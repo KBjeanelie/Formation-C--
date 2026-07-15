@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Cours C++ — Notions complémentaires</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:840px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(30px,4.2vw,42px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.1;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:640px;}
+
+  .toc{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:48px;}
+  .toc a{
+    display:flex; align-items:baseline; gap:10px; padding:11px 14px; border-radius:8px;
+    border:1px solid var(--edge-soft); font-family:var(--mono); font-size:12.5px;
+    color:var(--ink-dim); text-decoration:none;
+  }
+  .toc a:hover{border-color:var(--orange); color:var(--ink);}
+  .toc a span.tn{color:var(--orange);}
+
+  .term{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:10px; overflow:hidden; margin:0 0 48px;}
+  .term-bar{display:flex; align-items:center; gap:6px; padding:10px 14px; border-bottom:1px solid var(--edge-soft); background:#111120;}
+  .dot{width:9px; height:9px; border-radius:50%; background:#33334a;}
+  .term-label{margin-left:8px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .term-body{padding:20px 22px; font-family:var(--mono); font-size:13.5px; color:#d6d3e0;}
+  .term-body .c-kw{color:#ef6b34;} .term-body .c-str{color:#3fbd83;} .term-body .c-com{color:var(--ink-faint); font-style:italic;} .term-body .c-typ{color:#7fa9ec;}
+  .term-out{color:#7fd9ab; margin-top:10px; padding-top:10px; border-top:1px dashed var(--edge-soft); white-space:pre;}
+
+  section{margin:64px 0; scroll-margin-top:24px;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px;}
+  .sec-num{font-family:var(--mono); color:var(--orange); font-size:14px; min-width:26px;}
+  h2{font-size:22px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  .sec-intro{color:var(--ink-dim); margin:10px 0 22px 40px; max-width:640px;}
+
+  p{margin:0 0 14px;}
+  .content{margin-left:40px;}
+  ul, ol{margin:0 0 14px; padding-left:20px; color:var(--ink);}
+  li{margin-bottom:6px;}
+  strong{color:var(--ink); font-weight:600;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--panel); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:13px; line-height:1.6; margin:0 0 16px; color:#d6d3e0;}
+  pre .kw{color:#ef6b34;} pre .str{color:#3fbd83;} pre .com{color:var(--ink-faint); font-style:italic;} pre .typ{color:#7fa9ec;}
+
+  table{width:100%; border-collapse:collapse; margin:0 0 16px; font-size:14.5px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--edge-soft);}
+  th{color:var(--ink-faint); font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; font-weight:500;}
+
+  .note{background:var(--panel); border-left:3px solid var(--orange); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14.5px; color:var(--ink-dim);}
+  .note strong{color:var(--orange);}
+  .warn{background:var(--panel); border-left:3px solid #e2444a; border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14.5px; color:var(--ink-dim);}
+  .warn strong{color:#e2696e;}
+
+  .schema{
+    display:flex; gap:0; align-items:stretch; margin:0 0 20px; font-family:var(--mono); font-size:12.5px;
+  }
+  .schema .box{
+    flex:1; border:1px solid var(--edge-soft); border-radius:8px; padding:12px 14px; background:var(--panel);
+  }
+  .schema .box .k{color:var(--ink-faint); display:block; margin-bottom:4px; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;}
+  .schema .box .v{color:var(--ink);}
+  .schema .arrow{display:flex; align-items:center; justify-content:center; padding:0 10px; color:var(--orange);}
+
+  .tp{border:1px solid var(--orange); border-radius:12px; margin:8px 0 8px; overflow:hidden; background:var(--panel);}
+  .tp-head{padding:16px 20px; border-bottom:1px solid var(--edge-soft); background:var(--orange-dim); display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .tp-head h3{margin:0; font-size:15.5px; display:flex; align-items:baseline; gap:8px;}
+  .tp-head h3 .tag{font-family:var(--mono); font-size:11px; color:var(--orange); letter-spacing:.06em; text-transform:uppercase;}
+  .tp-diff{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); border:1px solid var(--edge-soft); border-radius:20px; padding:3px 10px; white-space:nowrap; background:var(--bg);}
+  .tp-body{padding:18px 20px 6px;}
+  .tp-body p:last-child{margin-bottom:0;}
+
+  details.sol{border-top:1px solid var(--edge-soft);}
+  details.sol summary{list-style:none; cursor:pointer; padding:13px 20px; font-family:var(--mono); font-size:12.5px; letter-spacing:.05em; color:var(--green); display:flex; align-items:center; gap:8px; user-select:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:'▸'; display:inline-block; transition:transform .15s ease; color:var(--green);}
+  details.sol[open] summary::before{transform:rotate(90deg);}
+  details.sol summary:hover{background:var(--green-dim);}
+  .sol-inner{padding:4px 20px 20px;}
+  .sol-inner pre{margin-top:8px;}
+  .sol-note{font-size:13.5px; color:var(--ink-dim); margin-top:10px;}
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono);}
+
+  @media (max-width:600px){ .toc{grid-template-columns:1fr;} .schema{flex-direction:column;} .schema .arrow{padding:6px 0; transform:rotate(90deg);} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Cours C++ · Notions complémentaires</p>
+  <h1 class="title">Pointeurs, références, mémoire dynamique, structures et fichiers</h1>
+  <p class="subtitle">Cinq notions qui prolongent le programme des 4 séances : chaque partie explique le concept, montre un exemple commenté, puis propose un TP avec sa solution repliable.</p>
+
+  <div class="toc">
+    <a href="#pointeurs"><span class="tn">01</span> Les pointeurs</a>
+    <a href="#references"><span class="tn">02</span> Les références</a>
+    <a href="#dynamique"><span class="tn">03</span> Allocation dynamique</a>
+    <a href="#structures"><span class="tn">04</span> Les structures</a>
+    <a href="#fichiers"><span class="tn">05</span> La gestion des fichiers</a>
+  </div>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="term-label">terminal — g++ main.cpp -o main && ./main</span>
+    </div>
+    <div class="term-body">
+<span class="c-com">// aperçu : un pointeur pointe vers une adresse mémoire</span>
+<span class="c-kw">int</span> age = 20;
+<span class="c-kw">int</span>* p = &amp;age;
+
+std::cout &lt;&lt; <span class="c-str">"valeur : "</span> &lt;&lt; *p;
+      <div class="term-out">valeur : 20</div>
+    </div>
+  </div>
+
+  <section id="pointeurs">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Les pointeurs</h2></div>
+    <div class="sec-intro">Un pointeur est une variable qui ne contient pas une donnée directement, mais l'<strong>adresse mémoire</strong> d'une autre variable.</div>
+    <div class="content">
+
+      <p>Deux opérateurs suffisent à comprendre les pointeurs :</p>
+      <div class="schema">
+        <div class="box"><span class="k">&amp;x</span><span class="v">adresse de la variable x</span></div>
+        <div class="arrow">↔</div>
+        <div class="box"><span class="k">*p</span><span class="v">valeur pointée par p (déréférencement)</span></div>
+      </div>
+
+      <pre><span class="typ">int</span> age = 20;
+<span class="typ">int</span>* p = &amp;age;   <span class="com">// p contient l'adresse de "age"</span>
+
+std::cout &lt;&lt; age;   <span class="com">// 20 — la valeur</span>
+std::cout &lt;&lt; &amp;age;  <span class="com">// une adresse du type 0x7ffee...</span>
+std::cout &lt;&lt; p;      <span class="com">// la même adresse que &amp;age</span>
+std::cout &lt;&lt; *p;     <span class="com">// 20 — la valeur pointée par p</span>
+
+*p = 25;              <span class="com">// modifie "age" via le pointeur</span>
+std::cout &lt;&lt; age;    <span class="com">// 25</span></pre>
+
+      <p>Un pointeur peut aussi ne pointer vers rien, avec <code class="inline">nullptr</code> :</p>
+      <pre><span class="typ">int</span>* p2 = <span class="kw">nullptr</span>;
+
+<span class="kw">if</span> (p2 == <span class="kw">nullptr</span>) {
+    std::cout &lt;&lt; <span class="str">"p2 ne pointe vers rien"</span>;
+}</pre>
+
+      <div class="warn"><strong>Piège fréquent :</strong> déréférencer un pointeur non initialisé ou <code class="inline">nullptr</code> avec <code class="inline">*p</code> provoque un plantage (accès mémoire invalide). Toujours s'assurer qu'un pointeur pointe vers une adresse valide avant de le déréférencer.</div>
+
+      <p>Un pointeur passé en paramètre de fonction permet, comme une référence, de modifier la variable d'origine :</p>
+      <pre><span class="typ">void</span> doubler(<span class="typ">int</span>* p) {
+    *p = *p * 2;
+}
+
+<span class="typ">int</span> main() {
+    <span class="typ">int</span> n = 5;
+    doubler(&amp;n);
+    std::cout &lt;&lt; n; <span class="com">// 10</span>
+}</pre>
+
+      <div class="tp">
+        <div class="tp-head">
+          <h3><span class="tag">TP</span>Échange par pointeurs</h3>
+          <span class="tp-diff">facile</span>
+        </div>
+        <div class="tp-body">
+          <p>Écrire une fonction <code class="inline">void echanger(int* a, int* b)</code> qui échange les valeurs pointées par <code class="inline">a</code> et <code class="inline">b</code>, en utilisant uniquement des pointeurs (pas de référence <code class="inline">&amp;</code> en paramètre). Tester avec deux variables dans <code class="inline">main</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="typ">void</span> echanger(<span class="typ">int</span>* a, <span class="typ">int</span>* b) {
+    <span class="typ">int</span> temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+<span class="typ">int</span> main() {
+    <span class="typ">int</span> x = 3, y = 9;
+    std::cout &lt;&lt; <span class="str">"Avant : x="</span> &lt;&lt; x &lt;&lt; <span class="str">" y="</span> &lt;&lt; y &lt;&lt; std::endl;
+
+    echanger(&amp;x, &amp;y);
+
+    std::cout &lt;&lt; <span class="str">"Après : x="</span> &lt;&lt; x &lt;&lt; <span class="str">" y="</span> &lt;&lt; y &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+            <p class="sol-note">C'est le même résultat que l'échange par référence vu en séance 2 — mais ici on manipule explicitement des adresses avec <code class="inline">&amp;x</code> et <code class="inline">&amp;y</code> à l'appel, et on déréférence avec <code class="inline">*a</code> / <code class="inline">*b</code> à l'intérieur de la fonction.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="references">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Les références</h2></div>
+    <div class="sec-intro">Une référence est un <strong>alias</strong> : un autre nom pour une variable déjà existante, et non une variable séparée.</div>
+    <div class="content">
+
+      <pre><span class="typ">int</span> age = 20;
+<span class="typ">int</span>&amp; ref = age;  <span class="com">// ref est un autre nom pour "age"</span>
+
+ref = 25;
+std::cout &lt;&lt; age; <span class="com">// 25 — "age" a changé, car ref EST age</span></pre>
+
+      <table>
+        <tr><th>Pointeur</th><th>Référence</th></tr>
+        <tr><td>Peut être réaffecté à autre chose</td><td>Toujours liée à la même variable, définitivement</td></tr>
+        <tr><td>Peut valoir <code class="inline">nullptr</code></td><td>Doit obligatoirement être initialisée à la déclaration</td></tr>
+        <tr><td>Nécessite <code class="inline">*</code> pour lire la valeur</td><td>Se manipule comme la variable elle-même</td></tr>
+      </table>
+
+      <p>En pratique, les références sont surtout utilisées en paramètre de fonction, pour éviter une copie coûteuse ou pour modifier la variable appelante — comme vu en séance 2 avec <code class="inline">void doubler(int&amp; x)</code>.</p>
+
+      <div class="note"><strong>Quand choisir quoi :</strong> référence par défaut pour les paramètres de fonction ; pointeur seulement si l'on a besoin de "ne pointer vers rien" (<code class="inline">nullptr</code>) ou de changer ce qui est pointé en cours de route.</div>
+
+      <div class="tp">
+        <div class="tp-head">
+          <h3><span class="tag">TP</span>Statistiques par référence</h3>
+          <span class="tp-diff">intermédiaire</span>
+        </div>
+        <div class="tp-body">
+          <p>Écrire une fonction <code class="inline">void statistiques(int tab[], int taille, int&amp; min, int&amp; max, double&amp; moyenne)</code> qui calcule en une seule passe le minimum, le maximum et la moyenne d'un tableau, en renvoyant les trois résultats par référence.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="typ">void</span> statistiques(<span class="typ">int</span> tab[], <span class="typ">int</span> taille, <span class="typ">int</span>&amp; min, <span class="typ">int</span>&amp; max, <span class="typ">double</span>&amp; moyenne) {
+    min = tab[0];
+    max = tab[0];
+    <span class="typ">int</span> somme = 0;
+
+    <span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; taille; i++) {
+        <span class="kw">if</span> (tab[i] &lt; min) min = tab[i];
+        <span class="kw">if</span> (tab[i] &gt; max) max = tab[i];
+        somme += tab[i];
+    }
+
+    moyenne = (<span class="typ">double</span>)somme / taille;
+}
+
+<span class="typ">int</span> main() {
+    <span class="typ">int</span> valeurs[6] = {12, 8, 21, 5, 17, 14};
+    <span class="typ">int</span> min, max;
+    <span class="typ">double</span> moyenne;
+
+    statistiques(valeurs, 6, min, max, moyenne);
+
+    std::cout &lt;&lt; <span class="str">"Min : "</span> &lt;&lt; min &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="str">"Max : "</span> &lt;&lt; max &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="str">"Moyenne : "</span> &lt;&lt; moyenne &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+            <p class="sol-note">Sans références, la fonction ne pourrait retourner qu'une seule valeur avec <code class="inline">return</code> — les paramètres par référence permettent de "retourner" plusieurs résultats à la fois.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="dynamique">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Allocation dynamique</h2></div>
+    <div class="sec-intro">Avec <code class="inline">new</code>, on réserve de la mémoire à l'exécution, dont la taille peut dépendre d'une valeur connue seulement au lancement du programme.</div>
+    <div class="content">
+
+      <pre><span class="typ">int</span>* p = <span class="kw">new</span> <span class="typ">int</span>;   <span class="com">// réserve un int sur le tas</span>
+*p = 42;
+std::cout &lt;&lt; *p;
+
+<span class="kw">delete</span> p;         <span class="com">// libère la mémoire</span></pre>
+
+      <p>Pour un tableau, la taille peut être une variable (contrairement à un tableau statique) :</p>
+      <pre><span class="typ">int</span> taille;
+std::cout &lt;&lt; <span class="str">"Combien de valeurs ? "</span>;
+std::cin &gt;&gt; taille;
+
+<span class="typ">int</span>* tab = <span class="kw">new</span> <span class="typ">int</span>[taille];
+
+<span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; taille; i++) {
+    tab[i] = i * i;
+}
+
+<span class="kw">delete</span>[] tab;  <span class="com">// [] obligatoire pour libérer un tableau</span></pre>
+
+      <div class="warn"><strong>Piège fréquent — fuite mémoire :</strong> chaque <code class="inline">new</code> doit avoir un <code class="inline">delete</code> correspondant (<code class="inline">delete[]</code> pour un tableau). Oublier de libérer la mémoire réservée avec <code class="inline">new</code> est une fuite mémoire : le programme garde la mémoire occupée même après ne plus en avoir besoin.</div>
+
+      <div class="note"><strong>Pour aller plus loin :</strong> en C++ moderne, on préfère souvent <code class="inline">std::vector</code> (vu en séance 4) à <code class="inline">new</code>/<code class="inline">delete</code> manuels, car il gère automatiquement sa mémoire. Cette section reste utile pour comprendre ce qui se passe "sous le capot".</div>
+
+      <div class="tp">
+        <div class="tp-head">
+          <h3><span class="tag">TP</span>Tableau dynamique de notes</h3>
+          <span class="tp-diff">intermédiaire</span>
+        </div>
+        <div class="tp-body">
+          <p>Demander à l'utilisateur combien de notes il souhaite saisir, allouer dynamiquement un tableau de cette taille avec <code class="inline">new</code>, remplir le tableau, afficher la moyenne, puis libérer la mémoire avec <code class="inline">delete[]</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="typ">int</span> main() {
+    <span class="typ">int</span> nombreNotes;
+    std::cout &lt;&lt; <span class="str">"Combien de notes ? "</span>;
+    std::cin &gt;&gt; nombreNotes;
+
+    <span class="typ">double</span>* notes = <span class="kw">new</span> <span class="typ">double</span>[nombreNotes];
+
+    <span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; nombreNotes; i++) {
+        std::cout &lt;&lt; <span class="str">"Note "</span> &lt;&lt; (i + 1) &lt;&lt; <span class="str">" : "</span>;
+        std::cin &gt;&gt; notes[i];
+    }
+
+    <span class="typ">double</span> somme = 0;
+    <span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; nombreNotes; i++) {
+        somme += notes[i];
+    }
+
+    std::cout &lt;&lt; <span class="str">"Moyenne : "</span> &lt;&lt; (somme / nombreNotes) &lt;&lt; std::endl;
+
+    <span class="kw">delete</span>[] notes;
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="structures">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Les structures</h2></div>
+    <div class="sec-intro">Une <code class="inline">struct</code> regroupe plusieurs données liées sous un seul type, sans forcément avoir de méthodes ni d'encapsulation — plus légère qu'une classe pour de simples "paquets de données".</div>
+    <div class="content">
+
+      <pre><span class="kw">struct</span> Point {
+    <span class="typ">double</span> x;
+    <span class="typ">double</span> y;
+};
+
+<span class="typ">int</span> main() {
+    Point p1;
+    p1.x = 3;
+    p1.y = 4;
+
+    std::cout &lt;&lt; <span class="str">"("</span> &lt;&lt; p1.x &lt;&lt; <span class="str">", "</span> &lt;&lt; p1.y &lt;&lt; <span class="str">")"</span>;
+}</pre>
+
+      <p>On peut aussi initialiser une structure directement à la déclaration, et créer des tableaux de structures :</p>
+      <pre><span class="kw">struct</span> Eleve {
+    std::string nom;
+    <span class="typ">int</span> age;
+};
+
+Eleve e1 = {<span class="str">"Fabrice"</span>, 17};
+Eleve classe[3] = {
+    {<span class="str">"Fabrice"</span>, 17},
+    {<span class="str">"Diane"</span>, 16},
+    {<span class="str">"Yann"</span>, 18}
+};</pre>
+
+      <table>
+        <tr><th>struct</th><th>class</th></tr>
+        <tr><td>Membres <code class="inline">public</code> par défaut</td><td>Membres <code class="inline">private</code> par défaut</td></tr>
+        <tr><td>Convient aux simples regroupements de données</td><td>Convient quand encapsulation et comportements riches sont nécessaires</td></tr>
+      </table>
+
+      <div class="tp">
+        <div class="tp-head">
+          <h3><span class="tag">TP</span>Carnet de contacts</h3>
+          <span class="tp-diff">facile</span>
+        </div>
+        <div class="tp-body">
+          <p>Définir une structure <code class="inline">Contact</code> avec <code class="inline">nom</code> et <code class="inline">telephone</code> (deux <code class="inline">std::string</code>). Créer un tableau de 4 contacts initialisés directement, puis les afficher tous avec une boucle.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+<span class="kw">#include</span> &lt;string&gt;
+
+<span class="kw">struct</span> Contact {
+    std::string nom;
+    std::string telephone;
+};
+
+<span class="typ">int</span> main() {
+    Contact carnet[4] = {
+        {<span class="str">"Awa"</span>, <span class="str">"06 111 22 33"</span>},
+        {<span class="str">"Brice"</span>, <span class="str">"05 222 33 44"</span>},
+        {<span class="str">"Chloé"</span>, <span class="str">"04 333 44 55"</span>},
+        {<span class="str">"David"</span>, <span class="str">"01 444 55 66"</span>}
+    };
+
+    <span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; 4; i++) {
+        std::cout &lt;&lt; carnet[i].nom &lt;&lt; <span class="str">" : "</span> &lt;&lt; carnet[i].telephone &lt;&lt; std::endl;
+    }
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="fichiers">
+    <div class="sec-head"><span class="sec-num">05</span><h2>La gestion des fichiers</h2></div>
+    <div class="sec-intro">La bibliothèque <code class="inline">&lt;fstream&gt;</code> permet de lire et d'écrire dans des fichiers texte depuis un programme C++.</div>
+    <div class="content">
+
+      <p><strong>Écrire</strong> dans un fichier avec <code class="inline">std::ofstream</code> :</p>
+      <pre><span class="kw">#include</span> &lt;fstream&gt;
+
+<span class="typ">int</span> main() {
+    std::ofstream fichier(<span class="str">"notes.txt"</span>);
+
+    <span class="kw">if</span> (fichier.is_open()) {
+        fichier &lt;&lt; <span class="str">"Fabrice 14"</span> &lt;&lt; std::endl;
+        fichier &lt;&lt; <span class="str">"Diane 17"</span> &lt;&lt; std::endl;
+        fichier.close();
+    } <span class="kw">else</span> {
+        std::cout &lt;&lt; <span class="str">"Impossible de créer le fichier."</span>;
+    }
+}</pre>
+
+      <p><strong>Lire</strong> un fichier ligne par ligne avec <code class="inline">std::ifstream</code> et <code class="inline">std::getline</code> :</p>
+      <pre><span class="kw">#include</span> &lt;fstream&gt;
+<span class="kw">#include</span> &lt;iostream&gt;
+<span class="kw">#include</span> &lt;string&gt;
+
+<span class="typ">int</span> main() {
+    std::ifstream fichier(<span class="str">"notes.txt"</span>);
+    std::string ligne;
+
+    <span class="kw">if</span> (fichier.is_open()) {
+        <span class="kw">while</span> (std::getline(fichier, ligne)) {
+            std::cout &lt;&lt; ligne &lt;&lt; std::endl;
+        }
+        fichier.close();
+    } <span class="kw">else</span> {
+        std::cout &lt;&lt; <span class="str">"Fichier introuvable."</span>;
+    }
+}</pre>
+
+      <table>
+        <tr><th>Classe</th><th>Usage</th></tr>
+        <tr><td><code class="inline">std::ofstream</code></td><td>Écriture (output)</td></tr>
+        <tr><td><code class="inline">std::ifstream</code></td><td>Lecture (input)</td></tr>
+        <tr><td><code class="inline">is_open()</code></td><td>Vérifie que le fichier a bien été ouvert avant de l'utiliser</td></tr>
+        <tr><td><code class="inline">std::getline(f, s)</code></td><td>Lit une ligne entière du fichier <code class="inline">f</code> dans la chaîne <code class="inline">s</code></td></tr>
+      </table>
+
+      <div class="warn"><strong>Piège fréquent :</strong> ouvrir un <code class="inline">ofstream</code> sur un fichier existant l'écrase par défaut. Toujours vérifier <code class="inline">is_open()</code> avant de lire ou écrire, et penser à <code class="inline">close()</code> une fois terminé.</div>
+
+      <div class="tp">
+        <div class="tp-head">
+          <h3><span class="tag">TP</span>Journal de dépenses</h3>
+          <span class="tp-diff">défi</span>
+        </div>
+        <div class="tp-body">
+          <p>Écrire un programme qui demande à l'utilisateur de saisir des dépenses (description + montant) jusqu'à ce qu'il tape <code class="inline">"fin"</code> comme description, en enregistrant chaque ligne dans un fichier <code class="inline">depenses.txt</code> au format <code class="inline">description montant</code>. Ensuite, relire le fichier ligne par ligne pour afficher son contenu à l'écran et calculer le total dépensé (avec <code class="inline">std::stringstream</code> pour séparer la description du montant sur chaque ligne relue).</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+<span class="kw">#include</span> &lt;fstream&gt;
+<span class="kw">#include</span> &lt;sstream&gt;
+<span class="kw">#include</span> &lt;string&gt;
+
+<span class="typ">int</span> main() {
+    std::ofstream sortie(<span class="str">"depenses.txt"</span>);
+    std::string description;
+    <span class="typ">double</span> montant;
+
+    <span class="kw">if</span> (!sortie.is_open()) {
+        std::cout &lt;&lt; <span class="str">"Impossible de créer le fichier."</span>;
+        <span class="kw">return</span> 1;
+    }
+
+    <span class="kw">while</span> (<span class="kw">true</span>) {
+        std::cout &lt;&lt; <span class="str">"Description (ou 'fin') : "</span>;
+        std::cin &gt;&gt; description;
+        <span class="kw">if</span> (description == <span class="str">"fin"</span>) {
+            <span class="kw">break</span>;
+        }
+        std::cout &lt;&lt; <span class="str">"Montant : "</span>;
+        std::cin &gt;&gt; montant;
+
+        sortie &lt;&lt; description &lt;&lt; <span class="str">" "</span> &lt;&lt; montant &lt;&lt; std::endl;
+    }
+    sortie.close();
+
+    <span class="com">// relecture</span>
+    std::ifstream entree(<span class="str">"depenses.txt"</span>);
+    std::string ligne;
+    <span class="typ">double</span> total = 0;
+
+    std::cout &lt;&lt; std::endl &lt;&lt; <span class="str">"--- Journal ---"</span> &lt;&lt; std::endl;
+    <span class="kw">while</span> (std::getline(entree, ligne)) {
+        std::stringstream ss(ligne);
+        std::string desc;
+        <span class="typ">double</span> m;
+        ss &gt;&gt; desc &gt;&gt; m;
+
+        std::cout &lt;&lt; desc &lt;&lt; <span class="str">" : "</span> &lt;&lt; m &lt;&lt; <span class="str">" FCFA"</span> &lt;&lt; std::endl;
+        total += m;
+    }
+    entree.close();
+
+    std::cout &lt;&lt; <span class="str">"Total dépensé : "</span> &lt;&lt; total &lt;&lt; <span class="str">" FCFA"</span> &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+            <p class="sol-note"><code class="inline">std::stringstream</code> permet de traiter une chaîne comme un flux, exactement comme <code class="inline">std::cin</code> — pratique pour extraire plusieurs valeurs d'une même ligne lue dans un fichier.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <footer>Cours C++ — Notions complémentaires · Pointeurs, références, mémoire dynamique, structures, fichiers</footer>
+
+</div>
+</body>
+</html>

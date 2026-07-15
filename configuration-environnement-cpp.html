@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Configuration de l'environnement C++</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:840px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(30px,4.2vw,42px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.1;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:640px;}
+
+  .toc{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:48px;}
+  .toc a{
+    display:flex; align-items:baseline; gap:10px; padding:11px 14px; border-radius:8px;
+    border:1px solid var(--edge-soft); font-family:var(--mono); font-size:12.5px;
+    color:var(--ink-dim); text-decoration:none;
+  }
+  .toc a:hover{border-color:var(--orange); color:var(--ink);}
+  .toc a span.tn{color:var(--orange);}
+
+  .term{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:10px; overflow:hidden; margin:0 0 48px;}
+  .term-bar{display:flex; align-items:center; gap:6px; padding:10px 14px; border-bottom:1px solid var(--edge-soft); background:#111120;}
+  .dot{width:9px; height:9px; border-radius:50%; background:#33334a;}
+  .term-label{margin-left:8px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .term-body{padding:20px 22px; font-family:var(--mono); font-size:13.5px; color:#d6d3e0;}
+  .term-body .c-kw{color:#ef6b34;} .term-body .c-com{color:var(--ink-faint); font-style:italic;}
+  .term-out{color:#7fd9ab; margin-top:10px; padding-top:10px; border-top:1px dashed var(--edge-soft); white-space:pre;}
+
+  section{margin:64px 0; scroll-margin-top:24px;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px;}
+  .sec-num{font-family:var(--mono); color:var(--orange); font-size:14px; min-width:26px;}
+  h2{font-size:22px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  .sec-intro{color:var(--ink-dim); margin:10px 0 22px 40px; max-width:640px;}
+  h4{font-size:14.5px; font-weight:600; margin:22px 0 8px; color:var(--ink);}
+
+  p{margin:0 0 14px;}
+  .content{margin-left:40px;}
+  ul, ol{margin:0 0 14px; padding-left:20px; color:var(--ink);}
+  li{margin-bottom:6px;}
+  strong{color:var(--ink); font-weight:600;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--panel); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:13px; line-height:1.6; margin:0 0 16px; color:#d6d3e0;}
+  pre .kw{color:#ef6b34;} pre .com{color:var(--ink-faint); font-style:italic;}
+
+  table{width:100%; border-collapse:collapse; margin:0 0 16px; font-size:14.5px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--edge-soft);}
+  th{color:var(--ink-faint); font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; font-weight:500;}
+
+  .note{background:var(--panel); border-left:3px solid var(--orange); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14.5px; color:var(--ink-dim);}
+  .note strong{color:var(--orange);}
+  .warn{background:var(--panel); border-left:3px solid #e2444a; border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14.5px; color:var(--ink-dim);}
+  .warn strong{color:#e2696e;}
+  .ok{background:var(--panel); border-left:3px solid var(--green); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14.5px; color:var(--ink-dim);}
+  .ok strong{color:var(--green);}
+
+  .os-badge{
+    display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--orange); border:1px solid var(--edge-soft);
+    border-radius:20px; padding:3px 10px; margin-bottom:14px;
+  }
+
+  .cards{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:0 0 16px;}
+  .card{border:1px solid var(--edge-soft); border-radius:10px; padding:16px 18px; background:var(--panel);}
+  .card h5{margin:0 0 6px; font-size:14.5px; font-weight:600;}
+  .card p{margin:0; font-size:13.5px; color:var(--ink-dim);}
+
+  .faq{border:1px solid var(--edge-soft); border-radius:8px; margin-bottom:10px; overflow:hidden; background:var(--panel);}
+  .faq summary{list-style:none; cursor:pointer; padding:13px 16px; font-size:14.5px; font-weight:500; display:flex; align-items:center; gap:8px; user-select:none;}
+  .faq summary::-webkit-details-marker{display:none;}
+  .faq summary::before{content:'▸'; display:inline-block; transition:transform .15s ease; color:var(--orange);}
+  .faq[open] summary::before{transform:rotate(90deg);}
+  .faq summary:hover{background:var(--orange-dim);}
+  .faq-inner{padding:2px 16px 16px; font-size:14px; color:var(--ink-dim);}
+  .faq-inner pre{margin-top:8px;}
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono);}
+
+  @media (max-width:600px){ .toc{grid-template-columns:1fr;} .cards{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Cours C++ · Guide pratique</p>
+  <h1 class="title">Installer et configurer C++ — Windows, macOS, Linux</h1>
+  <p class="subtitle">Un seul objectif final quel que soit le système : pouvoir taper <code class="inline">g++ main.cpp -o main</code> puis <code class="inline">./main</code> dans un terminal, ou obtenir l'équivalent dans un IDE.</p>
+
+  <div class="toc">
+    <a href="#windows"><span class="tn">01</span> Windows</a>
+    <a href="#macos"><span class="tn">02</span> macOS</a>
+    <a href="#linux"><span class="tn">03</span> Linux</a>
+    <a href="#editeurs"><span class="tn">04</span> Éditeurs et IDE</a>
+    <a href="#enligne"><span class="tn">05</span> Sans rien installer</a>
+    <a href="#verif"><span class="tn">06</span> Vérifier son installation</a>
+    <a href="#depannage"><span class="tn">07</span> Dépannage</a>
+  </div>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="term-label">terminal — n'importe quel système</span>
+    </div>
+    <div class="term-body">
+<span class="c-com">// une fois l'installation faite, ces deux commandes doivent marcher</span>
+<span class="c-kw">g++</span> main.cpp -o main
+<span class="c-kw">./main</span>
+      <div class="term-out">Bonjour, C++ !</div>
+    </div>
+  </div>
+
+  <section id="windows">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Windows</h2></div>
+    <div class="sec-intro">Deux approches courantes : installer un compilateur natif (MinGW-w64), ou utiliser Linux via WSL.</div>
+    <div class="content">
+
+      <h4>Option A — MinGW-w64 (recommandé pour débuter)</h4>
+      <ol>
+        <li>Télécharger MinGW-w64 depuis <code class="inline">winlibs.com</code> (version "UCRT runtime" recommandée) ou via l'installateur MSYS2.</li>
+        <li>Extraire l'archive, par exemple dans <code class="inline">C:\mingw64</code>.</li>
+        <li>Ajouter <code class="inline">C:\mingw64\bin</code> à la variable d'environnement <code class="inline">PATH</code> : Paramètres → Système → Informations système → Paramètres système avancés → Variables d'environnement → modifier <code class="inline">Path</code>.</li>
+        <li>Ouvrir une nouvelle invite de commandes (obligatoire pour que le <code class="inline">PATH</code> soit pris en compte) et vérifier :</li>
+      </ol>
+      <pre>g++ --version</pre>
+
+      <h4>Option B — WSL (Windows Subsystem for Linux)</h4>
+      <p>Fait tourner un vrai environnement Linux dans Windows — pratique si vous suivez aussi des cours orientés Linux/serveur.</p>
+      <pre><span class="com">## dans PowerShell, en administrateur</span>
+wsl --install
+
+<span class="com">## puis, une fois dans le terminal Linux ouvert</span>
+sudo apt update
+sudo apt install g++</pre>
+
+      <div class="note"><strong>Quel choix ?</strong> MinGW-w64 si vous voulez rester dans l'environnement Windows habituel (Explorateur, VS Code natif). WSL si vous êtes à l'aise avec un terminal Linux ou si le reste de la formation utilise des outils Linux.</div>
+    </div>
+  </section>
+
+  <section id="macos">
+    <div class="sec-head"><span class="sec-num">02</span><h2>macOS</h2></div>
+    <div class="sec-intro">macOS fournit un compilateur (Clang, compatible avec les commandes <code class="inline">g++</code>) via les outils en ligne de commande d'Xcode.</div>
+    <div class="content">
+      <pre>xcode-select --install</pre>
+      <p>Une fenêtre propose l'installation des "Command Line Tools" — valider et attendre la fin du téléchargement. Vérifier ensuite :</p>
+      <pre>g++ --version</pre>
+      <div class="note"><strong>À savoir :</strong> sur macOS, la commande <code class="inline">g++</code> pointe en réalité vers Clang, pas vers le vrai GCC. Pour la quasi-totalité d'un cours de C++, c'est totalement transparent. Pour obtenir le "vrai" GCC (rarement nécessaire), on peut installer Homebrew puis <code class="inline">brew install gcc</code>.</div>
+    </div>
+  </section>
+
+  <section id="linux">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Linux</h2></div>
+    <div class="sec-intro">La commande d'installation dépend du gestionnaire de paquets de la distribution.</div>
+    <div class="content">
+      <table>
+        <tr><th>Distribution</th><th>Commande</th></tr>
+        <tr><td>Debian / Ubuntu</td><td><code class="inline">sudo apt install build-essential</code></td></tr>
+        <tr><td>Fedora</td><td><code class="inline">sudo dnf install gcc-c++</code></td></tr>
+        <tr><td>Arch / Manjaro</td><td><code class="inline">sudo pacman -S base-devel</code></td></tr>
+        <tr><td>openSUSE</td><td><code class="inline">sudo zypper install gcc-c++</code></td></tr>
+      </table>
+      <p><code class="inline">build-essential</code> et <code class="inline">base-devel</code> installent d'un coup <code class="inline">g++</code>, <code class="inline">make</code> et les autres outils de compilation habituels. Vérifier ensuite :</p>
+      <pre>g++ --version</pre>
+    </div>
+  </section>
+
+  <section id="editeurs">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Éditeurs et IDE</h2></div>
+    <div class="sec-intro">Le compilateur suffit pour coder en ligne de commande ; un éditeur ou un IDE rend l'écriture et le débogage plus confortables. Fonctionnent à l'identique sur Windows, macOS et Linux.</div>
+    <div class="content">
+
+      <div class="cards">
+        <div class="card">
+          <h5>Visual Studio Code</h5>
+          <p>Léger, gratuit, multiplateforme. Installer l'extension <code class="inline">C/C++</code> (Microsoft) et éventuellement <code class="inline">Code Runner</code> pour exécuter un fichier en un clic.</p>
+        </div>
+        <div class="card">
+          <h5>Code::Blocks</h5>
+          <p>IDE dédié au C/C++, léger. Choisir la version "with MinGW" sur Windows pour avoir un compilateur préconfiguré directement dans l'installateur.</p>
+        </div>
+        <div class="card">
+          <h5>CLion</h5>
+          <p>IDE complet de JetBrains, très puissant pour de gros projets, payant (gratuit avec une licence étudiante).</p>
+        </div>
+        <div class="card">
+          <h5>Terminal + éditeur de texte</h5>
+          <p>Aucune installation d'IDE : n'importe quel éditeur (VS Code, Sublime, vim...) pour écrire le code, puis <code class="inline">g++</code> en ligne de commande pour compiler.</p>
+        </div>
+      </div>
+
+      <h4>Configurer VS Code pour compiler avec un raccourci</h4>
+      <p>Dans le dossier du projet, créer <code class="inline">.vscode/tasks.json</code> :</p>
+      <pre>{
+  <span class="com">"version": "2.0.0",</span>
+  <span class="com">"tasks": [</span>
+    {
+      <span class="com">"label": "compiler",</span>
+      <span class="com">"type": "shell",</span>
+      <span class="com">"command": "g++",</span>
+      <span class="com">"args": ["${file}", "-o", "${fileDirname}/${fileBasenameNoExtension}"]</span>
+    }
+  ]
+}</pre>
+      <p>Ensuite, <code class="inline">Ctrl+Shift+B</code> (ou <code class="inline">Cmd+Shift+B</code> sur Mac) compile le fichier actuellement ouvert.</p>
+    </div>
+  </section>
+
+  <section id="enligne">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Sans rien installer</h2></div>
+    <div class="sec-intro">Utile pour tester rapidement un extrait de code, ou si l'installation locale pose problème pendant une séance.</div>
+    <div class="content">
+      <table>
+        <tr><th>Service</th><th>Avantage</th></tr>
+        <tr><td><code class="inline">godbolt.org</code></td><td>Voir le code assembleur généré, plusieurs compilateurs/versions au choix</td></tr>
+        <tr><td><code class="inline">replit.com</code></td><td>Environnement complet avec fichiers multiples, proche d'un vrai projet</td></tr>
+        <tr><td><code class="inline">onlinegdb.com</code></td><td>Débogueur intégré simple, bon pour visualiser l'exécution pas à pas</td></tr>
+      </table>
+      <div class="note"><strong>Limite à connaître :</strong> ces services ne remplacent pas une installation locale pour la séance sur les fichiers (lecture/écriture sur disque), où l'accès au système de fichiers réel est nécessaire.</div>
+    </div>
+  </section>
+
+  <section id="verif">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Vérifier son installation</h2></div>
+    <div class="sec-intro">Ce test doit réussir quel que soit le système ou le logiciel choisi ci-dessus.</div>
+    <div class="content">
+      <p>Créer un fichier <code class="inline">test.cpp</code> :</p>
+      <pre><span class="com">#include &lt;iostream&gt;
+
+int main() {
+    std::cout &lt;&lt; "Configuration OK" &lt;&lt; std::endl;
+    return 0;
+}</span></pre>
+      <p>Puis, dans un terminal ouvert dans le même dossier :</p>
+      <pre>g++ test.cpp -o test
+./test</pre>
+      <div class="ok"><strong>Résultat attendu :</strong> le terminal affiche <code class="inline">Configuration OK</code>. Si c'est le cas, l'environnement est prêt pour toutes les séances du TP.</div>
+      <div class="note"><strong>Sur Windows sans WSL :</strong> l'exécutable s'appelle <code class="inline">test.exe</code> et se lance avec <code class="inline">test</code> ou <code class="inline">.\test</code> plutôt que <code class="inline">./test</code>.</div>
+    </div>
+  </section>
+
+  <section id="depannage">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Dépannage</h2></div>
+    <div class="sec-intro">Les erreurs les plus fréquentes en début de formation, indépendamment du système.</div>
+    <div class="content">
+
+      <details class="faq">
+        <summary>« g++ n'est pas reconnu » / « command not found »</summary>
+        <div class="faq-inner">
+          Le compilateur n'est pas installé, ou son dossier n'est pas dans le <code class="inline">PATH</code>. Sur Windows, vérifier l'ajout du dossier <code class="inline">bin</code> de MinGW au <code class="inline">PATH</code> et rouvrir le terminal. Sur macOS/Linux, relancer l'installation correspondante (sections 02 et 03).
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>« Permission denied » en lançant <code class="inline">./main</code></summary>
+        <div class="faq-inner">
+          Sur macOS/Linux, l'exécutable a besoin du droit d'exécution :
+          <pre>chmod +x main
+./main</pre>
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>Le programme compile mais rien ne s'affiche</summary>
+        <div class="faq-inner">
+          Vérifier qu'on exécute bien le fichier fraîchement compilé (<code class="inline">./main</code>), et pas une ancienne version. Vérifier aussi que <code class="inline">std::cout</code> est bien suivi de <code class="inline">std::endl</code> ou que le programme atteint bien <code class="inline">return 0;</code> à la fin.
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>VS Code ne reconnaît pas <code class="inline">#include &lt;iostream&gt;</code> (souligné en rouge)</summary>
+        <div class="faq-inner">
+          C'est un avertissement de l'extension C/C++, pas une erreur de compilation. Ouvrir la palette de commandes (<code class="inline">Ctrl+Shift+P</code>) → <code class="inline">C/C++: Edit Configurations</code> et vérifier que le compilateur détecté correspond bien à celui installé (MinGW, Clang...).
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>Erreur liée aux accents ou à l'affichage sur Windows (caractères bizarres)</summary>
+        <div class="faq-inner">
+          Le terminal Windows n'utilise pas UTF-8 par défaut. Ajouter en tout début de <code class="inline">main()</code> :
+          <pre><span class="com">system("chcp 65001 &gt; nul");</span></pre>
+          ou lancer le programme depuis un terminal déjà configuré en UTF-8 (Windows Terminal récent, ou WSL).
+        </div>
+      </details>
+
+    </div>
+  </section>
+
+  <footer>Cours C++ — Configuration de l'environnement · Windows, macOS, Linux</footer>
+
+</div>
+</body>
+</html>

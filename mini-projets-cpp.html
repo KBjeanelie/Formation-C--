@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Mini-Projets C++ du Réel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --blue:#4d90fe;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--green); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(30px,4.2vw,42px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.1;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:700px;}
+  
+  .back-link {
+    display: inline-block;
+    margin-bottom: 24px;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 13px;
+    border: 1px solid var(--edge-soft);
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .back-link:hover {
+    color: var(--ink);
+    border-color: var(--ink-faint);
+  }
+
+  .toc{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:48px;}
+  .toc a{
+    display:flex; align-items:baseline; gap:10px; padding:11px 14px; border-radius:8px;
+    border:1px solid var(--edge-soft); font-family:var(--mono); font-size:12.5px;
+    color:var(--ink-dim); text-decoration:none;
+  }
+  .toc a:hover{border-color:var(--green); color:var(--ink);}
+  .toc a span.tn{color:var(--green);}
+
+  section{margin:64px 0; scroll-margin-top:24px; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:16px;}
+  .sec-num{font-family:var(--mono); color:var(--green); font-size:16px; min-width:26px;}
+  h2{font-size:24px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  
+  .context-box {
+    background: #0d0d16;
+    border-left: 3px solid var(--blue);
+    padding: 16px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 24px;
+    font-size: 15px;
+    color: var(--ink-dim);
+  }
+  .context-box strong { color: var(--blue); }
+
+  h4{font-size:16px; font-weight:600; margin:24px 0 12px; color:var(--ink);}
+  p{margin:0 0 14px;}
+  ul{margin:0 0 20px; padding-left:20px; color:var(--ink-dim);}
+  li{margin-bottom:6px;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
+  pre .kw{color:#ef6b34;} pre .com{color:var(--ink-faint); font-style:italic;} pre .str{color:#7fd9ab;} pre .typ{color:#3fbd83;}
+
+  .guide-box {
+    background: var(--bg);
+    border: 1px solid var(--orange-dim);
+    border-top: 3px solid var(--orange);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 24px;
+  }
+  .guide-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    color: var(--orange);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+  .guide-box p { font-size: 14.5px; color: var(--ink-dim); margin-bottom: 10px; }
+  .guide-box ul { font-size: 14.5px; margin-bottom: 0; }
+  .guide-box strong { color: var(--ink); }
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono); text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="index.html" class="back-link">← Retour au Dashboard</a>
+
+  <p class="eyebrow">Mise en pratique</p>
+  <h1 class="title">10 Mini-Projets du Réel en C++</h1>
+  <p class="subtitle">L'objectif n'est plus seulement de connaître la syntaxe, mais de savoir **pourquoi** et **comment** l'utiliser dans des cas d'usage concrets. Chaque projet inclut une solution et un guide explicatif des choix d'architecture.</p>
+
+  <div class="toc">
+    <a href="#proj1"><span class="tn">01</span> Gestionnaire de Contacts</a>
+    <a href="#proj2"><span class="tn">02</span> Parseur de Logs Serveur</a>
+    <a href="#proj3"><span class="tn">03</span> Valideur de Mots de Passe</a>
+    <a href="#proj4"><span class="tn">04</span> CLI Calculatrice</a>
+    <a href="#proj5"><span class="tn">05</span> Simulation Bancaire</a>
+    <a href="#proj6"><span class="tn">06</span> Convertisseur de Devises</a>
+    <a href="#proj7"><span class="tn">07</span> Lecteur CSV Simple</a>
+    <a href="#proj8"><span class="tn">08</span> Tic-Tac-Toe Console</a>
+    <a href="#proj9"><span class="tn">09</span> Réservation Cinéma</a>
+    <a href="#proj10"><span class="tn">10</span> Tracker de Dépenses</a>
+  </div>
+
+  <!-- PROJET 1 -->
+  <section id="proj1">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Gestionnaire de Contacts</h2></div>
+    <div class="context-box">
+      <strong>Le cas réel :</strong> Une entreprise a besoin d'un mini-outil en ligne de commande pour enregistrer rapidement les coordonnées de ses prospects sur un salon. Le programme doit permettre d'ajouter, lister et rechercher des contacts en mémoire.
+    </div>
+    <h4>Objectifs Techniques</h4>
+    <ul>
+      <li>Utilisation d'une <code class="inline">struct</code> ou d'une <code class="inline">class</code>.</li>
+      <li>Stockage dynamique avec <code class="inline">std::vector</code>.</li>
+      <li>Boucle principale d'interface utilisateur.</li>
+    </ul>
+
+    <h4>Code Solution</h4>
+    <pre><span class="com">#include &lt;iostream&gt;</span>
+<span class="com">#include &lt;vector&gt;</span>
+<span class="com">#include &lt;string&gt;</span>
+
+<span class="kw">using namespace</span> std;
+
+<span class="kw">struct</span> <span class="typ">Contact</span> {
+    string nom;
+    string telephone;
+};
+
+<span class="kw">void</span> ajouterContact(vector&lt;<span class="typ">Contact</span>&gt;&amp; carnet) {
+    <span class="typ">Contact</span> c;
+    cout &lt;&lt; <span class="str">"Nom : "</span>;
+    cin &gt;&gt; c.nom;
+    cout &lt;&lt; <span class="str">"Tel : "</span>;
+    cin &gt;&gt; c.telephone;
+    carnet.push_back(c);
+    cout &lt;&lt; <span class="str">"Contact ajoute !\n"</span>;
+}
+
+<span class="kw">void</span> afficherContacts(<span class="kw">const</span> vector&lt;<span class="typ">Contact</span>&gt;&amp; carnet) {
+    <span class="kw">for</span> (<span class="kw">const auto</span>&amp; c : carnet) {
+        cout &lt;&lt; <span class="str">"- "</span> &lt;&lt; c.nom &lt;&lt; <span class="str">" ("</span> &lt;&lt; c.telephone &lt;&lt; <span class="str">")\n"</span>;
+    }
+}
+
+<span class="kw">int</span> main() {
+    vector&lt;<span class="typ">Contact</span>&gt; carnet;
+    <span class="kw">int</span> choix;
+    <span class="kw">do</span> {
+        cout &lt;&lt; <span class="str">"\n1. Ajouter  2. Lister  3. Quitter\nChoix: "</span>;
+        cin &gt;&gt; choix;
+        <span class="kw">if</span> (choix == 1) ajouterContact(carnet);
+        <span class="kw">else if</span> (choix == 2) afficherContacts(carnet);
+    } <span class="kw">while</span> (choix != 3);
+    <span class="kw">return</span> 0;
+}</pre>
+
+    <div class="guide-box">
+      <div class="guide-title">Guide : Pourquoi on a fait ça ?</div>
+      <p><strong>Passage par référence (<code>&amp;</code>) :</strong> Dans <code>ajouterContact</code>, on passe <code>vector&lt;Contact&gt;&amp; carnet</code> avec un <code>&amp;</code> pour modifier le vecteur original. Si on oubliait le <code>&amp;</code>, C++ ferait une copie complète du vecteur, ajouterait le contact à la copie, et l'original resterait vide.</p>
+      <p><strong>Passage par référence constante (<code>const &amp;</code>) :</strong> Dans <code>afficherContacts</code>, on utilise <code>const vector&lt;Contact&gt;&amp;</code>. Le <code>&amp;</code> évite de copier tout le vecteur (gain de performance s'il y a 1000 contacts), et le <code>const</code> garantit (et indique aux autres développeurs) que cette fonction ne fera que lire les données sans pouvoir les altérer.</p>
+      <p><strong>La boucle <code>do-while</code> :</strong> Parfaite pour les menus interactifs car elle garantit que le menu s'affiche au moins une fois avant de vérifier la condition de sortie.</p>
+    </div>
+  </section>
+
+  <!-- PROJET 2 -->
+  <section id="proj2">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Parseur de Logs Serveur</h2></div>
+    <div class="context-box">
+      <strong>Le cas réel :</strong> Un serveur web génère des milliers de lignes de log. L'administrateur système a besoin d'un script rapide pour compter combien de fois le mot "ERROR" apparaît dans les logs pour monitorer la santé du système.
+    </div>
+    <h4>Code Solution</h4>
+    <pre><span class="com">#include &lt;iostream&gt;</span>
+<span class="com">#include &lt;string&gt;</span>
+<span class="com">#include &lt;vector&gt;</span>
+
+<span class="kw">using namespace</span> std;
+
+<span class="kw">int</span> main() {
+    <span class="com">// Simulation d'un fichier lu ligne par ligne en mémoire</span>
+    vector&lt;string&gt; logs = {
+        <span class="str">"INFO: Server started on port 8080"</span>,
+        <span class="str">"WARNING: High memory usage detected"</span>,
+        <span class="str">"ERROR: Database connection timeout"</span>,
+        <span class="str">"INFO: User admin logged in"</span>,
+        <span class="str">"ERROR: File not found on request /img.png"</span>
+    };
+
+    <span class="kw">int</span> errorCount = 0;
+    <span class="kw">for</span> (<span class="kw">const auto</span>&amp; line : logs) {
+        <span class="kw">if</span> (line.find(<span class="str">"ERROR"</span>) != string::npos) {
+            errorCount++;
+            cout &lt;&lt; <span class="str">"Trouve : "</span> &lt;&lt; line &lt;&lt; <span class="str">"\n"</span>;
+        }
+    }
+    cout &lt;&lt; <span class="str">"Total erreurs critiques : "</span> &lt;&lt; errorCount &lt;&lt; <span class="str">"\n"</span>;
+    <span class="kw">return</span> 0;
+}</pre>
+    <div class="guide-box">
+      <div class="guide-title">Guide : Pourquoi on a fait ça ?</div>
+      <p><strong>Utilisation de <code>find()</code> :</strong> La méthode <code>find()</code> de <code>std::string</code> est la méthode standard pour chercher une sous-chaîne. Elle est hautement optimisée.</p>
+      <p><strong>Pourquoi comparer à <code>string::npos</code> ? :</strong> <code>string::npos</code> représente "la fin de la chaîne" ou "non trouvé". Si <code>find</code> ne renvoie pas <code>npos</code>, cela veut dire qu'il a trouvé l'index où le mot commence.</p>
+    </div>
+  </section>
+
+  <!-- PROJET 3 -->
+  <section id="proj3">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Valideur de Mots de Passe</h2></div>
+    <div class="context-box">
+      <strong>Le cas réel :</strong> Lors de l'inscription sur un site web, le backend doit vérifier que le mot de passe fourni par l'utilisateur respecte les règles de sécurité (longueur, présence de chiffres et de majuscules).
+    </div>
+    <h4>Code Solution</h4>
+    <pre><span class="com">#include &lt;iostream&gt;</span>
+<span class="com">#include &lt;string&gt;</span>
+<span class="com">#include &lt;cctype&gt;</span>
+
+<span class="kw">using namespace</span> std;
+
+<span class="kw">bool</span> validerMotDePasse(<span class="kw">const</span> string&amp; pwd) {
+    <span class="kw">if</span> (pwd.length() &lt; 8) <span class="kw">return false</span>;
+
+    <span class="kw">bool</span> aMaj = <span class="kw">false</span>;
+    <span class="kw">bool</span> aChiffre = <span class="kw">false</span>;
+
+    <span class="kw">for</span> (<span class="kw">char</span> c : pwd) {
+        <span class="kw">if</span> (isupper(c)) aMaj = <span class="kw">true</span>;
+        <span class="kw">if</span> (isdigit(c)) aChiffre = <span class="kw">true</span>;
+    }
+    <span class="kw">return</span> aMaj &amp;&amp; aChiffre;
+}
+
+<span class="kw">int</span> main() {
+    string pwd;
+    cout &lt;&lt; <span class="str">"Entrez un mot de passe a tester : "</span>;
+    cin &gt;&gt; pwd;
+
+    <span class="kw">if</span> (validerMotDePasse(pwd)) {
+        cout &lt;&lt; <span class="str">"Le mot de passe est valide et securise.\n"</span>;
+    } <span class="kw">else</span> {
+        cout &lt;&lt; <span class="str">"Invalide (necessite min 8 chars, 1 Maj, 1 Chiffre).\n"</span>;
+    }
+    <span class="kw">return</span> 0;
+}</pre>
+    <div class="guide-box">
+      <div class="guide-title">Guide : Pourquoi on a fait ça ?</div>
+      <p><strong>Librairie <code>&lt;cctype&gt;</code> :</strong> On utilise <code>isupper</code> et <code>isdigit</code> du C standard. C'est beaucoup plus robuste et lisible que de faire <code>if (c &gt;= 'A' &amp;&amp; c &lt;= 'Z')</code>.</p>
+      <p><strong>Early Return :</strong> Dès la première ligne de la fonction, on fait <code>if (pwd.length() &lt; 8) return false;</code>. Cela s'appelle un <em>Guard Clause</em>. Si la chaîne est trop courte, on ne perd pas de temps de CPU à parcourir tous les caractères.</p>
+    </div>
+  </section>
+
+  <!-- PROJET 4 -->
+  <section id="proj4">
+    <div class="sec-head"><span class="sec-num">04</span><h2>CLI Calculatrice</h2></div>
+    <div class="context-box">
+      <strong>Le cas réel :</strong> Créer un petit utilitaire appelé depuis d'autres scripts bash pour faire des maths basiques, via les arguments passés directement dans la ligne de commande (ex: <code>./calc 5 + 3</code>).
+    </div>
+    <h4>Code Solution</h4>
+    <pre><span class="com">#include &lt;iostream&gt;</span>
+<span class="com">#include &lt;string&gt;</span>
+
+<span class="kw">using namespace</span> std;
+
+<span class="kw">int</span> main(<span class="kw">int</span> argc, <span class="kw">char</span>* argv[]) {
+    <span class="kw">if</span> (argc != 4) {
+        cout &lt;&lt; <span class="str">"Usage : ./calc &lt;num1&gt; &lt;op&gt; &lt;num2&gt;\n"</span>;
+        <span class="kw">return</span> 1;
+    }
+
+    <span class="kw">double</span> a = stod(argv[1]);
+    string op = argv[2];
+    <span class="kw">double</span> b = stod(argv[3]);
+
+    <span class="kw">if</span> (op == <span class="str">"+"</span>) cout &lt;&lt; (a + b) &lt;&lt; <span class="str">"\n"</span>;
+    <span class="kw">else if</span> (op == <span class="str">"-"</span>) cout &lt;&lt; (a - b) &lt;&lt; <span class="str">"\n"</span>;
+    <span class="kw">else if</span> (op == <span class="str">"x"</span>) cout &lt;&lt; (a * b) &lt;&lt; <span class="str">"\n"</span>; <span class="com">// x au lieu de * (evite wildcard bash)</span>
+    <span class="kw">else if</span> (op == <span class="str">"/"</span>) {
+        <span class="kw">if</span> (b != 0) cout &lt;&lt; (a / b) &lt;&lt; <span class="str">"\n"</span>;
+        <span class="kw">else</span> cout &lt;&lt; <span class="str">"Erreur: division par zero\n"</span>;
+    }
+    <span class="kw">else</span> {
+        cout &lt;&lt; <span class="str">"Operateur inconnu.\n"</span>;
+    }
+    <span class="kw">return</span> 0;
+}</pre>
+    <div class="guide-box">
+      <div class="guide-title">Guide : Pourquoi on a fait ça ?</div>
+      <p><strong>Utilisation de <code>argc</code> et <code>argv</code> :</strong> C'est la méthode C/C++ pour capturer ce que l'utilisateur tape après le nom du programme. <code>argc</code> est le nombre d'arguments (toujours au moins 1, car le nom du programme compte). <code>argv</code> est un tableau de chaînes.</p>
+      <p><strong>Utilisation de <code>stod()</code> :</strong> Les arguments arrivent sous forme de texte (ex: "5"). On utilise <code>stod</code> (String TO Double) pour les convertir en vrais nombres avec virgule.</p>
+    </div>
+  </section>
+
+  <!-- PROJET 5 -->
+  <section id="proj5">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Simulation Bancaire</h2></div>
+    <div class="context-box">
+      <strong>Le cas réel :</strong> Le noyau d'un système bancaire qui doit manipuler des comptes. On doit s'assurer que personne ne peut modifier le solde d'un compte directement sans passer par les opérations officielles de dépôt ou retrait.
+    </div>
+    <h4>Code Solution</h4>
+    <pre><span class="com">#include &lt;iostream&gt;</span>
+<span class="com">#include &lt;string&gt;</span>
+
+<span class="kw">using namespace</span> std;
+
+<span class="kw">class</span> <span class="typ">CompteBancaire</span> {
+<span class="kw">private</span>:
+    string titulaire;
+    <span class="kw">double</span> solde;
+
+<span class="kw">public</span>:
+    <span class="typ">CompteBancaire</span>(string nom, <span class="kw">double</span> initial) {
+        titulaire = nom;
+        solde = (initial &gt; 0) ? initial : 0;
+    }
+
+    <span class="kw">void</span> deposer(<span class="kw">double</span> montant) {
+        <span class="kw">if</span> (montant &gt; 0) solde += montant;
+    }
+
+    <span class="kw">bool</span> retirer(<span class="kw">double</span> montant) {
+        <span class="kw">if</span> (montant &gt; 0 &amp;&amp; solde &gt;= montant) {
+            solde -= montant;
+            <span class="kw">return true</span>;
+        }
+        <span class="kw">return false</span>;
+    }
+
+    <span class="kw">void</span> afficher() <span class="kw">const</span> {
+        cout &lt;&lt; <span class="str">"Compte de "</span> &lt;&lt; titulaire &lt;&lt; <span class="str">" | Solde: "</span> &lt;&lt; solde &lt;&lt; <span class="str">" EUR\n"</span>;
+    }
+};
+
+<span class="kw">int</span> main() {
+    <span class="typ">CompteBancaire</span> compte(<span class="str">"Alice"</span>, 100.0);
+    compte.afficher();
+    compte.deposer(50);
+    <span class="kw">if</span> (!compte.retirer(200)) cout &lt;&lt; <span class="str">"Fonds insuffisants!\n"</span>;
+    compte.afficher();
+    <span class="kw">return</span> 0;
+}</pre>
+    <div class="guide-box">
+      <div class="guide-title">Guide : Pourquoi on a fait ça ?</div>
+      <p><strong>Encapsulation (<code>private</code>) :</strong> Le solde est privé. C'est essentiel dans le monde réel ! Si on le laissait public, n'importe quelle autre partie du code pourrait faire <code>compte.solde = 9999999;</code>, créant une énorme faille. On oblige le reste de l'application à utiliser <code>deposer</code> et <code>retirer</code>, où l'on peut ajouter des contrôles (ex: on ne dépose pas de montants négatifs).</p>
+      <p><strong>Constructeur sécurisé :</strong> L'opérateur ternaire <code>(initial &gt; 0) ? initial : 0</code> empêche la création d'un compte avec un solde négatif dès le départ.</p>
+    </div>
+  </section>
+
+  <!-- PROJETS 6 à 10 pour garder le rythme -->
+  
+  <section id="proj6">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Convertisseur de Devises</h2></div>
+    <div class="context-box">
+      <strong>Le cas réel :</strong> Une boutique e-commerce permet de changer la devise d'affichage. Il faut un système simple basés sur un tableau de taux de change.
+    </div>
+    <h4>Code Solution</h4>
+    <pre><span class="com">#include &lt;iostream&gt;</span>
+<span class="com">#include &lt;map&gt;</span>
+<span class="com">#include &lt;string&gt;</span>
+
+<span class="kw">using namespace</span> std;
+
+<span class="kw">int</span> main() {
+    map&lt;string, <span class="kw">double</span>&gt; taux = {
+        {<span class="str">"USD"</span>, 1.09},
+        {<span class="str">"GBP"</span>, 0.85},
+        {<span class="str">"JPY"</span>, 160.40}
+    };
+
+    <span class="kw">double</span> euros;
+    cout &lt;&lt; <span class="str">"Montant en EUR : "</span>;
+    cin &gt;&gt; euros;
+
+    cout &lt;&lt; <span class="str">"Equivalents :\n"</span>;
+    <span class="kw">for</span> (<span class="kw">const auto</span>&amp; paire : taux) {
+        cout &lt;&lt; euros * paire.second &lt;&lt; <span class="str">" "</span> &lt;&lt; paire.first &lt;&lt; <span class="str">"\n"</span>;
+    }
+    <span class="kw">return</span> 0;
+}</pre>
+    <div class="guide-box">
+      <div class="guide-title">Guide : Pourquoi on a fait ça ?</div>
+      <p><strong>Utilisation de <code>std::map</code> :</strong> Le dictionnaire clé-valeur (map) est parfait pour associer un nom de devise à son taux. Cela évite d'utiliser des blocs de <code>if-else</code> géants et permet d'ajouter de nouvelles devises très facilement.</p>
+      <p><strong>La boucle for-each sur une map :</strong> Chaque itération donne une <code>paire</code>. <code>paire.first</code> accède à la clé ("USD"), et <code>paire.second</code> accède à la valeur (1.09).</p>
+    </div>
+  </section>
+
+  <section id="proj7">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Lecteur CSV Simple</h2></div>
+    <div class="context-box">
+      <strong>Le cas réel :</strong> Les données métier sont souvent exportées en CSV. L'application doit lire des lignes de texte séparées par des virgules pour en extraire l'information brute.
+    </div>
+    <h4>Code Solution</h4>
+    <pre><span class="com">#include &lt;iostream&gt;</span>
+<span class="com">#include &lt;sstream&gt;</span>
+<span class="com">#include &lt;string&gt;</span>
+
+<span class="kw">using namespace</span> std;
+
+<span class="kw">int</span> main() {
+    string ligneCsv = <span class="str">"Durand,Jean,45,Paris"</span>;
+    stringstream ss(ligneCsv);
+    string token;
+
+    cout &lt;&lt; <span class="str">"Extraction des donnees:\n"</span>;
+    <span class="kw">while</span> (getline(ss, token, <span class="str">','</span>)) {
+        cout &lt;&lt; <span class="str">"- "</span> &lt;&lt; token &lt;&lt; <span class="str">"\n"</span>;
+    }
+    <span class="kw">return</span> 0;
+}</pre>
+    <div class="guide-box">
+      <div class="guide-title">Guide : Pourquoi on a fait ça ?</div>
+      <p><strong>Utilisation de <code>stringstream</code> :</strong> Un flux de chaîne (stringstream) permet de traiter une chaîne de caractères en mémoire comme s'il s'agissait d'un fichier. C'est l'outil canonique en C++ pour parser du texte avec des délimiteurs.</p>
+      <p><strong><code>getline</code> avec un 3ème argument :</strong> En passant <code>','</code>, on demande à getline de s'arrêter à la virgule plutôt qu'au saut de ligne.</p>
+    </div>
+  </section>
+
+  <section id="proj8">
+    <div class="sec-head"><span class="sec-num">08</span><h2>Tic-Tac-Toe Console</h2></div>
+    <div class="context-box">
+      <strong>Le cas réel :</strong> Développer un petit jeu dans le terminal. Cela apprend à gérer des grilles (tableaux 2D) et l'état global d'une application (Game Loop).
+    </div>
+    <h4>Code Solution</h4>
+    <pre><span class="com">#include &lt;iostream&gt;</span>
+<span class="kw">using namespace</span> std;
+
+<span class="kw">void</span> afficherGrille(<span class="kw">char</span> g[3][3]) {
+    <span class="kw">for</span>(<span class="kw">int</span> i=0; i&lt;3; i++) {
+        cout &lt;&lt; g[i][0] &lt;&lt; <span class="str">"|"</span> &lt;&lt; g[i][1] &lt;&lt; <span class="str">"|"</span> &lt;&lt; g[i][2] &lt;&lt; <span class="str">"\n"</span>;
+        <span class="kw">if</span>(i&lt;2) cout &lt;&lt; <span class="str">"-----\n"</span>;
+    }
+}
+
+<span class="kw">int</span> main() {
+    <span class="kw">char</span> grille[3][3] = {{<span class="str">'1'</span>,<span class="str">'2'</span>,<span class="str">'3'</span>}, {<span class="str">'4'</span>,<span class="str">'5'</span>,<span class="str">'6'</span>}, {<span class="str">'7'</span>,<span class="str">'8'</span>,<span class="str">'9'</span>}};
+    <span class="kw">int</span> tour = 0;
+    <span class="kw">char</span> joueur = <span class="str">'X'</span>;
+
+    <span class="kw">while</span>(tour &lt; 9) {
+        afficherGrille(grille);
+        cout &lt;&lt; <span class="str">"Joueur "</span> &lt;&lt; joueur &lt;&lt; <span class="str">", choisissez une case (1-9): "</span>;
+        <span class="kw">int</span> choix; cin &gt;&gt; choix;
+        <span class="kw">int</span> r = (choix-1)/3;
+        <span class="kw">int</span> c = (choix-1)%3;
+        
+        <span class="kw">if</span>(grille[r][c] != <span class="str">'X'</span> &amp;&amp; grille[r][c] != <span class="str">'O'</span>) {
+            grille[r][c] = joueur;
+            joueur = (joueur == <span class="str">'X'</span>) ? <span class="str">'O'</span> : <span class="str">'X'</span>;
+            tour++;
+        } <span class="kw">else</span> {
+            cout &lt;&lt; <span class="str">"Case occupee!\n"</span>;
+        }
+    }
+    cout &lt;&lt; <span class="str">"Fin du jeu!\n"</span>;
+    <span class="kw">return</span> 0;
+}</pre>
+    <div class="guide-box">
+      <div class="guide-title">Guide : Pourquoi on a fait ça ?</div>
+      <p><strong>Maths de conversion 1D-2D :</strong> La formule <code>r = (choix-1)/3</code> et <code>c = (choix-1)%3</code> est une astuce mathématique classique pour transformer un index linéaire (1 à 9) en coordonnées X,Y pour un tableau 2D, évitant un énorme switch-case.</p>
+      <p><strong>Ternaire pour changer de joueur :</strong> <code>(joueur == 'X') ? 'O' : 'X'</code> est un moyen propre et concis d'alterner les joueurs à chaque tour valide.</p>
+    </div>
+  </section>
+
+  <section id="proj9">
+    <div class="sec-head"><span class="sec-num">09</span><h2>Réservation Cinéma</h2></div>
+    <div class="context-box">
+      <strong>Le cas réel :</strong> Un cinéma veut un outil de gestion des places dans une salle. Si une place est déjà vendue, on ne peut plus la réserver.
+    </div>
+    <h4>Code Solution</h4>
+    <pre><span class="com">#include &lt;iostream&gt;</span>
+<span class="com">#include &lt;vector&gt;</span>
+<span class="kw">using namespace</span> std;
+
+<span class="kw">int</span> main() {
+    <span class="com">// 10 places dans la salle, false = libre, true = reserve</span>
+    vector&lt;<span class="kw">bool</span>&gt; places(10, <span class="kw">false</span>);
+    
+    <span class="kw">int</span> choix;
+    <span class="kw">while</span>(<span class="kw">true</span>) {
+        cout &lt;&lt; <span class="str">"\nPlaces libres : "</span>;
+        <span class="kw">for</span>(<span class="kw">int</span> i=0; i&lt;places.size(); i++) {
+            <span class="kw">if</span>(!places[i]) cout &lt;&lt; (i+1) &lt;&lt; <span class="str">" "</span>;
+        }
+        cout &lt;&lt; <span class="str">"\nReserver le siege numero (0 pour quitter) : "</span>;
+        cin &gt;&gt; choix;
+        
+        <span class="kw">if</span> (choix == 0) <span class="kw">break</span>;
+        <span class="kw">if</span> (choix &lt; 1 || choix &gt; 10) cout &lt;&lt; <span class="str">"Invalide.\n"</span>;
+        <span class="kw">else if</span> (places[choix-1]) cout &lt;&lt; <span class="str">"Deja reserve!\n"</span>;
+        <span class="kw">else</span> {
+            places[choix-1] = <span class="kw">true</span>;
+            cout &lt;&lt; <span class="str">"Reservation validee.\n"</span>;
+        }
+    }
+    <span class="kw">return</span> 0;
+}</pre>
+    <div class="guide-box">
+      <div class="guide-title">Guide : Pourquoi on a fait ça ?</div>
+      <p><strong><code>vector&lt;bool&gt;</code> initialisé avec une taille :</strong> <code>vector&lt;bool&gt; places(10, false)</code> permet de créer directement un vecteur de 10 éléments, tous mis à <code>false</code>. C'est plus propre que de faire une boucle de 10 push_back.</p>
+      <p><strong>Ajustement d'index :</strong> Le client voit les sièges de 1 à 10, mais les tableaux commencent à l'index 0. D'où le <code>places[choix-1]</code> obligatoire.</p>
+    </div>
+  </section>
+
+  <section id="proj10">
+    <div class="sec-head"><span class="sec-num">10</span><h2>Tracker de Dépenses</h2></div>
+    <div class="context-box">
+      <strong>Le cas réel :</strong> Une app d'aggrégation financière qui accumule les petites dépenses d'une journée et calcule un total.
+    </div>
+    <h4>Code Solution</h4>
+    <pre><span class="com">#include &lt;iostream&gt;</span>
+<span class="com">#include &lt;numeric&gt;</span>
+<span class="com">#include &lt;vector&gt;</span>
+
+<span class="kw">using namespace</span> std;
+
+<span class="kw">int</span> main() {
+    vector&lt;<span class="kw">double</span>&gt; depenses;
+    <span class="kw">double</span> saisie;
+
+    cout &lt;&lt; <span class="str">"Entrez vos depenses (0 pour terminer) :\n"</span>;
+    <span class="kw">while</span> (<span class="kw">true</span>) {
+        cin &gt;&gt; saisie;
+        <span class="kw">if</span> (saisie == 0) <span class="kw">break</span>;
+        depenses.push_back(saisie);
+    }
+
+    <span class="kw">double</span> total = accumulate(depenses.begin(), depenses.end(), 0.0);
+    
+    cout &lt;&lt; <span class="str">"Vous avez fait "</span> &lt;&lt; depenses.size() &lt;&lt; <span class="str">" depenses.\n"</span>;
+    cout &lt;&lt; <span class="str">"Total de la journee : "</span> &lt;&lt; total &lt;&lt; <span class="str">" EUR\n"</span>;
+
+    <span class="kw">return</span> 0;
+}</pre>
+    <div class="guide-box">
+      <div class="guide-title">Guide : Pourquoi on a fait ça ?</div>
+      <p><strong>Utilisation de <code>std::accumulate</code> :</strong> Issue de la librairie <code>&lt;numeric&gt;</code>, cette fonction parcourt tout un conteneur et additionne les éléments. C'est du "Modern C++" : on préfère utiliser les algorithmes standards très optimisés plutôt que d'écrire des boucles for soi-même pour faire des sommes.</p>
+      <p><strong>Le <code>0.0</code> dans accumulate :</strong> Le troisième paramètre est la valeur de départ. Mettre <code>0.0</code> (et non 0) indique au compilateur que l'on manipule des nombres à virgule (double), évitant des troncatures intempestives (perte des centimes).</p>
+    </div>
+  </section>
+
+  <footer>Cours C++ — 10 Mini-Projets d'Application</footer>
+
+</div>
+</body>
+</html>

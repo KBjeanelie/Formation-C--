@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>TP C++ — Séance 2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:840px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{
+    font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--orange); margin:0 0 14px;
+  }
+  h1.title{
+    font-family:var(--sans); font-weight:700; font-size:clamp(30px,4.2vw,42px);
+    margin:0 0 8px; letter-spacing:-.01em; line-height:1.1;
+  }
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:640px;}
+
+  .tracker{display:flex; gap:8px; margin-bottom:44px;}
+  .tstep{flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--edge-soft); font-family:var(--mono); font-size:11.5px; color:var(--ink-faint);}
+  .tstep .n{display:block; font-size:10px; letter-spacing:.1em; margin-bottom:4px;}
+  .tstep.active{border-color:var(--orange); color:var(--ink); background:var(--orange-dim);}
+  .tstep.active .n{color:var(--orange);}
+  .tstep.done{border-color:var(--edge); color:var(--ink-dim);}
+  .tstep.done .n{color:var(--green);}
+
+  .term{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:10px; overflow:hidden; margin:0 0 48px;}
+  .term-bar{display:flex; align-items:center; gap:6px; padding:10px 14px; border-bottom:1px solid var(--edge-soft); background:#111120;}
+  .dot{width:9px; height:9px; border-radius:50%; background:#33334a;}
+  .term-label{margin-left:8px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .term-body{padding:20px 22px; font-family:var(--mono); font-size:13.5px; color:#d6d3e0;}
+  .term-body .c-kw{color:#ef6b34;} .term-body .c-str{color:#3fbd83;} .term-body .c-com{color:var(--ink-faint); font-style:italic;} .term-body .c-typ{color:#7fa9ec;}
+  .term-out{color:#7fd9ab; margin-top:10px; padding-top:10px; border-top:1px dashed var(--edge-soft); white-space:pre;}
+
+  section{margin:56px 0;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px;}
+  .sec-num{font-family:var(--mono); color:var(--orange); font-size:14px; min-width:26px;}
+  h2{font-size:22px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  .sec-intro{color:var(--ink-dim); margin:10px 0 22px 40px; max-width:640px;}
+
+  p{margin:0 0 14px;}
+  .content{margin-left:40px;}
+  ul, ol{margin:0 0 14px; padding-left:20px; color:var(--ink);}
+  li{margin-bottom:6px;}
+  strong{color:var(--ink); font-weight:600;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--panel); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:13px; line-height:1.6; margin:0 0 16px; color:#d6d3e0;}
+  pre .kw{color:#ef6b34;} pre .str{color:#3fbd83;} pre .com{color:var(--ink-faint); font-style:italic;} pre .typ{color:#7fa9ec;}
+
+  table{width:100%; border-collapse:collapse; margin:0 0 16px; font-size:14.5px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--edge-soft);}
+  th{color:var(--ink-faint); font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; font-weight:500;}
+
+  .note{background:var(--panel); border-left:3px solid var(--orange); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14.5px; color:var(--ink-dim);}
+  .note strong{color:var(--orange);}
+
+  .ex{border:1px solid var(--edge-soft); border-radius:10px; margin-bottom:24px; overflow:hidden; background:var(--panel);}
+  .ex-head{padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--edge-soft);}
+  .ex-title{display:flex; align-items:baseline; gap:10px;}
+  .ex-num{font-family:var(--mono); color:var(--orange); font-size:13px;}
+  .ex-title h3{margin:0; font-size:16px; font-weight:600;}
+  .ex-diff{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); border:1px solid var(--edge-soft); border-radius:20px; padding:3px 10px; white-space:nowrap;}
+  .ex-body{padding:18px 20px 6px;}
+  .ex-body p:last-child{margin-bottom:0;}
+
+  details.sol{border-top:1px solid var(--edge-soft);}
+  details.sol summary{list-style:none; cursor:pointer; padding:13px 20px; font-family:var(--mono); font-size:12.5px; letter-spacing:.05em; color:var(--green); display:flex; align-items:center; gap:8px; user-select:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:'▸'; display:inline-block; transition:transform .15s ease; color:var(--green);}
+  details.sol[open] summary::before{transform:rotate(90deg);}
+  details.sol summary:hover{background:var(--green-dim);}
+  .sol-inner{padding:4px 20px 20px;}
+  .sol-inner pre{margin-top:8px;}
+  .sol-note{font-size:13.5px; color:var(--ink-dim); margin-top:10px;}
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">TP C++ · Programme en 4 séances</p>
+  <h1 class="title">Séance 2 — Boucles, tableaux et fonctions</h1>
+  <p class="subtitle">Répéter des instructions, stocker des collections de valeurs, et découper un programme en blocs réutilisables. Durée indicative : 3h30 à 4h.</p>
+
+  <div class="tracker">
+    <div class="tstep done"><span class="n">Séance 01 ✓</span>Bases du langage : variables, types, conditions</div>
+    <div class="tstep active"><span class="n">Séance 02</span>Boucles, tableaux, fonctions</div>
+    <div class="tstep"><span class="n">Séance 03</span>Programmation orientée objet</div>
+    <div class="tstep"><span class="n">Séance 04</span>Héritage, STL, mini-projet</div>
+  </div>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="term-label">terminal — g++ main.cpp -o main && ./main</span>
+    </div>
+    <div class="term-body">
+<span class="c-com">// aperçu de la séance : boucler sur un tableau</span>
+<span class="c-kw">int</span> notes[5] = {12, 15, 9, 18, 14};
+<span class="c-kw">for</span> (<span class="c-kw">int</span> i = 0; i &lt; 5; i++) {
+    std::cout &lt;&lt; notes[i] &lt;&lt; <span class="c-str">" "</span>;
+}
+      <div class="term-out">12 15 9 18 14</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Objectifs de la séance</h2></div>
+    <div class="content">
+      <ul>
+        <li>Répéter des instructions avec les boucles <code class="inline">for</code>, <code class="inline">while</code> et <code class="inline">do-while</code>.</li>
+        <li>Choisir la bonne boucle selon la situation.</li>
+        <li>Déclarer, remplir et parcourir un tableau statique.</li>
+        <li>Écrire des fonctions avec paramètres et valeur de retour.</li>
+        <li>Comprendre la différence entre passage par valeur et passage par référence.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Les boucles</h2></div>
+    <div class="sec-intro">Trois boucles, trois usages typiques.</div>
+    <div class="content">
+      <table>
+        <tr><th>Boucle</th><th>Quand l'utiliser</th></tr>
+        <tr><td><code class="inline">for</code></td><td>Le nombre de répétitions est connu à l'avance</td></tr>
+        <tr><td><code class="inline">while</code></td><td>On répète tant qu'une condition reste vraie, sans savoir combien de fois</td></tr>
+        <tr><td><code class="inline">do-while</code></td><td>Comme <code class="inline">while</code>, mais le corps s'exécute au moins une fois</td></tr>
+      </table>
+
+      <pre><span class="com">// for</span>
+<span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; 10; i++) {
+    std::cout &lt;&lt; i &lt;&lt; <span class="str">" "</span>;
+}
+
+<span class="com">// while</span>
+<span class="typ">int</span> n = 10;
+<span class="kw">while</span> (n &gt; 0) {
+    std::cout &lt;&lt; n &lt;&lt; <span class="str">" "</span>;
+    n--;
+}
+
+<span class="com">// do-while</span>
+<span class="typ">int</span> choix;
+<span class="kw">do</span> {
+    std::cout &lt;&lt; <span class="str">"Entrez 0 pour quitter : "</span>;
+    std::cin &gt;&gt; choix;
+} <span class="kw">while</span> (choix != 0);</pre>
+
+      <div class="note"><strong>Piège fréquent :</strong> une boucle <code class="inline">while</code> dont la condition ne devient jamais fausse tourne indéfiniment (boucle infinie) — toujours vérifier que quelque chose change à l'intérieur de la boucle.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Les tableaux</h2></div>
+    <div class="content">
+      <p>Un tableau statique stocke plusieurs valeurs de même type, à taille fixe, indexées à partir de <code class="inline">0</code> :</p>
+      <pre><span class="typ">int</span> notes[5] = {12, 15, 9, 18, 14};
+std::cout &lt;&lt; notes[0]; <span class="com">// 12, premier élément</span>
+std::cout &lt;&lt; notes[4]; <span class="com">// 14, dernier élément</span></pre>
+      <p>Parcourir un tableau avec une boucle <code class="inline">for</code> :</p>
+      <pre><span class="typ">int</span> taille = 5;
+<span class="typ">int</span> somme = 0;
+<span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; taille; i++) {
+    somme += notes[i];
+}</pre>
+      <div class="note"><strong>Piège fréquent :</strong> accéder à <code class="inline">notes[5]</code> dans un tableau de taille 5 est un accès hors limites — C++ ne le détecte pas automatiquement et le comportement est indéfini.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Les fonctions</h2></div>
+    <div class="content">
+      <p>Une fonction regroupe des instructions réutilisables sous un nom, avec des paramètres en entrée et une valeur de retour :</p>
+      <pre><span class="typ">int</span> carre(<span class="typ">int</span> x) {
+    <span class="kw">return</span> x * x;
+}
+
+<span class="typ">int</span> main() {
+    std::cout &lt;&lt; carre(5); <span class="com">// 25</span>
+}</pre>
+      <p>Par défaut, les paramètres sont passés <strong>par valeur</strong> : la fonction reçoit une copie, les modifications à l'intérieur n'affectent pas la variable d'origine. Pour modifier réellement la variable appelante, on passe <strong>par référence</strong> avec <code class="inline">&</code> :</p>
+      <pre><span class="typ">void</span> doubler(<span class="typ">int</span>& x) {
+    x = x * 2;
+}
+
+<span class="typ">int</span> main() {
+    <span class="typ">int</span> valeur = 5;
+    doubler(valeur);
+    std::cout &lt;&lt; valeur; <span class="com">// 10</span>
+}</pre>
+      <div class="note"><strong>À retenir :</strong> <code class="inline">void</code> signifie que la fonction ne retourne aucune valeur.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Exercices pratiques</h2></div>
+    <div class="sec-intro">Écrire son propre code avant de dérouler la solution. Les exercices 4 à 6 réutilisent les notions des séances précédentes.</div>
+    <div class="content">
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 1</span><h3>Table de multiplication</h3></div>
+          <span class="ex-diff">échauffement</span>
+        </div>
+        <div class="ex-body">
+          <p>Demander un nombre entier à l'utilisateur et afficher sa table de multiplication de 1 à 10, en utilisant une boucle <code class="inline">for</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="typ">int</span> main() {
+    <span class="typ">int</span> n;
+    std::cout &lt;&lt; <span class="str">"Nombre : "</span>;
+    std::cin &gt;&gt; n;
+
+    <span class="kw">for</span> (<span class="typ">int</span> i = 1; i &lt;= 10; i++) {
+        std::cout &lt;&lt; n &lt;&lt; <span class="str">" x "</span> &lt;&lt; i &lt;&lt; <span class="str">" = "</span> &lt;&lt; (n * i) &lt;&lt; std::endl;
+    }
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 2</span><h3>Somme et moyenne d'un tableau</h3></div>
+          <span class="ex-diff">facile</span>
+        </div>
+        <div class="ex-body">
+          <p>Déclarer un tableau de 6 notes (valeurs de votre choix), calculer et afficher leur somme et leur moyenne.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="typ">int</span> main() {
+    <span class="typ">double</span> notes[6] = {12, 15, 9, 18, 14, 11};
+    <span class="typ">double</span> somme = 0;
+
+    <span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; 6; i++) {
+        somme += notes[i];
+    }
+
+    <span class="typ">double</span> moyenne = somme / 6;
+    std::cout &lt;&lt; <span class="str">"Somme : "</span> &lt;&lt; somme &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="str">"Moyenne : "</span> &lt;&lt; moyenne &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 3</span><h3>Trouver le maximum</h3></div>
+          <span class="ex-diff">facile</span>
+        </div>
+        <div class="ex-body">
+          <p>Écrire une fonction <code class="inline">int maximum(int tab[], int taille)</code> qui retourne la plus grande valeur d'un tableau, puis l'utiliser dans <code class="inline">main</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="typ">int</span> maximum(<span class="typ">int</span> tab[], <span class="typ">int</span> taille) {
+    <span class="typ">int</span> max = tab[0];
+    <span class="kw">for</span> (<span class="typ">int</span> i = 1; i &lt; taille; i++) {
+        <span class="kw">if</span> (tab[i] &gt; max) {
+            max = tab[i];
+        }
+    }
+    <span class="kw">return</span> max;
+}
+
+<span class="typ">int</span> main() {
+    <span class="typ">int</span> valeurs[5] = {3, 17, 8, 22, 14};
+    std::cout &lt;&lt; <span class="str">"Maximum : "</span> &lt;&lt; maximum(valeurs, 5) &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 4</span><h3>Nombre premier</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Écrire une fonction <code class="inline">bool estPremier(int n)</code> qui retourne <code class="inline">true</code> si <code class="inline">n</code> est premier, en testant les diviseurs de 2 à <code class="inline">n - 1</code> avec une boucle <code class="inline">for</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="typ">bool</span> estPremier(<span class="typ">int</span> n) {
+    <span class="kw">if</span> (n &lt; 2) {
+        <span class="kw">return</span> <span class="kw">false</span>;
+    }
+    <span class="kw">for</span> (<span class="typ">int</span> i = 2; i &lt; n; i++) {
+        <span class="kw">if</span> (n % i == 0) {
+            <span class="kw">return</span> <span class="kw">false</span>;
+        }
+    }
+    <span class="kw">return</span> <span class="kw">true</span>;
+}
+
+<span class="typ">int</span> main() {
+    <span class="typ">int</span> n;
+    std::cout &lt;&lt; <span class="str">"Entrez un entier : "</span>;
+    std::cin &gt;&gt; n;
+
+    <span class="kw">if</span> (estPremier(n)) {
+        std::cout &lt;&lt; n &lt;&lt; <span class="str">" est premier."</span> &lt;&lt; std::endl;
+    } <span class="kw">else</span> {
+        std::cout &lt;&lt; n &lt;&lt; <span class="str">" n'est pas premier."</span> &lt;&lt; std::endl;
+    }
+
+    <span class="kw">return</span> 0;
+}</pre>
+            <p class="sol-note">Optimisation possible : on peut arrêter la boucle dès que <code class="inline">i * i > n</code>, mais la version simple ci-dessus suffit à ce stade.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 5</span><h3>Échanger deux valeurs</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Écrire une fonction <code class="inline">void echanger(int&amp; a, int&amp; b)</code> qui échange les valeurs de deux entiers en utilisant le passage par référence. Vérifier dans <code class="inline">main</code> que les variables d'origine sont bien modifiées.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="typ">void</span> echanger(<span class="typ">int</span>&amp; a, <span class="typ">int</span>&amp; b) {
+    <span class="typ">int</span> temp = a;
+    a = b;
+    b = temp;
+}
+
+<span class="typ">int</span> main() {
+    <span class="typ">int</span> x = 3, y = 8;
+    std::cout &lt;&lt; <span class="str">"Avant : x="</span> &lt;&lt; x &lt;&lt; <span class="str">" y="</span> &lt;&lt; y &lt;&lt; std::endl;
+
+    echanger(x, y);
+
+    std::cout &lt;&lt; <span class="str">"Après : x="</span> &lt;&lt; x &lt;&lt; <span class="str">" y="</span> &lt;&lt; y &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+            <p class="sol-note">Sans le <code class="inline">&amp;</code> dans les paramètres, la fonction échangerait seulement des copies locales et <code class="inline">x</code>/<code class="inline">y</code> resteraient inchangés dans <code class="inline">main</code>.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 6</span><h3>Inverser un tableau</h3></div>
+          <span class="ex-diff">défi</span>
+        </div>
+        <div class="ex-body">
+          <p>Écrire une fonction <code class="inline">void inverser(int tab[], int taille)</code> qui inverse l'ordre des éléments d'un tableau <em>en place</em> (sans créer de nouveau tableau), puis afficher le tableau avant et après dans <code class="inline">main</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="typ">void</span> inverser(<span class="typ">int</span> tab[], <span class="typ">int</span> taille) {
+    <span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; taille / 2; i++) {
+        <span class="typ">int</span> temp = tab[i];
+        tab[i] = tab[taille - 1 - i];
+        tab[taille - 1 - i] = temp;
+    }
+}
+
+<span class="typ">void</span> afficher(<span class="typ">int</span> tab[], <span class="typ">int</span> taille) {
+    <span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; taille; i++) {
+        std::cout &lt;&lt; tab[i] &lt;&lt; <span class="str">" "</span>;
+    }
+    std::cout &lt;&lt; std::endl;
+}
+
+<span class="typ">int</span> main() {
+    <span class="typ">int</span> valeurs[5] = {1, 2, 3, 4, 5};
+
+    std::cout &lt;&lt; <span class="str">"Avant : "</span>;
+    afficher(valeurs, 5);
+
+    inverser(valeurs, 5);
+
+    std::cout &lt;&lt; <span class="str">"Après : "</span>;
+    afficher(valeurs, 5);
+
+    <span class="kw">return</span> 0;
+}</pre>
+            <p class="sol-note">Un tableau passé en paramètre agit déjà comme une référence en C++ : <code class="inline">inverser</code> modifie directement le tableau du <code class="inline">main</code>, sans besoin de <code class="inline">&amp;</code>.</p>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>TP C++ — Séance 2 / 4 · Boucles, tableaux, fonctions</footer>
+
+</div>
+</body>
+</html>

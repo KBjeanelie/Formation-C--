@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>TP C++ — Séance 3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:840px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(30px,4.2vw,42px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.1;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:640px;}
+
+  .tracker{display:flex; gap:8px; margin-bottom:44px;}
+  .tstep{flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--edge-soft); font-family:var(--mono); font-size:11.5px; color:var(--ink-faint);}
+  .tstep .n{display:block; font-size:10px; letter-spacing:.1em; margin-bottom:4px;}
+  .tstep.active{border-color:var(--orange); color:var(--ink); background:var(--orange-dim);}
+  .tstep.active .n{color:var(--orange);}
+  .tstep.done{border-color:var(--edge); color:var(--ink-dim);}
+  .tstep.done .n{color:var(--green);}
+
+  .term{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:10px; overflow:hidden; margin:0 0 48px;}
+  .term-bar{display:flex; align-items:center; gap:6px; padding:10px 14px; border-bottom:1px solid var(--edge-soft); background:#111120;}
+  .dot{width:9px; height:9px; border-radius:50%; background:#33334a;}
+  .term-label{margin-left:8px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .term-body{padding:20px 22px; font-family:var(--mono); font-size:13.5px; color:#d6d3e0;}
+  .term-body .c-kw{color:#ef6b34;} .term-body .c-str{color:#3fbd83;} .term-body .c-com{color:var(--ink-faint); font-style:italic;} .term-body .c-typ{color:#7fa9ec;}
+  .term-out{color:#7fd9ab; margin-top:10px; padding-top:10px; border-top:1px dashed var(--edge-soft); white-space:pre;}
+
+  section{margin:56px 0;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px;}
+  .sec-num{font-family:var(--mono); color:var(--orange); font-size:14px; min-width:26px;}
+  h2{font-size:22px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  .sec-intro{color:var(--ink-dim); margin:10px 0 22px 40px; max-width:640px;}
+
+  p{margin:0 0 14px;}
+  .content{margin-left:40px;}
+  ul, ol{margin:0 0 14px; padding-left:20px; color:var(--ink);}
+  li{margin-bottom:6px;}
+  strong{color:var(--ink); font-weight:600;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--panel); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:13px; line-height:1.6; margin:0 0 16px; color:#d6d3e0;}
+  pre .kw{color:#ef6b34;} pre .str{color:#3fbd83;} pre .com{color:var(--ink-faint); font-style:italic;} pre .typ{color:#7fa9ec;}
+
+  table{width:100%; border-collapse:collapse; margin:0 0 16px; font-size:14.5px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--edge-soft);}
+  th{color:var(--ink-faint); font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; font-weight:500;}
+
+  .note{background:var(--panel); border-left:3px solid var(--orange); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14.5px; color:var(--ink-dim);}
+  .note strong{color:var(--orange);}
+
+  .ex{border:1px solid var(--edge-soft); border-radius:10px; margin-bottom:24px; overflow:hidden; background:var(--panel);}
+  .ex-head{padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--edge-soft);}
+  .ex-title{display:flex; align-items:baseline; gap:10px;}
+  .ex-num{font-family:var(--mono); color:var(--orange); font-size:13px;}
+  .ex-title h3{margin:0; font-size:16px; font-weight:600;}
+  .ex-diff{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); border:1px solid var(--edge-soft); border-radius:20px; padding:3px 10px; white-space:nowrap;}
+  .ex-body{padding:18px 20px 6px;}
+  .ex-body p:last-child{margin-bottom:0;}
+
+  details.sol{border-top:1px solid var(--edge-soft);}
+  details.sol summary{list-style:none; cursor:pointer; padding:13px 20px; font-family:var(--mono); font-size:12.5px; letter-spacing:.05em; color:var(--green); display:flex; align-items:center; gap:8px; user-select:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:'▸'; display:inline-block; transition:transform .15s ease; color:var(--green);}
+  details.sol[open] summary::before{transform:rotate(90deg);}
+  details.sol summary:hover{background:var(--green-dim);}
+  .sol-inner{padding:4px 20px 20px;}
+  .sol-inner pre{margin-top:8px;}
+  .sol-note{font-size:13.5px; color:var(--ink-dim); margin-top:10px;}
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">TP C++ · Programme en 4 séances</p>
+  <h1 class="title">Séance 3 — Programmation orientée objet</h1>
+  <p class="subtitle">Regrouper données et comportements dans des classes : attributs, méthodes, constructeurs et encapsulation. Durée indicative : 3h30 à 4h.</p>
+
+  <div class="tracker">
+    <div class="tstep done"><span class="n">Séance 01 ✓</span>Bases du langage : variables, types, conditions</div>
+    <div class="tstep done"><span class="n">Séance 02 ✓</span>Boucles, tableaux, fonctions</div>
+    <div class="tstep active"><span class="n">Séance 03</span>Programmation orientée objet</div>
+    <div class="tstep"><span class="n">Séance 04</span>Héritage, STL, mini-projet</div>
+  </div>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="term-label">terminal — g++ main.cpp -o main && ./main</span>
+    </div>
+    <div class="term-body">
+<span class="c-com">// aperçu de la séance : une classe simple</span>
+<span class="c-kw">class</span> Chien {
+<span class="c-kw">public</span>:
+    std::string nom;
+    <span class="c-kw">void</span> aboyer() { std::cout &lt;&lt; nom &lt;&lt; <span class="c-str">" : Wouf !"</span>; }
+};
+
+Chien rex;
+rex.nom = <span class="c-str">"Rex"</span>;
+rex.aboyer();
+      <div class="term-out">Rex : Wouf !</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Objectifs de la séance</h2></div>
+    <div class="content">
+      <ul>
+        <li>Comprendre la différence entre une <strong>classe</strong> (le modèle) et un <strong>objet</strong> (une instance concrète).</li>
+        <li>Déclarer des attributs et des méthodes.</li>
+        <li>Écrire des constructeurs pour initialiser un objet à sa création.</li>
+        <li>Appliquer l'encapsulation avec <code class="inline">private</code> et <code class="inline">public</code>, et écrire des accesseurs / mutateurs (getters / setters).</li>
+        <li>Manipuler plusieurs objets d'une même classe dans un programme.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Classes et objets</h2></div>
+    <div class="sec-intro">Une classe décrit un type sur mesure : quels attributs (données) et quelles méthodes (comportements) possèdent ses objets.</div>
+    <div class="content">
+      <pre><span class="kw">class</span> Personne {
+<span class="kw">public</span>:
+    std::string nom;
+    <span class="typ">int</span> age;
+
+    <span class="typ">void</span> sePresenter() {
+        std::cout &lt;&lt; <span class="str">"Je m'appelle "</span> &lt;&lt; nom &lt;&lt; <span class="str">" et j'ai "</span> &lt;&lt; age &lt;&lt; <span class="str">" ans."</span> &lt;&lt; std::endl;
+    }
+};
+
+<span class="typ">int</span> main() {
+    Personne p1;
+    p1.nom = <span class="str">"Sarah"</span>;
+    p1.age = 24;
+    p1.sePresenter();
+
+    <span class="kw">return</span> 0;
+}</pre>
+      <p><code class="inline">p1</code> est un <strong>objet</strong> — une instance de la classe <code class="inline">Personne</code>. On peut créer autant d'objets que nécessaire à partir de la même classe, chacun avec ses propres valeurs.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Constructeurs</h2></div>
+    <div class="content">
+      <p>Un constructeur porte le même nom que la classe et s'exécute automatiquement à la création d'un objet, pour l'initialiser proprement :</p>
+      <pre><span class="kw">class</span> Personne {
+<span class="kw">public</span>:
+    std::string nom;
+    <span class="typ">int</span> age;
+
+    <span class="com">// constructeur</span>
+    Personne(std::string n, <span class="typ">int</span> a) {
+        nom = n;
+        age = a;
+    }
+
+    <span class="typ">void</span> sePresenter() {
+        std::cout &lt;&lt; nom &lt;&lt; <span class="str">", "</span> &lt;&lt; age &lt;&lt; <span class="str">" ans"</span> &lt;&lt; std::endl;
+    }
+};
+
+<span class="typ">int</span> main() {
+    Personne p1(<span class="str">"Sarah"</span>, 24);
+    Personne p2(<span class="str">"Karim"</span>, 31);
+    p1.sePresenter();
+    p2.sePresenter();
+
+    <span class="kw">return</span> 0;
+}</pre>
+      <div class="note"><strong>À retenir :</strong> une classe peut avoir plusieurs constructeurs avec des listes de paramètres différentes (surcharge), y compris un constructeur sans paramètre.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Encapsulation</h2></div>
+    <div class="content">
+      <p>Un attribut <code class="inline">private</code> n'est accessible que depuis l'intérieur de la classe. On y accède de l'extérieur via des méthodes publiques dédiées : les <strong>getters</strong> (lecture) et <strong>setters</strong> (écriture), qui permettent au passage de valider les valeurs.</p>
+      <pre><span class="kw">class</span> CompteBancaire {
+<span class="kw">private</span>:
+    <span class="typ">double</span> solde;
+
+<span class="kw">public</span>:
+    CompteBancaire(<span class="typ">double</span> soldeInitial) {
+        solde = soldeInitial;
+    }
+
+    <span class="typ">double</span> getSolde() {
+        <span class="kw">return</span> solde;
+    }
+
+    <span class="typ">void</span> deposer(<span class="typ">double</span> montant) {
+        <span class="kw">if</span> (montant &gt; 0) {
+            solde += montant;
+        }
+    }
+};</pre>
+      <table>
+        <tr><th>Mot-clé</th><th>Accès</th></tr>
+        <tr><td><code class="inline">private</code></td><td>Uniquement depuis les méthodes de la classe elle-même</td></tr>
+        <tr><td><code class="inline">public</code></td><td>Depuis n'importe où dans le programme</td></tr>
+      </table>
+      <div class="note"><strong>Pourquoi encapsuler ?</strong> Un <code class="inline">solde</code> public pourrait être modifié n'importe comment depuis l'extérieur (<code class="inline">compte.solde = -500;</code>). En le rendant privé et en passant par <code class="inline">deposer()</code>, on garde le contrôle sur les règles métier.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Exercices pratiques</h2></div>
+    <div class="sec-intro">Écrire son propre code avant de dérouler la solution. Chaque exercice construit une classe complète, à tester dans une fonction <code class="inline">main</code>.</div>
+    <div class="content">
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 1</span><h3>Classe Rectangle</h3></div>
+          <span class="ex-diff">échauffement</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer une classe <code class="inline">Rectangle</code> avec deux attributs publics <code class="inline">largeur</code> et <code class="inline">hauteur</code> (double), et une méthode <code class="inline">aire()</code> qui retourne l'aire du rectangle. Instancier deux rectangles différents et afficher leur aire.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="kw">class</span> Rectangle {
+<span class="kw">public</span>:
+    <span class="typ">double</span> largeur;
+    <span class="typ">double</span> hauteur;
+
+    <span class="typ">double</span> aire() {
+        <span class="kw">return</span> largeur * hauteur;
+    }
+};
+
+<span class="typ">int</span> main() {
+    Rectangle r1;
+    r1.largeur = 4;
+    r1.hauteur = 3;
+
+    Rectangle r2;
+    r2.largeur = 10;
+    r2.hauteur = 2;
+
+    std::cout &lt;&lt; <span class="str">"Aire r1 : "</span> &lt;&lt; r1.aire() &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="str">"Aire r2 : "</span> &lt;&lt; r2.aire() &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 2</span><h3>Classe Rectangle avec constructeur</h3></div>
+          <span class="ex-diff">facile</span>
+        </div>
+        <div class="ex-body">
+          <p>Reprendre la classe <code class="inline">Rectangle</code> de l'exercice 1 et lui ajouter un constructeur qui initialise <code class="inline">largeur</code> et <code class="inline">hauteur</code> à la création, ainsi qu'une méthode <code class="inline">perimetre()</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="kw">class</span> Rectangle {
+<span class="kw">public</span>:
+    <span class="typ">double</span> largeur;
+    <span class="typ">double</span> hauteur;
+
+    Rectangle(<span class="typ">double</span> l, <span class="typ">double</span> h) {
+        largeur = l;
+        hauteur = h;
+    }
+
+    <span class="typ">double</span> aire() {
+        <span class="kw">return</span> largeur * hauteur;
+    }
+
+    <span class="typ">double</span> perimetre() {
+        <span class="kw">return</span> 2 * (largeur + hauteur);
+    }
+};
+
+<span class="typ">int</span> main() {
+    Rectangle r1(4, 3);
+    std::cout &lt;&lt; <span class="str">"Aire : "</span> &lt;&lt; r1.aire() &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="str">"Périmètre : "</span> &lt;&lt; r1.perimetre() &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 3</span><h3>Classe CompteBancaire</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer une classe <code class="inline">CompteBancaire</code> avec un attribut privé <code class="inline">solde</code>, un constructeur prenant le solde initial, une méthode <code class="inline">deposer(double montant)</code>, une méthode <code class="inline">retirer(double montant)</code> qui refuse le retrait si le solde est insuffisant, et un getter <code class="inline">getSolde()</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="kw">class</span> CompteBancaire {
+<span class="kw">private</span>:
+    <span class="typ">double</span> solde;
+
+<span class="kw">public</span>:
+    CompteBancaire(<span class="typ">double</span> soldeInitial) {
+        solde = soldeInitial;
+    }
+
+    <span class="typ">void</span> deposer(<span class="typ">double</span> montant) {
+        <span class="kw">if</span> (montant &gt; 0) {
+            solde += montant;
+        }
+    }
+
+    <span class="typ">void</span> retirer(<span class="typ">double</span> montant) {
+        <span class="kw">if</span> (montant &gt; 0 &amp;&amp; montant &lt;= solde) {
+            solde -= montant;
+        } <span class="kw">else</span> {
+            std::cout &lt;&lt; <span class="str">"Retrait refusé : solde insuffisant."</span> &lt;&lt; std::endl;
+        }
+    }
+
+    <span class="typ">double</span> getSolde() {
+        <span class="kw">return</span> solde;
+    }
+};
+
+<span class="typ">int</span> main() {
+    CompteBancaire compte(10000);
+    compte.deposer(5000);
+    compte.retirer(3000);
+    compte.retirer(50000);
+
+    std::cout &lt;&lt; <span class="str">"Solde final : "</span> &lt;&lt; compte.getSolde() &lt;&lt; <span class="str">" FCFA"</span> &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 4</span><h3>Classe Etudiant et moyenne</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer une classe <code class="inline">Etudiant</code> avec un attribut privé <code class="inline">nom</code> et un tableau privé de 3 notes. Ajouter un constructeur, une méthode <code class="inline">moyenne()</code> qui retourne la moyenne des notes, et une méthode <code class="inline">afficher()</code> qui affiche le nom et la moyenne.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="kw">class</span> Etudiant {
+<span class="kw">private</span>:
+    std::string nom;
+    <span class="typ">double</span> notes[3];
+
+<span class="kw">public</span>:
+    Etudiant(std::string n, <span class="typ">double</span> n1, <span class="typ">double</span> n2, <span class="typ">double</span> n3) {
+        nom = n;
+        notes[0] = n1;
+        notes[1] = n2;
+        notes[2] = n3;
+    }
+
+    <span class="typ">double</span> moyenne() {
+        <span class="kw">return</span> (notes[0] + notes[1] + notes[2]) / 3;
+    }
+
+    <span class="typ">void</span> afficher() {
+        std::cout &lt;&lt; nom &lt;&lt; <span class="str">" — moyenne : "</span> &lt;&lt; moyenne() &lt;&lt; std::endl;
+    }
+};
+
+<span class="typ">int</span> main() {
+    Etudiant e1(<span class="str">"Paul"</span>, 14, 16, 12);
+    e1.afficher();
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 5</span><h3>Classe Point et distance</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer une classe <code class="inline">Point</code> avec des attributs privés <code class="inline">x</code> et <code class="inline">y</code>, un constructeur, des getters, et une méthode <code class="inline">distance(Point autre)</code> qui calcule la distance euclidienne entre deux points (formule : racine carrée de (x2-x1)² + (y2-y1)², avec <code class="inline">#include &lt;cmath&gt;</code> et <code class="inline">sqrt()</code>).</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+<span class="kw">#include</span> &lt;cmath&gt;
+
+<span class="kw">class</span> Point {
+<span class="kw">private</span>:
+    <span class="typ">double</span> x, y;
+
+<span class="kw">public</span>:
+    Point(<span class="typ">double</span> px, <span class="typ">double</span> py) {
+        x = px;
+        y = py;
+    }
+
+    <span class="typ">double</span> getX() { <span class="kw">return</span> x; }
+    <span class="typ">double</span> getY() { <span class="kw">return</span> y; }
+
+    <span class="typ">double</span> distance(Point autre) {
+        <span class="typ">double</span> dx = autre.getX() - x;
+        <span class="typ">double</span> dy = autre.getY() - y;
+        <span class="kw">return</span> sqrt(dx * dx + dy * dy);
+    }
+};
+
+<span class="typ">int</span> main() {
+    Point a(0, 0);
+    Point b(3, 4);
+
+    std::cout &lt;&lt; <span class="str">"Distance : "</span> &lt;&lt; a.distance(b) &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+            <p class="sol-note">Résultat attendu : <code class="inline">5</code>, puisque le triangle (0,0)-(3,0)-(3,4) est un triangle 3-4-5.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 6</span><h3>Gestion d'un petit stock</h3></div>
+          <span class="ex-diff">défi</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer une classe <code class="inline">Produit</code> avec des attributs privés <code class="inline">nom</code>, <code class="inline">prixUnitaire</code> et <code class="inline">quantite</code>. Ajouter un constructeur, une méthode <code class="inline">valeurStock()</code> qui retourne <code class="inline">prixUnitaire * quantite</code>, et une méthode <code class="inline">vendre(int qte)</code> qui diminue la quantité si le stock est suffisant, sinon affiche un message d'erreur. Dans <code class="inline">main</code>, créer un tableau de 3 <code class="inline">Produit</code> et afficher la valeur totale du stock.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="kw">class</span> Produit {
+<span class="kw">private</span>:
+    std::string nom;
+    <span class="typ">double</span> prixUnitaire;
+    <span class="typ">int</span> quantite;
+
+<span class="kw">public</span>:
+    Produit(std::string n, <span class="typ">double</span> prix, <span class="typ">int</span> qte) {
+        nom = n;
+        prixUnitaire = prix;
+        quantite = qte;
+    }
+
+    <span class="typ">double</span> valeurStock() {
+        <span class="kw">return</span> prixUnitaire * quantite;
+    }
+
+    <span class="typ">void</span> vendre(<span class="typ">int</span> qte) {
+        <span class="kw">if</span> (qte &lt;= quantite) {
+            quantite -= qte;
+        } <span class="kw">else</span> {
+            std::cout &lt;&lt; <span class="str">"Stock insuffisant pour "</span> &lt;&lt; nom &lt;&lt; std::endl;
+        }
+    }
+
+    <span class="typ">double</span> getValeur() { <span class="kw">return</span> valeurStock(); }
+};
+
+<span class="typ">int</span> main() {
+    Produit stock[3] = {
+        Produit(<span class="str">"Cahier"</span>, 500, 40),
+        Produit(<span class="str">"Stylo"</span>, 150, 100),
+        Produit(<span class="str">"Classeur"</span>, 1200, 15)
+    };
+
+    <span class="typ">double</span> total = 0;
+    <span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; 3; i++) {
+        total += stock[i].getValeur();
+    }
+
+    std::cout &lt;&lt; <span class="str">"Valeur totale du stock : "</span> &lt;&lt; total &lt;&lt; <span class="str">" FCFA"</span> &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+            <p class="sol-note">Cet exercice combine tableau d'objets, constructeur, encapsulation et méthodes — une bonne préparation pour l'héritage et la STL de la séance 4.</p>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>TP C++ — Séance 3 / 4 · Programmation orientée objet</footer>
+
+</div>
+</body>
+</html>

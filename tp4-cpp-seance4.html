@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>TP C++ — Séance 4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:840px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(30px,4.2vw,42px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.1;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:640px;}
+
+  .tracker{display:flex; gap:8px; margin-bottom:44px;}
+  .tstep{flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--edge-soft); font-family:var(--mono); font-size:11.5px; color:var(--ink-faint);}
+  .tstep .n{display:block; font-size:10px; letter-spacing:.1em; margin-bottom:4px;}
+  .tstep.active{border-color:var(--orange); color:var(--ink); background:var(--orange-dim);}
+  .tstep.active .n{color:var(--orange);}
+  .tstep.done{border-color:var(--edge); color:var(--ink-dim);}
+  .tstep.done .n{color:var(--green);}
+
+  .term{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:10px; overflow:hidden; margin:0 0 48px;}
+  .term-bar{display:flex; align-items:center; gap:6px; padding:10px 14px; border-bottom:1px solid var(--edge-soft); background:#111120;}
+  .dot{width:9px; height:9px; border-radius:50%; background:#33334a;}
+  .term-label{margin-left:8px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .term-body{padding:20px 22px; font-family:var(--mono); font-size:13.5px; color:#d6d3e0;}
+  .term-body .c-kw{color:#ef6b34;} .term-body .c-str{color:#3fbd83;} .term-body .c-com{color:var(--ink-faint); font-style:italic;} .term-body .c-typ{color:#7fa9ec;}
+  .term-out{color:#7fd9ab; margin-top:10px; padding-top:10px; border-top:1px dashed var(--edge-soft); white-space:pre;}
+
+  section{margin:56px 0;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px;}
+  .sec-num{font-family:var(--mono); color:var(--orange); font-size:14px; min-width:26px;}
+  h2{font-size:22px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  .sec-intro{color:var(--ink-dim); margin:10px 0 22px 40px; max-width:640px;}
+
+  p{margin:0 0 14px;}
+  .content{margin-left:40px;}
+  ul, ol{margin:0 0 14px; padding-left:20px; color:var(--ink);}
+  li{margin-bottom:6px;}
+  strong{color:var(--ink); font-weight:600;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--panel); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:13px; line-height:1.6; margin:0 0 16px; color:#d6d3e0;}
+  pre .kw{color:#ef6b34;} pre .str{color:#3fbd83;} pre .com{color:var(--ink-faint); font-style:italic;} pre .typ{color:#7fa9ec;}
+
+  table{width:100%; border-collapse:collapse; margin:0 0 16px; font-size:14.5px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--edge-soft);}
+  th{color:var(--ink-faint); font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; font-weight:500;}
+
+  .note{background:var(--panel); border-left:3px solid var(--orange); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14.5px; color:var(--ink-dim);}
+  .note strong{color:var(--orange);}
+
+  .ex{border:1px solid var(--edge-soft); border-radius:10px; margin-bottom:24px; overflow:hidden; background:var(--panel);}
+  .ex-head{padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--edge-soft);}
+  .ex-title{display:flex; align-items:baseline; gap:10px;}
+  .ex-num{font-family:var(--mono); color:var(--orange); font-size:13px;}
+  .ex-title h3{margin:0; font-size:16px; font-weight:600;}
+  .ex-diff{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); border:1px solid var(--edge-soft); border-radius:20px; padding:3px 10px; white-space:nowrap;}
+  .ex-body{padding:18px 20px 6px;}
+  .ex-body p:last-child{margin-bottom:0;}
+
+  details.sol{border-top:1px solid var(--edge-soft);}
+  details.sol summary{list-style:none; cursor:pointer; padding:13px 20px; font-family:var(--mono); font-size:12.5px; letter-spacing:.05em; color:var(--green); display:flex; align-items:center; gap:8px; user-select:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:'▸'; display:inline-block; transition:transform .15s ease; color:var(--green);}
+  details.sol[open] summary::before{transform:rotate(90deg);}
+  details.sol summary:hover{background:var(--green-dim);}
+  .sol-inner{padding:4px 20px 20px;}
+  .sol-inner pre{margin-top:8px;}
+  .sol-note{font-size:13.5px; color:var(--ink-dim); margin-top:10px;}
+
+  .project{border:1px solid var(--orange); border-radius:12px; margin-bottom:24px; overflow:hidden; background:var(--panel);}
+  .project-head{padding:20px 22px; border-bottom:1px solid var(--edge-soft); background:var(--orange-dim);}
+  .project-head h3{margin:0 0 6px; font-size:18px;}
+  .project-head p{margin:0; color:var(--ink-dim); font-size:14.5px;}
+  .project-body{padding:20px 22px 6px;}
+  .project-body ul{margin-bottom:16px;}
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">TP C++ · Programme en 4 séances</p>
+  <h1 class="title">Séance 4 — Héritage, STL et mini-projet</h1>
+  <p class="subtitle">Réutiliser du code entre classes apparentées, découvrir la bibliothèque standard, puis assembler tout le programme dans un mini-projet complet. Durée indicative : 4h.</p>
+
+  <div class="tracker">
+    <div class="tstep done"><span class="n">Séance 01 ✓</span>Bases du langage : variables, types, conditions</div>
+    <div class="tstep done"><span class="n">Séance 02 ✓</span>Boucles, tableaux, fonctions</div>
+    <div class="tstep done"><span class="n">Séance 03 ✓</span>Programmation orientée objet</div>
+    <div class="tstep active"><span class="n">Séance 04</span>Héritage, STL, mini-projet</div>
+  </div>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="term-label">terminal — g++ main.cpp -o main && ./main</span>
+    </div>
+    <div class="term-body">
+<span class="c-com">// aperçu de la séance : hériter d'une classe</span>
+<span class="c-kw">class</span> Animal {
+<span class="c-kw">public</span>:
+    <span class="c-kw">virtual void</span> parler() { std::cout &lt;&lt; <span class="c-str">"..."</span>; }
+};
+
+<span class="c-kw">class</span> Chat : <span class="c-kw">public</span> Animal {
+<span class="c-kw">public</span>:
+    <span class="c-kw">void</span> parler() <span class="c-kw">override</span> { std::cout &lt;&lt; <span class="c-str">"Miaou"</span>; }
+};
+      <div class="term-out">Miaou</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Objectifs de la séance</h2></div>
+    <div class="content">
+      <ul>
+        <li>Créer une hiérarchie de classes avec l'<strong>héritage</strong> (<code class="inline">public</code>).</li>
+        <li>Redéfinir le comportement d'une classe fille avec des méthodes <code class="inline">virtual</code> et <code class="inline">override</code> (polymorphisme).</li>
+        <li>Utiliser <code class="inline">std::vector</code> pour manipuler des listes de taille variable.</li>
+        <li>Assembler variables, boucles, fonctions, classes, héritage et vecteurs dans un seul programme cohérent.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Héritage</h2></div>
+    <div class="sec-intro">Une classe fille hérite des attributs et méthodes d'une classe mère, et peut ajouter ou redéfinir des comportements.</div>
+    <div class="content">
+      <pre><span class="kw">class</span> Employe {
+<span class="kw">protected</span>:
+    std::string nom;
+    <span class="typ">double</span> salaireBase;
+
+<span class="kw">public</span>:
+    Employe(std::string n, <span class="typ">double</span> s) {
+        nom = n;
+        salaireBase = s;
+    }
+
+    <span class="typ">double</span> salaire() {
+        <span class="kw">return</span> salaireBase;
+    }
+};
+
+<span class="kw">class</span> Manager : <span class="kw">public</span> Employe {
+<span class="kw">private</span>:
+    <span class="typ">double</span> prime;
+
+<span class="kw">public</span>:
+    Manager(std::string n, <span class="typ">double</span> s, <span class="typ">double</span> p) : Employe(n, s) {
+        prime = p;
+    }
+
+    <span class="typ">double</span> salaire() {
+        <span class="kw">return</span> salaireBase + prime;
+    }
+};</pre>
+      <p><code class="inline">Manager</code> hérite de <code class="inline">Employe</code> : il possède déjà <code class="inline">nom</code> et <code class="inline">salaireBase</code>, et son constructeur appelle celui de la classe mère avec <code class="inline">: Employe(n, s)</code>. La méthode <code class="inline">salaire()</code> est redéfinie pour ajouter la prime.</p>
+      <table>
+        <tr><th>Mot-clé</th><th>Rôle</th></tr>
+        <tr><td><code class="inline">protected</code></td><td>Accessible dans la classe et ses classes filles, mais pas depuis l'extérieur</td></tr>
+        <tr><td><code class="inline">: public Employe</code></td><td>Manager hérite publiquement d'Employe</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Polymorphisme</h2></div>
+    <div class="content">
+      <p>Avec <code class="inline">virtual</code> sur la classe mère et <code class="inline">override</code> sur la classe fille, on peut manipuler différents types d'objets à travers un pointeur ou une référence de type mère, et chaque objet exécute <em>sa propre version</em> de la méthode :</p>
+      <pre><span class="kw">class</span> Animal {
+<span class="kw">public</span>:
+    <span class="kw">virtual void</span> parler() { std::cout &lt;&lt; <span class="str">"..."</span> &lt;&lt; std::endl; }
+};
+
+<span class="kw">class</span> Chien : <span class="kw">public</span> Animal {
+<span class="kw">public</span>:
+    <span class="typ">void</span> parler() <span class="kw">override</span> { std::cout &lt;&lt; <span class="str">"Wouf"</span> &lt;&lt; std::endl; }
+};
+
+<span class="kw">class</span> Chat : <span class="kw">public</span> Animal {
+<span class="kw">public</span>:
+    <span class="typ">void</span> parler() <span class="kw">override</span> { std::cout &lt;&lt; <span class="str">"Miaou"</span> &lt;&lt; std::endl; }
+};</pre>
+      <div class="note"><strong>À retenir :</strong> sans <code class="inline">virtual</code>, un pointeur ou une référence de type <code class="inline">Animal</code> appellerait toujours la version <code class="inline">Animal::parler()</code>, même pour un objet <code class="inline">Chat</code>.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>La bibliothèque standard : std::vector</h2></div>
+    <div class="content">
+      <p>Contrairement à un tableau classique, un <code class="inline">std::vector</code> peut grandir dynamiquement (nécessite <code class="inline">#include &lt;vector&gt;</code>) :</p>
+      <pre><span class="kw">#include</span> &lt;vector&gt;
+
+std::vector&lt;<span class="typ">int</span>&gt; notes;
+notes.push_back(12);
+notes.push_back(15);
+notes.push_back(9);
+
+<span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; notes.size(); i++) {
+    std::cout &lt;&lt; notes[i] &lt;&lt; <span class="str">" "</span>;
+}
+
+<span class="com">// ou, plus idiomatique :</span>
+<span class="kw">for</span> (<span class="typ">int</span> n : notes) {
+    std::cout &lt;&lt; n &lt;&lt; <span class="str">" "</span>;
+}</pre>
+      <table>
+        <tr><th>Méthode</th><th>Rôle</th></tr>
+        <tr><td><code class="inline">push_back(x)</code></td><td>Ajoute <code class="inline">x</code> à la fin</td></tr>
+        <tr><td><code class="inline">size()</code></td><td>Nombre d'éléments actuels</td></tr>
+        <tr><td><code class="inline">[i]</code></td><td>Accès à l'élément d'indice <code class="inline">i</code></td></tr>
+        <tr><td><code class="inline">empty()</code></td><td>Vrai si le vecteur ne contient aucun élément</td></tr>
+      </table>
+      <p>Un vecteur peut aussi contenir des objets d'une classe, comme <code class="inline">std::vector&lt;Employe&gt;</code>.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Exercices pratiques</h2></div>
+    <div class="sec-intro">Ces exercices préparent directement le mini-projet ci-dessous.</div>
+    <div class="content">
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 1</span><h3>Formes géométriques</h3></div>
+          <span class="ex-diff">facile</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer une classe mère <code class="inline">Forme</code> avec une méthode <code class="inline">virtual double aire()</code> retournant <code class="inline">0</code>, puis deux classes filles <code class="inline">Carre</code> et <code class="inline">Cercle</code> (constante <code class="inline">M_PI</code> ou <code class="inline">3.14159</code>) qui redéfinissent <code class="inline">aire()</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+
+<span class="kw">class</span> Forme {
+<span class="kw">public</span>:
+    <span class="kw">virtual double</span> aire() { <span class="kw">return</span> 0; }
+};
+
+<span class="kw">class</span> Carre : <span class="kw">public</span> Forme {
+<span class="kw">private</span>:
+    <span class="typ">double</span> cote;
+<span class="kw">public</span>:
+    Carre(<span class="typ">double</span> c) { cote = c; }
+    <span class="typ">double</span> aire() <span class="kw">override</span> { <span class="kw">return</span> cote * cote; }
+};
+
+<span class="kw">class</span> Cercle : <span class="kw">public</span> Forme {
+<span class="kw">private</span>:
+    <span class="typ">double</span> rayon;
+<span class="kw">public</span>:
+    Cercle(<span class="typ">double</span> r) { rayon = r; }
+    <span class="typ">double</span> aire() <span class="kw">override</span> { <span class="kw">return</span> 3.14159 * rayon * rayon; }
+};
+
+<span class="typ">int</span> main() {
+    Carre c(4);
+    Cercle ce(3);
+    std::cout &lt;&lt; <span class="str">"Aire carré : "</span> &lt;&lt; c.aire() &lt;&lt; std::endl;
+    std::cout &lt;&lt; <span class="str">"Aire cercle : "</span> &lt;&lt; ce.aire() &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 2</span><h3>Vecteur de notes</h3></div>
+          <span class="ex-diff">facile</span>
+        </div>
+        <div class="ex-body">
+          <p>Lire un nombre inconnu de notes saisies par l'utilisateur (l'utilisateur tape <code class="inline">-1</code> pour arrêter), les stocker dans un <code class="inline">std::vector&lt;double&gt;</code>, puis afficher leur moyenne.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+<span class="kw">#include</span> &lt;vector&gt;
+
+<span class="typ">int</span> main() {
+    std::vector&lt;<span class="typ">double</span>&gt; notes;
+    <span class="typ">double</span> saisie;
+
+    std::cout &lt;&lt; <span class="str">"Entrez des notes (-1 pour arrêter) : "</span> &lt;&lt; std::endl;
+    <span class="kw">while</span> (<span class="kw">true</span>) {
+        std::cin &gt;&gt; saisie;
+        <span class="kw">if</span> (saisie == -1) {
+            <span class="kw">break</span>;
+        }
+        notes.push_back(saisie);
+    }
+
+    <span class="kw">if</span> (notes.empty()) {
+        std::cout &lt;&lt; <span class="str">"Aucune note saisie."</span> &lt;&lt; std::endl;
+        <span class="kw">return</span> 0;
+    }
+
+    <span class="typ">double</span> somme = 0;
+    <span class="kw">for</span> (<span class="typ">double</span> n : notes) {
+        somme += n;
+    }
+
+    std::cout &lt;&lt; <span class="str">"Moyenne : "</span> &lt;&lt; (somme / notes.size()) &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 3</span><h3>Hiérarchie Employe / Manager</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Reprendre les classes <code class="inline">Employe</code> et <code class="inline">Manager</code> de la section héritage, les compléter si besoin, créer un <code class="inline">std::vector&lt;Employe&gt;</code>... puis constater la limite : un vecteur d'<code class="inline">Employe</code> ne peut pas stocker directement des <code class="inline">Manager</code> sans perdre leurs spécificités (voir la note ci-dessous).</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="kw">#include</span> &lt;iostream&gt;
+<span class="kw">#include</span> &lt;vector&gt;
+
+<span class="kw">class</span> Employe {
+<span class="kw">protected</span>:
+    std::string nom;
+    <span class="typ">double</span> salaireBase;
+<span class="kw">public</span>:
+    Employe(std::string n, <span class="typ">double</span> s) { nom = n; salaireBase = s; }
+    <span class="typ">double</span> salaire() { <span class="kw">return</span> salaireBase; }
+    std::string getNom() { <span class="kw">return</span> nom; }
+};
+
+<span class="kw">class</span> Manager : <span class="kw">public</span> Employe {
+<span class="kw">private</span>:
+    <span class="typ">double</span> prime;
+<span class="kw">public</span>:
+    Manager(std::string n, <span class="typ">double</span> s, <span class="typ">double</span> p) : Employe(n, s) { prime = p; }
+    <span class="typ">double</span> salaire() { <span class="kw">return</span> salaireBase + prime; }
+};
+
+<span class="typ">int</span> main() {
+    Employe e1(<span class="str">"Nadia"</span>, 300000);
+    Manager m1(<span class="str">"Bruno"</span>, 400000, 100000);
+
+    std::cout &lt;&lt; e1.getNom() &lt;&lt; <span class="str">" : "</span> &lt;&lt; e1.salaire() &lt;&lt; <span class="str">" FCFA"</span> &lt;&lt; std::endl;
+    std::cout &lt;&lt; m1.getNom() &lt;&lt; <span class="str">" : "</span> &lt;&lt; m1.salaire() &lt;&lt; <span class="str">" FCFA"</span> &lt;&lt; std::endl;
+
+    <span class="kw">return</span> 0;
+}</pre>
+            <p class="sol-note">Le mini-projet ci-dessous montre comment gérer proprement un groupe d'employés de types différents, en gardant chaque type dans son propre vecteur plutôt qu'en les mélangeant.</p>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Mini-projet</h2></div>
+    <div class="sec-intro">À réaliser en autonomie ou en binôme, en s'appuyant sur tout ce qui a été vu depuis la séance 1.</div>
+    <div class="content">
+
+      <div class="project">
+        <div class="project-head">
+          <h3>Gestion d'une petite bibliothèque</h3>
+          <p>Cahier des charges à implémenter, puis solution complète repliable ci-dessous.</p>
+        </div>
+        <div class="project-body">
+          <ul>
+            <li>Une classe <code class="inline">Livre</code> avec <code class="inline">titre</code>, <code class="inline">auteur</code> et <code class="inline">disponible</code> (bool), un constructeur, et des méthodes <code class="inline">emprunter()</code> et <code class="inline">rendre()</code> qui changent <code class="inline">disponible</code>.</li>
+            <li>Une classe <code class="inline">Bibliotheque</code> qui contient un <code class="inline">std::vector&lt;Livre&gt;</code>, avec des méthodes <code class="inline">ajouterLivre(Livre l)</code>, <code class="inline">afficherCatalogue()</code>, et <code class="inline">emprunterLivre(std::string titre)</code> qui recherche le livre par titre et l'emprunte s'il est disponible.</li>
+            <li>Un <code class="inline">main()</code> qui crée une bibliothèque, y ajoute au moins 4 livres, affiche le catalogue, emprunte deux livres (dont un déjà emprunté, pour tester le refus), puis réaffiche le catalogue.</li>
+          </ul>
+          <details class="sol">
+            <summary>Voir la solution complète</summary>
+            <div class="sol-inner">
+              <pre><span class="kw">#include</span> &lt;iostream&gt;
+<span class="kw">#include</span> &lt;vector&gt;
+<span class="kw">#include</span> &lt;string&gt;
+
+<span class="kw">class</span> Livre {
+<span class="kw">private</span>:
+    std::string titre;
+    std::string auteur;
+    <span class="typ">bool</span> disponible;
+
+<span class="kw">public</span>:
+    Livre(std::string t, std::string a) {
+        titre = t;
+        auteur = a;
+        disponible = <span class="kw">true</span>;
+    }
+
+    std::string getTitre() { <span class="kw">return</span> titre; }
+    <span class="typ">bool</span> estDisponible() { <span class="kw">return</span> disponible; }
+
+    <span class="typ">bool</span> emprunter() {
+        <span class="kw">if</span> (disponible) {
+            disponible = <span class="kw">false</span>;
+            <span class="kw">return</span> <span class="kw">true</span>;
+        }
+        <span class="kw">return</span> <span class="kw">false</span>;
+    }
+
+    <span class="typ">void</span> rendre() {
+        disponible = <span class="kw">true</span>;
+    }
+
+    <span class="typ">void</span> afficher() {
+        std::cout &lt;&lt; <span class="str">"- "</span> &lt;&lt; titre &lt;&lt; <span class="str">" ("</span> &lt;&lt; auteur &lt;&lt; <span class="str">") — "</span>
+                  &lt;&lt; (disponible ? <span class="str">"disponible"</span> : <span class="str">"emprunté"</span>) &lt;&lt; std::endl;
+    }
+};
+
+<span class="kw">class</span> Bibliotheque {
+<span class="kw">private</span>:
+    std::vector&lt;Livre&gt; livres;
+
+<span class="kw">public</span>:
+    <span class="typ">void</span> ajouterLivre(Livre l) {
+        livres.push_back(l);
+    }
+
+    <span class="typ">void</span> afficherCatalogue() {
+        std::cout &lt;&lt; <span class="str">"--- Catalogue ---"</span> &lt;&lt; std::endl;
+        <span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; livres.size(); i++) {
+            livres[i].afficher();
+        }
+    }
+
+    <span class="typ">void</span> emprunterLivre(std::string titreRecherche) {
+        <span class="kw">for</span> (<span class="typ">int</span> i = 0; i &lt; livres.size(); i++) {
+            <span class="kw">if</span> (livres[i].getTitre() == titreRecherche) {
+                <span class="kw">if</span> (livres[i].emprunter()) {
+                    std::cout &lt;&lt; <span class="str">"Emprunté : "</span> &lt;&lt; titreRecherche &lt;&lt; std::endl;
+                } <span class="kw">else</span> {
+                    std::cout &lt;&lt; <span class="str">"Indisponible : "</span> &lt;&lt; titreRecherche &lt;&lt; std::endl;
+                }
+                <span class="kw">return</span>;
+            }
+        }
+        std::cout &lt;&lt; <span class="str">"Livre introuvable : "</span> &lt;&lt; titreRecherche &lt;&lt; std::endl;
+    }
+};
+
+<span class="typ">int</span> main() {
+    Bibliotheque biblio;
+    biblio.ajouterLivre(Livre(<span class="str">"Une si longue lettre"</span>, <span class="str">"Mariama Bâ"</span>));
+    biblio.ajouterLivre(Livre(<span class="str">"L'enfant noir"</span>, <span class="str">"Camara Laye"</span>));
+    biblio.ajouterLivre(Livre(<span class="str">"Les soleils des indépendances"</span>, <span class="str">"Ahmadou Kourouma"</span>));
+    biblio.ajouterLivre(Livre(<span class="str">"Le pleurer-rire"</span>, <span class="str">"Henri Lopes"</span>));
+
+    biblio.afficherCatalogue();
+
+    biblio.emprunterLivre(<span class="str">"L'enfant noir"</span>);
+    biblio.emprunterLivre(<span class="str">"L'enfant noir"</span>); <span class="com">// déjà emprunté</span>
+
+    std::cout &lt;&lt; std::endl;
+    biblio.afficherCatalogue();
+
+    <span class="kw">return</span> 0;
+}</pre>
+              <p class="sol-note">Pistes d'extension pour aller plus loin : ajouter une méthode <code class="inline">rendreLivre(titre)</code>, une classe <code class="inline">Adherent</code> qui emprunte les livres, ou une hiérarchie <code class="inline">Livre</code> / <code class="inline">BandeDessinee</code> avec héritage.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>TP C++ — Séance 4 / 4 · Héritage, STL, mini-projet — fin du programme</footer>
+
+</div>
+</body>
+</html>
