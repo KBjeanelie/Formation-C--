@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Laravel - Projet Final : Archivage de Documents</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --red:#ff2d20; --blue:#4d90fe; --green:#3fbd83; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
+  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
+  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--red); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(30px,4.2vw,42px); margin:0 0 8px; letter-spacing:-.01em;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:700px;}
+  
+  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:24px;}
+  .sec-num{font-family:var(--mono); background:var(--red); color:white; padding:4px 10px; border-radius:8px; font-weight:bold; font-size:14px;}
+  h2{font-size:24px; font-weight:700; margin:0; letter-spacing:-.01em; color:white;}
+  h3{font-size:18px; color:var(--blue); margin:24px 0 12px;}
+  p{margin:0 0 14px;}
+  ul, ol{margin:0 0 20px; padding-left:20px; color:var(--ink-dim);}
+  li{margin-bottom:8px;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
+  
+  .alert { background: rgba(63, 189, 131, 0.1); border-left: 4px solid var(--green); padding: 16px; border-radius: 4px; margin-bottom: 24px; }
+  .alert strong { color: var(--green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour au Dashboard Laravel</a>
+  <p class="eyebrow">Projet Final</p>
+  <h1 class="title">GED : Gestion Électronique de Documents</h1>
+  <p class="subtitle">Ce guide va vous accompagner pas à pas pour créer un système complet d'archivage sécurisé (upload de fichiers PDF/Images, catégorisation, droits d'accès et déploiement).</p>
+
+  <div class="alert">
+    <strong>🎯 Objectif de l'application :</strong> Permettre aux utilisateurs authentifiés d'ajouter des documents, de les classer par catégorie, et de les télécharger de manière sécurisée.
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">Étape 1</span><h2>Installation & Authentification</h2></div>
+    <p>Nous allons partir sur une base saine avec le scaffolding d'authentification Laravel Breeze.</p>
+    <pre>composer create-project laravel/laravel archivage-app
+cd archivage-app
+composer require laravel/breeze --dev
+php artisan breeze:install blade
+npm install && npm run build
+php artisan migrate</pre>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">Étape 2</span><h2>Modélisation de la Base de Données</h2></div>
+    <p>Nous avons besoin de 2 entités : <strong>Category</strong> et <strong>Document</strong>.</p>
+    <h3>1. Les Catégories</h3>
+    <pre>php artisan make:model Category -m</pre>
+    <p>Dans la migration <code>create_categories_table</code> :</p>
+    <pre>Schema::create('categories', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->timestamps();
+});</pre>
+
+    <h3>2. Les Documents</h3>
+    <pre>php artisan make:model Document -m</pre>
+    <p>Dans la migration <code>create_documents_table</code> :</p>
+    <pre>Schema::create('documents', function (Blueprint $table) {
+    $table->id();
+    $table->string('title');
+    $table->string('file_path'); // Stockera le chemin du fichier
+    $table->foreignId('category_id')->constrained()->cascadeOnDelete();
+    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+    $table->timestamps();
+});</pre>
+    <p>Appliquez les migrations avec : <code>php artisan migrate</code>.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">Étape 3</span><h2>L'Upload de Fichiers (Le Cœur du Projet)</h2></div>
+    <p>Laravel utilise un système de disques (local, public, s3). Par défaut, les fichiers uploadés dans <code>storage/app/public</code> ne sont pas accessibles depuis le web. Il faut créer un lien symbolique :</p>
+    <pre>php artisan storage:link</pre>
+    
+    <h3>Le Contrôleur de Document</h3>
+    <pre>php artisan make:controller DocumentController</pre>
+    <p>Dans <code>DocumentController.php</code> (Méthode Store) :</p>
+    <pre>use Illuminate\Support\Facades\Storage;
+
+public function store(Request $request)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'category_id' => 'required|exists:categories,id',
+        'file' => 'required|file|mimes:pdf,jpg,png,doc,docx|max:10240', // Max 10MB
+    ]);
+
+    // L'upload magique
+    $path = $request->file('file')->store('documents', 'public');
+
+    Document::create([
+        'title' => $request->title,
+        'file_path' => $path,
+        'category_id' => $request->category_id,
+        'user_id' => auth()->id(),
+    ]);
+
+    return redirect()->route('dashboard')->with('success', 'Document archivé avec succès !');
+}</pre>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">Étape 4</span><h2>Le Téléchargement Sécurisé</h2></div>
+    <p>Plutôt que de donner un lien direct au fichier, il est plus sûr de forcer le téléchargement via un contrôleur (ce qui permet d'ajouter des vérifications de droits avec les Policies).</p>
+    <pre>public function download(Document $document)
+{
+    // On vérifie que le fichier existe bien sur le disque
+    if (Storage::disk('public')->exists($document->file_path)) {
+        return Storage::disk('public')->download($document->file_path, $document->title);
+    }
+    
+    abort(404, "Fichier introuvable.");
+}</pre>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">Étape 5</span><h2>Les Vues (Formulaire HTML)</h2></div>
+    <p>Dans votre formulaire d'upload (Blade), il est <strong>crucial</strong> de ne pas oublier l'attribut <code>enctype="multipart/form-data"</code>, sinon le fichier ne sera pas envoyé au serveur.</p>
+    <pre>&lt;form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data"&gt;
+    @csrf
+    
+    &lt;label&gt;Titre du document&lt;/label&gt;
+    &lt;input type="text" name="title" required&gt;
+
+    &lt;label&gt;Fichier (PDF, Images, Word)&lt;/label&gt;
+    &lt;input type="file" name="file" required&gt;
+
+    &lt;button type="submit"&gt;Archiver&lt;/button&gt;
+&lt;/form&gt;</pre>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">Étape 6</span><h2>Conseils de Déploiement (Production)</h2></div>
+    <p>Déployer une application Laravel demande quelques étapes cruciales pour garantir la sécurité et la performance de votre système d'archivage.</p>
+    <ol>
+      <li><strong>Fichier .env :</strong> Passez <code>APP_ENV=production</code> et <code>APP_DEBUG=false</code>. Cela évitera d'afficher des erreurs détaillées avec vos mots de passe de base de données à vos utilisateurs.</li>
+      <li><strong>Optimisation des performances :</strong> Exécutez ces commandes pour mettre en cache la configuration et les routes :
+        <pre>php artisan config:cache
+php artisan route:cache
+php artisan view:cache</pre>
+      </li>
+      <li><strong>Le Lien Symbolique :</strong> Sur le serveur de production, n'oubliez pas de relancer la commande pour rendre les fichiers téléchargeables : <code>php artisan storage:link</code>.</li>
+      <li><strong>Droits des dossiers (Linux) :</strong> Les dossiers <code>storage</code> et <code>bootstrap/cache</code> doivent être inscriptibles par le serveur web (souvent www-data).
+        <pre>sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache</pre>
+      </li>
+      <li><strong>Uploads volumineux (PHP.ini) :</strong> Si vos utilisateurs archivent de gros PDF, modifiez le <code>php.ini</code> de votre serveur de production pour augmenter les limites :
+        <pre>upload_max_filesize = 50M
+post_max_size = 50M</pre>
+      </li>
+    </ol>
+  </section>
+
+</div>
+</body>
+</html>
