@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Laravel - Notions Avancées</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #14141f;
+    --panel: #1c1c2b;
+    --edge: #33334a;
+    --edge-soft: #292939;
+    --ink: #eeece4;
+    --ink-dim: #a8a5b8;
+    --ink-faint: #726f85;
+    --red: #ff2d20; /* Laravel Red */
+    --red-dim: #4a1310;
+    --blue: #4d90fe;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.65; font-size: 16px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 64px 32px 120px; }
+
+  .eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--red); margin: 0 0 14px; }
+  h1.title { font-family: var(--sans); font-weight: 700; font-size: clamp(30px, 4.2vw, 42px); margin: 0 0 8px; letter-spacing: -.01em; line-height: 1.1; }
+  .subtitle { color: var(--ink-dim); font-size: 17px; margin: 0 0 36px; max-width: 700px; }
+  
+  .back-link {
+    display: inline-block;
+    margin-bottom: 24px;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 13px;
+    border: 1px solid var(--edge-soft);
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .back-link:hover {
+    color: var(--ink);
+    border-color: var(--ink-faint);
+  }
+
+  section { margin: 64px 0; background: var(--panel); border: 1px solid var(--edge-soft); border-radius: 12px; padding: 32px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px; }
+  .sec-num { font-family: var(--mono); color: var(--red); font-size: 16px; min-width: 26px; }
+  h2 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+  h3 { font-size: 20px; font-weight: 600; margin: 24px 0 12px; color: var(--ink); border-bottom: 1px solid var(--edge-soft); padding-bottom: 8px;}
+  p { margin: 0 0 14px; }
+  ul { margin: 0 0 20px; padding-left: 20px; color: var(--ink-dim); }
+  code.inline { font-family: var(--mono); font-size: .88em; background: var(--bg); border: 1px solid var(--edge-soft); padding: 1px 6px; border-radius: 4px; color: #f0c8a8; }
+  pre { background: #0d0d16; border: 1px solid var(--edge-soft); border-radius: 8px; padding: 16px 18px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; margin: 0 0 24px; color: #d6d3e0; }
+
+  .tp-box {
+    background: var(--bg);
+    border-left: 3px solid var(--blue);
+    padding: 20px;
+    border-radius: 0 8px 8px 0;
+    margin-top: 32px;
+  }
+  .tp-title {
+    font-weight: 700;
+    color: var(--blue);
+    margin-bottom: 12px;
+    font-size: 18px;
+  }
+  
+  details {
+    margin-top: 16px;
+    background: var(--panel);
+    border: 1px solid var(--edge-soft);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  summary {
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--ink);
+    outline: none;
+  }
+  summary:hover { color: var(--blue); }
+  details[open] summary { margin-bottom: 16px; border-bottom: 1px solid var(--edge-soft); padding-bottom: 8px; }
+  
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--edge-soft); color: var(--ink-faint); font-size: 13px; font-family: var(--mono); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="../index.html" class="back-link">← Retour au Dashboard</a>
+
+  <p class="eyebrow">Module Avancé</p>
+  <h1 class="title">Laravel : Notions Avancées</h1>
+  <p class="subtitle">Approfondissez vos connaissances en Laravel avec les Jobs/Queues, les Events, l'Autorisation (Gates/Policies) et les API Resources.</p>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Files d'attente (Queues) et Tâches (Jobs)</h2></div>
+    <p>Dans une application web, certaines tâches prennent du temps (ex: envoyer un email, générer un PDF, redimensionner une image). Si on les exécute de manière synchrone, l'utilisateur doit attendre que la tâche se termine avant que la page ne se charge. Les <strong>Queues</strong> permettent de différer ces tâches en arrière-plan.</p>
+    
+    <h3>Création d'un Job</h3>
+    <p>Pour générer un Job, on utilise Artisan :</p>
+    <pre>php artisan make:job ProcessPodcast</pre>
+    <p>Cela crée une classe dans <code class="inline">app/Jobs</code>. La logique s'écrit dans la méthode <code class="inline">handle()</code>.</p>
+    
+    <pre>&lt;?php
+namespace App\Jobs;
+
+use App\Models\Podcast;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+
+class ProcessPodcast implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public $podcast;
+
+    public function __construct(Podcast $podcast) {
+        $this->podcast = $podcast;
+    }
+
+    public function handle() {
+        // Logique de traitement long (ex: encodage audio)
+    }
+}</pre>
+
+    <div class="tp-box">
+      <div class="tp-title">TP Pratique : Envoi d'email différé</div>
+      <p><strong>Objectif :</strong> Créez un Job nommé <code class="inline">SendWelcomeEmail</code> qui simule l'envoi d'un email (par exemple en utilisant <code class="inline">Log::info</code>) à un utilisateur lors de son inscription, puis dispatchez-le depuis un contrôleur.</p>
+      
+      <details>
+        <summary>Voir la solution</summary>
+        <p>1. Créez le Job :</p>
+        <pre>php artisan make:job SendWelcomeEmail</pre>
+        <p>2. Modifiez le Job généré :</p>
+        <pre>&lt;?php
+namespace App\Jobs;
+
+use App\Models\User;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+
+class SendWelcomeEmail implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    protected $user;
+
+    public function __construct(User $user) {
+        $this->user = $user;
+    }
+
+    public function handle() {
+        Log::info("Envoi de l'email de bienvenue à : " . $this->user->email);
+        // sleep(3); // Simulation de délai
+    }
+}</pre>
+        <p>3. Dispatchez le Job dans votre Contrôleur :</p>
+        <pre>use App\Jobs\SendWelcomeEmail;
+
+public function register(Request $request) {
+    // Création de l'utilisateur...
+    $user = User::create($request->all());
+
+    // Dispatch du Job
+    SendWelcomeEmail::dispatch($user);
+
+    return response()->json(['message' => 'Inscription réussie']);
+}</pre>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Autorisation : Gates et Policies</h2></div>
+    <p>Laravel sépare l'<strong>authentification</strong> (qui es-tu ?) de l'<strong>autorisation</strong> (as-tu le droit de faire ça ?). Les <strong>Gates</strong> sont des fermetures (closures) simples, souvent utilisées pour des actions globales. Les <strong>Policies</strong> sont des classes liées à un modèle spécifique (ex: <code class="inline">PostPolicy</code> pour le modèle <code class="inline">Post</code>).</p>
+    
+    <h3>Création d'une Policy</h3>
+    <pre>php artisan make:policy PostPolicy --model=Post</pre>
+    <p>Dans la policy, on définit des méthodes qui retournent <code>true</code> ou <code>false</code>.</p>
+    
+    <pre>&lt;?php
+namespace App\Policies;
+
+use App\Models\Post;
+use App\Models\User;
+
+class PostPolicy
+{
+    // L'utilisateur peut-il modifier ce post ?
+    public function update(User $user, Post $post)
+    {
+        return $user->id === $post->user_id;
+    }
+}</pre>
+
+    <div class="tp-box">
+      <div class="tp-title">TP Pratique : Protection de modification d'Article</div>
+      <p><strong>Objectif :</strong> Dans un contrôleur <code class="inline">ArticleController</code>, empêchez un utilisateur de supprimer un article qui ne lui appartient pas en utilisant une Policy.</p>
+      
+      <details>
+        <summary>Voir la solution</summary>
+        <p>1. Créez la Policy :</p>
+        <pre>php artisan make:policy ArticlePolicy --model=Article</pre>
+        <p>2. Définissez la méthode <code>delete</code> :</p>
+        <pre>public function delete(User $user, Article $article) {
+    return $user->id === $article->author_id;
+}</pre>
+        <p>3. Dans l'<code class="inline">ArticleController</code> :</p>
+        <pre>public function destroy(Article $article) {
+    // La méthode authorize renverra une erreur 403 si l'action n'est pas permise
+    $this->authorize('delete', $article);
+    
+    $article->delete();
+    return redirect('/articles');
+}</pre>
+        <p>Note : Dans Laravel 11+, l'autorisation peut aussi s'écrire : <code>Gate::authorize('delete', $article);</code></p>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Ressources API (Eloquent Resources)</h2></div>
+    <p>Quand vous créez une API, vous ne voulez pas toujours renvoyer l'intégralité des colonnes de la base de données (ex: mots de passe hachés, dates de création). Les <strong>Ressources API</strong> agissent comme une couche de transformation entre vos modèles Eloquent et la réponse JSON renvoyée à l'utilisateur.</p>
+    
+    <h3>Création d'une Resource</h3>
+    <pre>php artisan make:resource UserResource</pre>
+    <p>Dans <code class="inline">app/Http/Resources/UserResource.php</code> :</p>
+    
+    <pre>&lt;?php
+namespace App\Http\Resources;
+
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class UserResource extends JsonResource
+{
+    public function toArray($request)
+    {
+        return [
+            'id' => $this->id,
+            'nom_complet' => $this->first_name . ' ' . $this->last_name,
+            'email' => $this->email,
+            'rejoint_le' => $this->created_at->format('Y-m-d'),
+        ];
+    }
+}</pre>
+
+    <div class="tp-box">
+      <div class="tp-title">TP Pratique : Formatage JSON d'un Produit</div>
+      <p><strong>Objectif :</strong> Créez une <code class="inline">ProductResource</code> pour un modèle <code class="inline">Product</code>. Ne renvoyez que le <code class="inline">nom</code>, le <code class="inline">prix_ttc</code> (en multipliant le prix HT par 1.2), et cachez l'ID.</p>
+      
+      <details>
+        <summary>Voir la solution</summary>
+        <p>1. Génération :</p>
+        <pre>php artisan make:resource ProductResource</pre>
+        <p>2. Modification de la méthode <code class="inline">toArray</code> :</p>
+        <pre>public function toArray($request)
+{
+    return [
+        'nom' => $this->name,
+        'prix_ttc' => round($this->price_ht * 1.2, 2) . ' €',
+        // On omet volontairement 'id' et 'created_at'
+    ];
+}</pre>
+        <p>3. Utilisation dans le contrôleur :</p>
+        <pre>public function show(Product $product) {
+    return new ProductResource($product);
+}
+
+// Pour une liste (collection) de produits :
+public function index() {
+    return ProductResource::collection(Product::all());
+}</pre>
+      </details>
+    </div>
+  </section>
+
+  <footer>Cours Laravel — Notions Avancées</footer>
+
+</div>
+</body>
+</html>

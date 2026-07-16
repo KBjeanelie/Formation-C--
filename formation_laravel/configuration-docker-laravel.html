@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Laravel & Docker - Configuration Universelle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #14141f;
+    --panel: #1c1c2b;
+    --edge: #33334a;
+    --edge-soft: #292939;
+    --ink: #eeece4;
+    --ink-dim: #a8a5b8;
+    --ink-faint: #726f85;
+    --blue: #2496ed; /* Docker Blue */
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.65; font-size: 16px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 64px 32px 120px; }
+
+  .eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--blue); margin: 0 0 14px; }
+  h1.title { font-family: var(--sans); font-weight: 700; font-size: clamp(30px, 4.2vw, 42px); margin: 0 0 8px; letter-spacing: -.01em; line-height: 1.1; }
+  .subtitle { color: var(--ink-dim); font-size: 17px; margin: 0 0 36px; max-width: 700px; }
+  
+  .back-link {
+    display: inline-block;
+    margin-bottom: 24px;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 13px;
+    border: 1px solid var(--edge-soft);
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .back-link:hover {
+    color: var(--ink);
+    border-color: var(--ink-faint);
+  }
+
+  section { margin: 48px 0; background: var(--panel); border: 1px solid var(--edge-soft); border-radius: 12px; padding: 32px; }
+  h2 { font-size: 24px; font-weight: 700; margin: 0 0 16px; color: var(--blue); letter-spacing: -.01em; }
+  h3 { font-size: 18px; font-weight: 600; margin: 24px 0 12px; color: var(--ink); }
+  p { margin: 0 0 14px; }
+  ul, ol { margin: 0 0 20px; padding-left: 20px; color: var(--ink-dim); }
+  li { margin-bottom: 8px; }
+  code.inline { font-family: var(--mono); font-size: .88em; background: var(--bg); border: 1px solid var(--edge-soft); padding: 1px 6px; border-radius: 4px; color: #a4c2f4; }
+  pre { background: #0d0d16; border: 1px solid var(--edge-soft); border-radius: 8px; padding: 16px 18px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; margin: 0 0 24px; color: #d6d3e0; }
+
+  .highlight-box {
+    background: rgba(36, 150, 237, 0.1);
+    border-left: 3px solid var(--blue);
+    padding: 16px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 24px;
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--edge-soft); color: var(--ink-faint); font-size: 13px; font-family: var(--mono); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="../index.html" class="back-link">← Retour au Dashboard</a>
+
+  <p class="eyebrow">Infrastructure & DevOps</p>
+  <h1 class="title">Environnement Laravel avec Docker</h1>
+  <p class="subtitle">La solution ultime pour uniformiser le développement. Peu importe que vous soyez sous Windows, macOS ou Linux, l'environnement fonctionnera de la même manière.</p>
+
+  <div class="highlight-box">
+    <strong>Pourquoi Docker ?</strong><br>
+    Docker permet d'encapsuler votre application (PHP, Nginx, MySQL, Redis) dans des "conteneurs". Plus de problème de version PHP différente entre les développeurs ou de conflits de bases de données (le fameux "Ça marche sur ma machine !").
+  </div>
+
+  <section>
+    <h2>L'approche officielle : Laravel Sail</h2>
+    <p>La manière la plus simple recommandée par Laravel est d'utiliser <strong>Sail</strong>, qui est une interface en ligne de commande intégrée pour interagir avec l'environnement Docker par défaut de Laravel.</p>
+    
+    <h3>Installation sur un nouveau projet</h3>
+    <p>Sur n'importe quel système avec Docker installé, lancez simplement :</p>
+    <pre>curl -s https://laravel.build/mon-projet | bash
+cd mon-projet
+./vendor/bin/sail up</pre>
+    
+    <h3>Installation sur un projet existant</h3>
+    <pre>composer require laravel/sail --dev
+php artisan sail:install
+./vendor/bin/sail up</pre>
+  </section>
+
+  <section>
+    <h2>L'approche manuelle (Pour comprendre comment ça marche)</h2>
+    <p>Parfois, on souhaite maîtriser entièrement son infrastructure sans utiliser Sail. Voici comment configurer manuellement un environnement Nginx + PHP-FPM + MySQL avec <code>docker-compose</code>.</p>
+    
+    <h3>1. Fichier <code class="inline">docker-compose.yml</code> (À la racine du projet)</h3>
+    <pre>version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel-app
+    container_name: laravel_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:alpine
+    container_name: laravel_nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: laravel_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+volumes:
+  dbdata:</pre>
+
+    <h3>2. Le <code class="inline">Dockerfile</code> pour le service PHP</h3>
+    <p>Créez un fichier <code>Dockerfile</code> à la racine :</p>
+    <pre>FROM php:8.2-fpm
+
+# Installation des dépendances système
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip
+
+# Installation des extensions PHP requises par Laravel
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Récupération de Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html</pre>
+
+    <h3>3. Configuration Nginx</h3>
+    <p>Créez le fichier <code>docker/nginx/default.conf</code> :</p>
+    <pre>server {
+    listen 80;
+    index index.php index.html;
+    server_name localhost;
+    error_log  /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+    root /var/www/html/public;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass app:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+    }
+}</pre>
+  </section>
+
+  <section>
+    <h2>Démarrage et Utilisation</h2>
+    <ol>
+      <li>Assurez-vous que Docker Desktop (ou le démon Docker) est lancé sur votre machine.</li>
+      <li>Copiez votre <code>.env.example</code> en <code>.env</code> et ajustez les variables DB pour matcher le docker-compose (DB_HOST=db).</li>
+      <li>Construisez et démarrez les conteneurs : <code class="inline">docker-compose up -d --build</code></li>
+      <li>Entrez dans le conteneur PHP pour installer les vendors : <code class="inline">docker-compose exec app composer install</code></li>
+      <li>Générez la clé de l'application : <code class="inline">docker-compose exec app php artisan key:generate</code></li>
+      <li>Jouez les migrations : <code class="inline">docker-compose exec app php artisan migrate</code></li>
+      <li>Votre site est disponible sur <strong>http://localhost:8000</strong>.</li>
+    </ol>
+  </section>
+
+  <footer>Cours Laravel — Infrastructure Docker</footer>
+
+</div>
+</body>
+</html>
