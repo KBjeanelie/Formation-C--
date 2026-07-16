@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Développement avec Framework — Séance 1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --blue:#4f9ee8;
+    --blue-dim:#182a3a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(28px,4vw,40px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.15;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:660px;}
+
+  .tracker{display:flex; gap:8px; margin-bottom:44px;}
+  .tstep{flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--edge-soft); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .tstep .n{display:block; font-size:10px; letter-spacing:.1em; margin-bottom:4px;}
+  .tstep.active{border-color:var(--orange); color:var(--ink); background:var(--orange-dim);}
+  .tstep.active .n{color:var(--orange);}
+
+  .term{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:10px; overflow:hidden; margin:0 0 48px;}
+  .term-bar{display:flex; align-items:center; gap:6px; padding:10px 14px; border-bottom:1px solid var(--edge-soft); background:#111120;}
+  .dot{width:9px; height:9px; border-radius:50%; background:#33334a;}
+  .term-label{margin-left:8px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .term-body{padding:20px 22px; font-family:var(--mono); font-size:13.5px; color:#d6d3e0;}
+  .term-body .c-kw{color:#ef6b34;} .term-body .c-str{color:#3fbd83;} .term-body .c-com{color:var(--ink-faint); font-style:italic;}
+  .term-out{color:#7fd9ab; margin-top:10px; padding-top:10px; border-top:1px dashed var(--edge-soft); white-space:pre;}
+
+  section{margin:56px 0;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px;}
+  .sec-num{font-family:var(--mono); color:var(--orange); font-size:14px; min-width:26px;}
+  h2{font-size:21px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  .sec-intro{color:var(--ink-dim); margin:10px 0 22px 40px; max-width:640px;}
+  h4{font-size:14px; font-weight:600; margin:20px 0 8px; color:var(--ink);}
+
+  p{margin:0 0 14px;}
+  .content{margin-left:40px;}
+  ul, ol{margin:0 0 14px; padding-left:20px; color:var(--ink);}
+  li{margin-bottom:6px;}
+  strong{color:var(--ink); font-weight:600;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--panel); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.5px; line-height:1.6; margin:0 0 16px; color:#d6d3e0;}
+  pre .kw{color:#ef6b34;} pre .str{color:#3fbd83;} pre .com{color:var(--ink-faint); font-style:italic;} pre .typ{color:#7fa9ec;} pre .tag{color:#c98edb;}
+
+  table{width:100%; border-collapse:collapse; margin:0 0 16px; font-size:14px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--edge-soft);}
+  th{color:var(--ink-faint); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:500;}
+
+  .note{background:var(--panel); border-left:3px solid var(--orange); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .note strong{color:var(--orange);}
+  .warn{background:var(--panel); border-left:3px solid #e2444a; border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .warn strong{color:#e2696e;}
+  .docker{background:var(--blue-dim); border-left:3px solid var(--blue); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .docker strong{color:var(--blue);}
+
+  .ex{border:1px solid var(--edge-soft); border-radius:10px; margin-bottom:24px; overflow:hidden; background:var(--panel);}
+  .ex-head{padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--edge-soft);}
+  .ex-title{display:flex; align-items:baseline; gap:10px;}
+  .ex-num{font-family:var(--mono); color:var(--orange); font-size:13px;}
+  .ex-title h3{margin:0; font-size:15.5px; font-weight:600;}
+  .ex-diff{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); border:1px solid var(--edge-soft); border-radius:20px; padding:3px 10px; white-space:nowrap;}
+  .ex-body{padding:18px 20px 6px;}
+  .ex-body p:last-child{margin-bottom:0;}
+
+  details.sol{border-top:1px solid var(--edge-soft);}
+  details.sol summary{list-style:none; cursor:pointer; padding:13px 20px; font-family:var(--mono); font-size:12.5px; letter-spacing:.05em; color:var(--green); display:flex; align-items:center; gap:8px; user-select:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:'▸'; display:inline-block; transition:transform .15s ease; color:var(--green);}
+  details.sol[open] summary::before{transform:rotate(90deg);}
+  details.sol summary:hover{background:var(--green-dim);}
+  .sol-inner{padding:4px 20px 20px;}
+  .sol-inner pre{margin-top:8px;}
+  .sol-note{font-size:13.5px; color:var(--ink-dim); margin-top:10px;}
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Développement avec Framework · L3 Génie Logiciel · Laravel</p>
+  <h1 class="title">Séance 1 — Fondamentaux de Laravel</h1>
+  <p class="subtitle">Architecture MVC, installation locale et via Docker, routing, contrôleurs et vues Blade. Durée indicative : 3h30 à 4h. L'environnement Docker mis en place ici servira à dockeriser les TP des séances suivantes.</p>
+
+  <div class="tracker">
+    <div class="tstep active"><span class="n">Séance 01</span>Fondamentaux : MVC, installation, routing, contrôleurs, vues</div>
+    <div class="tstep"><span class="n">Séance 02</span>Données : migrations, Eloquent, relations</div>
+    <div class="tstep"><span class="n">Séance 03</span>Interface & logique métier : Blade avancé, formulaires, CRUD</div>
+    <div class="tstep"><span class="n">Séance 04</span>Authentification, API REST, mini-projet dockerisé</div>
+  </div>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="term-label">terminal — première route Laravel</span>
+    </div>
+    <div class="term-body">
+<span class="c-com">// routes/web.php</span>
+Route::get(<span class="c-str">'/bonjour'</span>, <span class="c-kw">function</span> () {
+    <span class="c-kw">return</span> <span class="c-str">'Bonjour, Laravel !'</span>;
+});
+      <div class="term-out">GET /bonjour → "Bonjour, Laravel !"</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Objectifs de la séance</h2></div>
+    <div class="content">
+      <ul>
+        <li>Comprendre le rôle d'un framework et l'architecture MVC que suit Laravel.</li>
+        <li>Installer un projet Laravel en local, puis dans un environnement Docker reproductible.</li>
+        <li>Comprendre la structure d'un projet Laravel et le rôle de ses principaux dossiers.</li>
+        <li>Définir des routes, écrire des contrôleurs et afficher des vues avec le moteur de templates Blade.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Qu'est-ce que Laravel ?</h2></div>
+    <div class="sec-intro">Laravel est un framework PHP qui fournit déjà les briques dont a besoin une application web : routing, accès aux données, gestion des formulaires, sécurité, envoi d'e-mails... Sans framework, il faudrait réécrire tout cela pour chaque projet.</div>
+    <div class="content">
+      <p>Laravel suit le modèle <strong>MVC</strong> (Modèle - Vue - Contrôleur), qui sépare trois responsabilités :</p>
+      <table>
+        <tr><th>Couche</th><th>Rôle</th></tr>
+        <tr><td>Modèle</td><td>Représente et manipule les données (base de données) — vu en séance 2</td></tr>
+        <tr><td>Vue</td><td>Ce que l'utilisateur voit — fichiers Blade (<code class="inline">.blade.php</code>)</td></tr>
+        <tr><td>Contrôleur</td><td>Reçoit la requête, orchestre modèle et vue, renvoie une réponse</td></tr>
+      </table>
+      <div class="note"><strong>Pourquoi ça compte :</strong> séparer ces responsabilités évite de mélanger requêtes SQL, logique métier et HTML dans un seul fichier — un problème courant en PHP procédural classique.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Installation locale</h2></div>
+    <div class="sec-intro">Prérequis : PHP 8.2+, Composer, et une base de données (MySQL ou SQLite pour démarrer simplement).</div>
+    <div class="content">
+      <pre>composer create-project laravel/laravel nom-du-projet
+<span class="com">cd</span> nom-du-projet
+php artisan serve</pre>
+      <p>Le serveur de développement écoute par défaut sur <code class="inline">http://127.0.0.1:8000</code>.</p>
+      <div class="note"><strong>À vérifier avant de continuer :</strong> la page d'accueil par défaut de Laravel doit s'afficher dans le navigateur.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Environnement Docker</h2></div>
+    <div class="sec-intro">Installer PHP, Composer et MySQL sur chaque machine peut vite diverger d'un poste à l'autre. Docker fige l'environnement une bonne fois pour toutes : ce qui tourne chez vous tourne à l'identique chez tout le monde. C'est cet environnement qui servira à dockeriser les TP des prochaines séances.</div>
+    <div class="content">
+
+      <h4>Dockerfile</h4>
+      <p>À la racine du projet Laravel :</p>
+      <pre><span class="kw">FROM</span> php:8.3-cli
+
+<span class="kw">RUN</span> apt-get update && apt-get install -y \
+    git unzip libzip-dev \
+    && docker-php-ext-install pdo_mysql zip
+
+<span class="kw">COPY</span> --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+<span class="kw">WORKDIR</span> /app
+<span class="kw">COPY</span> . .
+
+<span class="kw">RUN</span> composer install
+
+<span class="kw">EXPOSE</span> 8000
+<span class="kw">CMD</span> [<span class="str">"php"</span>, <span class="str">"artisan"</span>, <span class="str">"serve"</span>, <span class="str">"--host=0.0.0.0"</span>]</pre>
+
+      <h4>docker-compose.yml</h4>
+      <p>Deux services : l'application Laravel, et une base MySQL.</p>
+      <pre><span class="tag">services</span>:
+  <span class="tag">app</span>:
+    <span class="kw">build</span>: .
+    <span class="kw">ports</span>:
+      - <span class="str">"8000:8000"</span>
+    <span class="kw">volumes</span>:
+      - .:/app
+    <span class="kw">depends_on</span>:
+      - db
+    <span class="kw">environment</span>:
+      DB_HOST: db
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+
+  <span class="tag">db</span>:
+    <span class="kw">image</span>: mysql:8
+    <span class="kw">environment</span>:
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    <span class="kw">ports</span>:
+      - <span class="str">"3306:3306"</span>
+    <span class="kw">volumes</span>:
+      - db_data:/var/lib/mysql
+
+<span class="tag">volumes</span>:
+  <span class="kw">db_data</span>:</pre>
+
+      <p>Lancer l'ensemble :</p>
+      <pre>docker compose up --build</pre>
+      <p>Puis, dans un second terminal, exécuter les commandes Artisan à l'intérieur du conteneur :</p>
+      <pre>docker compose exec app php artisan migrate</pre>
+
+      <div class="docker"><strong>Pourquoi ce découpage en deux services :</strong> l'application et la base de données sont deux responsabilités distinctes, avec des cycles de vie différents (on peut redémarrer l'app sans perdre les données MySQL, car elles vivent dans le volume <code class="inline">db_data</code>, séparé du conteneur).</div>
+
+      <div class="warn"><strong>Piège fréquent :</strong> dans <code class="inline">.env</code>, <code class="inline">DB_HOST</code> doit être le nom du service Docker (<code class="inline">db</code>), pas <code class="inline">127.0.0.1</code> — depuis le conteneur <code class="inline">app</code>, <code class="inline">127.0.0.1</code> désigne le conteneur lui-même, pas la base de données.</div>
+
+      <div class="note"><strong>Les deux approches cohabitent :</strong> installation locale pour comprendre Laravel sans couche supplémentaire en séance 1, puis Docker devient la référence à partir de la séance 2, pour que l'environnement soit identique du poste de chaque étudiant jusqu'au mini-projet final.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Structure d'un projet Laravel</h2></div>
+    <div class="content">
+      <table>
+        <tr><th>Dossier / fichier</th><th>Rôle</th></tr>
+        <tr><td><code class="inline">routes/web.php</code></td><td>Déclaration des routes de l'application</td></tr>
+        <tr><td><code class="inline">app/Http/Controllers/</code></td><td>Les contrôleurs</td></tr>
+        <tr><td><code class="inline">app/Models/</code></td><td>Les modèles Eloquent (séance 2)</td></tr>
+        <tr><td><code class="inline">resources/views/</code></td><td>Les fichiers Blade (vues)</td></tr>
+        <tr><td><code class="inline">database/migrations/</code></td><td>Schéma de la base de données, versionné (séance 2)</td></tr>
+        <tr><td><code class="inline">.env</code></td><td>Configuration locale (base de données, clés...), jamais versionné sur Git</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Routing</h2></div>
+    <div class="content">
+      <p>Une route associe une URL et une méthode HTTP à une action :</p>
+      <pre><span class="com">// routes/web.php</span>
+Route::get(<span class="str">'/'</span>, <span class="kw">function</span> () {
+    <span class="kw">return</span> <span class="str">'Accueil'</span>;
+});
+
+Route::get(<span class="str">'/etudiants/{id}'</span>, <span class="kw">function</span> (<span class="typ">$id</span>) {
+    <span class="kw">return</span> <span class="str">"Étudiant numéro "</span> . <span class="typ">$id</span>;
+});</pre>
+      <p><code class="inline">{id}</code> est un paramètre de route : sa valeur est automatiquement passée à la fonction.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Contrôleurs</h2></div>
+    <div class="content">
+      <p>Au-delà de quelques routes, la logique se déplace dans des contrôleurs dédiés :</p>
+      <pre>php artisan make:controller EtudiantController</pre>
+      <pre><span class="com">// app/Http/Controllers/EtudiantController.php</span>
+<span class="kw">class</span> EtudiantController <span class="kw">extends</span> Controller
+{
+    <span class="kw">public function</span> accueil()
+    {
+        <span class="kw">return</span> <span class="str">'Bienvenue dans le module étudiants'</span>;
+    }
+}</pre>
+      <p>Puis référencer le contrôleur depuis les routes :</p>
+      <pre><span class="com">// routes/web.php</span>
+<span class="kw">use</span> App\Http\Controllers\EtudiantController;
+
+Route::get(<span class="str">'/etudiants'</span>, [EtudiantController::class, <span class="str">'accueil'</span>]);</pre>
+      <div class="note"><strong>Pourquoi un contrôleur plutôt qu'une fonction dans <code class="inline">web.php</code> :</strong> ça garde le fichier de routes lisible (une liste de correspondances URL → action), et regroupe la logique d'une même fonctionnalité dans une seule classe organisée.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Vues Blade</h2></div>
+    <div class="content">
+      <p>Un contrôleur renvoie généralement une vue plutôt qu'un texte brut :</p>
+      <pre><span class="com">// app/Http/Controllers/EtudiantController.php</span>
+<span class="kw">public function</span> accueil()
+{
+    <span class="kw">return</span> view(<span class="str">'etudiants.accueil'</span>, [<span class="str">'nom'</span> => <span class="str">'Fabrice'</span>]);
+}</pre>
+      <pre><span class="com">&lt;!-- resources/views/etudiants/accueil.blade.php --&gt;</span>
+&lt;h1&gt;Bonjour, {{ <span class="typ">$nom</span> }} !&lt;/h1&gt;
+
+@<span class="kw">if</span> (<span class="typ">$nom</span>)
+    &lt;p&gt;Compte actif&lt;/p&gt;
+@<span class="kw">endif</span></pre>
+      <table>
+        <tr><th>Syntaxe Blade</th><th>Rôle</th></tr>
+        <tr><td><code class="inline">{{ $variable }}</code></td><td>Affiche une valeur (échappée automatiquement contre les failles XSS)</td></tr>
+        <tr><td><code class="inline">@if / @endif</code></td><td>Condition</td></tr>
+        <tr><td><code class="inline">@foreach / @endforeach</code></td><td>Boucle</td></tr>
+        <tr><td><code class="inline">@extends / @section</code></td><td>Héritage de mise en page (layouts communs)</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Exercices pratiques</h2></div>
+    <div class="sec-intro">À réaliser dans l'ordre. Le dernier exercice dockerise le mini-projet construit pendant la séance.</div>
+    <div class="content">
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 1</span><h3>Route paramétrée</h3></div>
+          <span class="ex-diff">échauffement</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer une route <code class="inline">/salut/{prenom}</code> qui affiche <code class="inline">"Salut, {prenom} !"</code> en utilisant le paramètre de route.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">// routes/web.php</span>
+Route::get(<span class="str">'/salut/{prenom}'</span>, <span class="kw">function</span> (<span class="typ">$prenom</span>) {
+    <span class="kw">return</span> <span class="str">"Salut, "</span> . <span class="typ">$prenom</span> . <span class="str">" !"</span>;
+});</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 2</span><h3>Contrôleur Cours</h3></div>
+          <span class="ex-diff">facile</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer un <code class="inline">CoursController</code> avec une méthode <code class="inline">liste()</code> qui renvoie une vue affichant un tableau PHP de 4 noms de cours passés à la vue, affichés dans une <code class="inline">&lt;ul&gt;</code> avec <code class="inline">@foreach</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">// app/Http/Controllers/CoursController.php</span>
+<span class="kw">class</span> CoursController <span class="kw">extends</span> Controller
+{
+    <span class="kw">public function</span> liste()
+    {
+        <span class="typ">$cours</span> = [<span class="str">'Algorithmique'</span>, <span class="str">'Bases de données'</span>, <span class="str">'Réseaux'</span>, <span class="str">'Développement Web'</span>];
+        <span class="kw">return</span> view(<span class="str">'cours.liste'</span>, [<span class="str">'cours'</span> => <span class="typ">$cours</span>]);
+    }
+}</pre>
+            <pre><span class="com">&lt;!-- resources/views/cours/liste.blade.php --&gt;</span>
+&lt;h1&gt;Liste des cours&lt;/h1&gt;
+&lt;ul&gt;
+    @<span class="kw">foreach</span> (<span class="typ">$cours</span> <span class="kw">as</span> <span class="typ">$c</span>)
+        &lt;li&gt;{{ <span class="typ">$c</span> }}&lt;/li&gt;
+    @<span class="kw">endforeach</span>
+&lt;/ul&gt;</pre>
+            <pre><span class="com">// routes/web.php</span>
+Route::get(<span class="str">'/cours'</span>, [CoursController::class, <span class="str">'liste'</span>]);</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 3</span><h3>Layout commun</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer un layout <code class="inline">resources/views/layouts/app.blade.php</code> avec un <code class="inline">@yield('content')</code>, puis faire hériter la vue de l'exercice 2 de ce layout avec <code class="inline">@extends</code> et <code class="inline">@section</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">&lt;!-- resources/views/layouts/app.blade.php --&gt;</span>
+&lt;!DOCTYPE html&gt;
+&lt;html lang=<span class="str">"fr"</span>&gt;
+&lt;head&gt;&lt;title&gt;Mon application&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+    &lt;nav&gt;Menu du site&lt;/nav&gt;
+    @<span class="kw">yield</span>(<span class="str">'content'</span>)
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+            <pre><span class="com">&lt;!-- resources/views/cours/liste.blade.php --&gt;</span>
+@<span class="kw">extends</span>(<span class="str">'layouts.app'</span>)
+
+@<span class="kw">section</span>(<span class="str">'content'</span>)
+    &lt;h1&gt;Liste des cours&lt;/h1&gt;
+    &lt;ul&gt;
+        @<span class="kw">foreach</span> (<span class="typ">$cours</span> <span class="kw">as</span> <span class="typ">$c</span>)
+            &lt;li&gt;{{ <span class="typ">$c</span> }}&lt;/li&gt;
+        @<span class="kw">endforeach</span>
+    &lt;/ul&gt;
+@<span class="kw">endsection</span></pre>
+            <p class="sol-note">Sans layout, chaque vue devrait répéter le même HTML de base (<code class="inline">&lt;html&gt;</code>, menu, etc.) — <code class="inline">@extends</code> centralise cette structure commune à un seul endroit.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 4</span><h3>Dockeriser le mini-projet de la séance</h3></div>
+          <span class="ex-diff">défi</span>
+        </div>
+        <div class="ex-body">
+          <p>Reprendre le projet Laravel de la séance (routes + contrôleur + vues des exercices 1 à 3), ajouter le <code class="inline">Dockerfile</code> et le <code class="inline">docker-compose.yml</code> vus en section 04, puis vérifier que <code class="inline">docker compose up --build</code> permet d'accéder au projet sur <code class="inline">http://localhost:8000/cours</code> exactement comme en local.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <p>Étapes à valider, dans l'ordre :</p>
+            <ol>
+              <li>Placer <code class="inline">Dockerfile</code> et <code class="inline">docker-compose.yml</code> à la racine du projet (à côté de <code class="inline">artisan</code>).</li>
+              <li>Copier <code class="inline">.env.example</code> vers <code class="inline">.env</code> si ce n'est pas déjà fait, puis adapter <code class="inline">DB_HOST=db</code> comme indiqué en section 04.</li>
+              <li>Lancer <code class="inline">docker compose up --build</code>.</li>
+              <li>Dans un second terminal : <code class="inline">docker compose exec app php artisan key:generate</code>, puis <code class="inline">docker compose exec app php artisan migrate</code>.</li>
+              <li>Ouvrir <code class="inline">http://localhost:8000/cours</code> — la liste des cours doit s'afficher, servie depuis le conteneur.</li>
+            </ol>
+            <p class="sol-note">C'est exactement cette base Docker qui sera réutilisée telle quelle pour les TP des séances 2 à 4, avec des services supplémentaires ajoutés au fil du cours (par exemple phpMyAdmin en séance 2).</p>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>Développement avec Framework — Séance 1 / 4 · Laravel · Fondamentaux</footer>
+
+</div>
+</body>
+</html>

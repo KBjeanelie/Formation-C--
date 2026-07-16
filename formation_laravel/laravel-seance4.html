@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Développement avec Framework — Séance 4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --blue:#4f9ee8;
+    --blue-dim:#182a3a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(28px,4vw,40px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.15;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:660px;}
+
+  .tracker{display:flex; gap:8px; margin-bottom:44px;}
+  .tstep{flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--edge-soft); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .tstep .n{display:block; font-size:10px; letter-spacing:.1em; margin-bottom:4px;}
+  .tstep.active{border-color:var(--orange); color:var(--ink); background:var(--orange-dim);}
+  .tstep.active .n{color:var(--orange);}
+  .tstep.done{border-color:var(--edge); color:var(--ink-dim);}
+  .tstep.done .n{color:var(--green);}
+
+  .term{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:10px; overflow:hidden; margin:0 0 48px;}
+  .term-bar{display:flex; align-items:center; gap:6px; padding:10px 14px; border-bottom:1px solid var(--edge-soft); background:#111120;}
+  .dot{width:9px; height:9px; border-radius:50%; background:#33334a;}
+  .term-label{margin-left:8px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .term-body{padding:20px 22px; font-family:var(--mono); font-size:13.5px; color:#d6d3e0;}
+  .term-body .c-kw{color:#ef6b34;} .term-body .c-str{color:#3fbd83;} .term-body .c-com{color:var(--ink-faint); font-style:italic;} .term-body .c-typ{color:#7fa9ec;}
+  .term-out{color:#7fd9ab; margin-top:10px; padding-top:10px; border-top:1px dashed var(--edge-soft); white-space:pre;}
+
+  section{margin:56px 0;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px;}
+  .sec-num{font-family:var(--mono); color:var(--orange); font-size:14px; min-width:26px;}
+  h2{font-size:21px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  .sec-intro{color:var(--ink-dim); margin:10px 0 22px 40px; max-width:640px;}
+  h4{font-size:14px; font-weight:600; margin:20px 0 8px; color:var(--ink);}
+
+  p{margin:0 0 14px;}
+  .content{margin-left:40px;}
+  ul, ol{margin:0 0 14px; padding-left:20px; color:var(--ink);}
+  li{margin-bottom:6px;}
+  strong{color:var(--ink); font-weight:600;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--panel); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.5px; line-height:1.6; margin:0 0 16px; color:#d6d3e0;}
+  pre .kw{color:#ef6b34;} pre .str{color:#3fbd83;} pre .com{color:var(--ink-faint); font-style:italic;} pre .typ{color:#7fa9ec;} pre .tag{color:#c98edb;}
+
+  table{width:100%; border-collapse:collapse; margin:0 0 16px; font-size:14px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--edge-soft);}
+  th{color:var(--ink-faint); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:500;}
+
+  .note{background:var(--panel); border-left:3px solid var(--orange); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .note strong{color:var(--orange);}
+  .warn{background:var(--panel); border-left:3px solid #e2444a; border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .warn strong{color:#e2696e;}
+  .docker{background:var(--blue-dim); border-left:3px solid var(--blue); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .docker strong{color:var(--blue);}
+
+  .ex{border:1px solid var(--edge-soft); border-radius:10px; margin-bottom:24px; overflow:hidden; background:var(--panel);}
+  .ex-head{padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--edge-soft);}
+  .ex-title{display:flex; align-items:baseline; gap:10px;}
+  .ex-num{font-family:var(--mono); color:var(--orange); font-size:13px;}
+  .ex-title h3{margin:0; font-size:15.5px; font-weight:600;}
+  .ex-diff{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); border:1px solid var(--edge-soft); border-radius:20px; padding:3px 10px; white-space:nowrap;}
+  .ex-body{padding:18px 20px 6px;}
+  .ex-body p:last-child{margin-bottom:0;}
+
+  details.sol{border-top:1px solid var(--edge-soft);}
+  details.sol summary{list-style:none; cursor:pointer; padding:13px 20px; font-family:var(--mono); font-size:12.5px; letter-spacing:.05em; color:var(--green); display:flex; align-items:center; gap:8px; user-select:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:'▸'; display:inline-block; transition:transform .15s ease; color:var(--green);}
+  details.sol[open] summary::before{transform:rotate(90deg);}
+  details.sol summary:hover{background:var(--green-dim);}
+  .sol-inner{padding:4px 20px 20px;}
+  .sol-inner pre{margin-top:8px;}
+  .sol-note{font-size:13.5px; color:var(--ink-dim); margin-top:10px;}
+
+  .project{border:1px solid var(--orange); border-radius:12px; margin-bottom:24px; overflow:hidden; background:var(--panel);}
+  .project-head{padding:20px 22px; border-bottom:1px solid var(--edge-soft); background:var(--orange-dim);}
+  .project-head h3{margin:0 0 6px; font-size:18px;}
+  .project-head p{margin:0; color:var(--ink-dim); font-size:14.5px;}
+  .project-body{padding:20px 22px 6px;}
+  .project-body ul{margin-bottom:16px;}
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Développement avec Framework · L3 Génie Logiciel · Laravel</p>
+  <h1 class="title">Séance 4 — Authentification, API REST et mini-projet dockerisé</h1>
+  <p class="subtitle">Protéger des pages, exposer des données en JSON pour un client externe, puis assembler tout le programme dans un mini-projet livré avec Docker. Durée indicative : 4h.</p>
+
+  <div class="tracker">
+    <div class="tstep done"><span class="n">Séance 01 ✓</span>Fondamentaux : MVC, installation, routing, contrôleurs, vues</div>
+    <div class="tstep done"><span class="n">Séance 02 ✓</span>Données : migrations, Eloquent, relations</div>
+    <div class="tstep done"><span class="n">Séance 03 ✓</span>Interface & logique métier : Blade avancé, formulaires, CRUD</div>
+    <div class="tstep active"><span class="n">Séance 04</span>Authentification, API REST, mini-projet dockerisé</div>
+  </div>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="term-label">terminal — dans le conteneur app</span>
+    </div>
+    <div class="term-body">
+curl -X GET http://localhost:8000/api/livres
+      <div class="term-out">[{"id":1,"titre":"L'enfant noir","auteur":"Camara Laye","disponible":true}, ...]</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Objectifs de la séance</h2></div>
+    <div class="content">
+      <ul>
+        <li>Mettre en place l'authentification (inscription, connexion, déconnexion) avec Laravel Breeze.</li>
+        <li>Protéger des routes avec des middlewares.</li>
+        <li>Exposer une API REST en JSON, avec des routes et contrôleurs dédiés.</li>
+        <li>Sécuriser une API avec un jeton d'accès (Sanctum).</li>
+        <li>Livrer un mini-projet complet, entièrement dockerisé, qui réunit toutes les notions des 4 séances.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Authentification avec Laravel Breeze</h2></div>
+    <div class="sec-intro">Breeze installe en quelques commandes des pages d'inscription, de connexion et un tableau de bord protégé, avec un code simple à lire et à personnaliser.</div>
+    <div class="content">
+      <pre>docker compose exec app composer require laravel/breeze --dev
+docker compose exec app php artisan breeze:install blade</pre>
+      <p>Breeze génère des assets front-end (CSS/JS) qui doivent être compilés avec Node — à ajouter au <code class="inline">Dockerfile</code> de la séance 1 :</p>
+      <pre><span class="kw">RUN</span> apt-get update && apt-get install -y nodejs npm</pre>
+      <pre>docker compose exec app npm install
+docker compose exec app npm run build
+docker compose exec app php artisan migrate</pre>
+      <p>Une fois installé, Breeze fournit automatiquement les routes <code class="inline">/register</code>, <code class="inline">/login</code>, <code class="inline">/logout</code> et un <code class="inline">/dashboard</code> protégé.</p>
+      <div class="note"><strong>Pourquoi Breeze plutôt qu'un système d'authentification écrit à la main :</strong> hacher les mots de passe, gérer les sessions, se protéger contre les attaques par force brute — Breeze applique déjà les bonnes pratiques de sécurité de Laravel, plutôt que de laisser chaque étudiant réinventer un mécanisme sensible avec ses propres failles potentielles.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Protéger des routes avec un middleware</h2></div>
+    <div class="content">
+      <pre><span class="com">// routes/web.php</span>
+Route::middleware(<span class="str">'auth'</span>)->group(<span class="kw">function</span> () {
+    Route::resource(<span class="str">'livres'</span>, LivreController::class);
+});</pre>
+      <p>Toutes les routes du groupe exigent désormais un utilisateur connecté ; un visiteur non authentifié est automatiquement redirigé vers <code class="inline">/login</code>.</p>
+      <div class="note"><strong>Pourquoi grouper avec <code class="inline">middleware('auth')</code> plutôt que de vérifier <code class="inline">Auth::check()</code> dans chaque méthode :</strong> la règle "connecté obligatoire" est déclarée à un seul endroit, pour toutes les routes du groupe — impossible d'oublier la vérification sur une nouvelle méthode ajoutée plus tard au contrôleur.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>API REST</h2></div>
+    <div class="sec-intro">Une API REST expose les données en JSON, pour qu'une application mobile, un autre service, ou une frontend séparé (React, Vue...) puisse les consommer sans passer par les vues Blade.</div>
+    <div class="content">
+      <pre>docker compose exec app php artisan make:controller Api/LivreController --api</pre>
+      <pre><span class="com">// routes/api.php</span>
+<span class="kw">use</span> App\Http\Controllers\Api\LivreController;
+
+Route::apiResource(<span class="str">'livres'</span>, LivreController::class);</pre>
+      <pre><span class="com">// app/Http/Controllers/Api/LivreController.php</span>
+<span class="kw">public function</span> index()
+{
+    <span class="kw">return</span> Livre::all();
+}
+
+<span class="kw">public function</span> store(Request <span class="typ">$request</span>)
+{
+    <span class="typ">$donnees</span> = <span class="typ">$request</span>->validate([
+        <span class="str">'titre'</span> => <span class="str">'required|max:255'</span>,
+        <span class="str">'auteur'</span> => <span class="str">'required|max:255'</span>,
+    ]);
+
+    <span class="kw">return</span> Livre::create(<span class="typ">$donnees</span>);
+}</pre>
+      <div class="note"><strong>Pourquoi <code class="inline">routes/api.php</code> et un contrôleur séparés de <code class="inline">routes/web.php</code> :</strong> une API ne renvoie jamais de HTML ni de vue Blade — la séparer évite de mélanger deux logiques de réponse différentes (JSON pour l'API, pages complètes pour le web) dans les mêmes contrôleurs.</div>
+
+      <h4>Sécuriser l'API avec Sanctum</h4>
+      <pre>docker compose exec app php artisan install:api</pre>
+      <pre><span class="com">// routes/api.php</span>
+Route::middleware(<span class="str">'auth:sanctum'</span>)->group(<span class="kw">function</span> () {
+    Route::apiResource(<span class="str">'livres'</span>, LivreController::class);
+});</pre>
+      <p>Un client doit alors envoyer un jeton dans l'en-tête de chaque requête :</p>
+      <pre>curl -H <span class="str">"Authorization: Bearer TOKEN_ICI"</span> http://localhost:8000/api/livres</pre>
+      <div class="warn"><strong>Piège fréquent :</strong> confondre l'authentification par session (<code class="inline">auth</code>, utilisée pour les pages web avec cookies de navigateur) et l'authentification par jeton (<code class="inline">auth:sanctum</code>, utilisée pour une API consommée par un client externe qui n'a pas de cookie de session).</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Exercices pratiques</h2></div>
+    <div class="sec-intro">À réaliser avant le mini-projet final, dans le même environnement Docker que les séances précédentes.</div>
+    <div class="content">
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 1</span><h3>Installer Breeze et vérifier l'inscription</h3></div>
+          <span class="ex-diff">échauffement</span>
+        </div>
+        <div class="ex-body">
+          <p>Installer Breeze sur le projet, créer un compte via <code class="inline">/register</code>, se déconnecter, se reconnecter via <code class="inline">/login</code>, et vérifier que <code class="inline">/dashboard</code> redirige vers <code class="inline">/login</code> quand on n'est pas connecté.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <p>Aucun code à écrire — l'exercice consiste à valider chaque étape :</p>
+            <ol>
+              <li><code class="inline">docker compose exec app composer require laravel/breeze --dev</code></li>
+              <li><code class="inline">docker compose exec app php artisan breeze:install blade</code></li>
+              <li><code class="inline">docker compose exec app npm install && npm run build</code></li>
+              <li><code class="inline">docker compose exec app php artisan migrate</code></li>
+              <li>Ouvrir <code class="inline">/register</code>, créer un compte, être redirigé vers <code class="inline">/dashboard</code>.</li>
+              <li>Se déconnecter, essayer <code class="inline">/dashboard</code> directement : redirection vers <code class="inline">/login</code> attendue.</li>
+            </ol>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 2</span><h3>Protéger le CRUD des cours</h3></div>
+          <span class="ex-diff">facile</span>
+        </div>
+        <div class="ex-body">
+          <p>Reprendre le <code class="inline">Route::resource('cours', ...)</code> de la séance 3 et le placer dans un groupe <code class="inline">middleware('auth')</code>, pour que seule une personne connectée puisse gérer les cours.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">// routes/web.php</span>
+Route::middleware(<span class="str">'auth'</span>)->group(<span class="kw">function</span> () {
+    Route::resource(<span class="str">'cours'</span>, CoursController::class);
+});</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 3</span><h3>API publique en lecture seule</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer une route API <code class="inline">GET /api/cours</code> qui retourne la liste des cours en JSON, accessible sans authentification (pour un futur site vitrine qui affiche les cours disponibles), en gardant la création/modification/suppression réservée à <code class="inline">web.php</code> avec <code class="inline">auth</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">// routes/api.php</span>
+Route::get(<span class="str">'/cours'</span>, <span class="kw">function</span> () {
+    <span class="kw">return</span> Cours::all();
+});</pre>
+            <p class="sol-note">Tester avec <code class="inline">curl http://localhost:8000/api/cours</code> — aucun jeton requis, contrairement à l'exemple Sanctum de la section 04, car cette route n'est volontairement pas placée dans le groupe <code class="inline">auth:sanctum</code>.</p>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Mini-projet final</h2></div>
+    <div class="sec-intro">À réaliser en autonomie ou en binôme, en réutilisant tout ce qui a été construit depuis la séance 1 — c'est le livrable final du module.</div>
+    <div class="content">
+
+      <div class="project">
+        <div class="project-head">
+          <h3>Plateforme de gestion d'une petite bibliothèque</h3>
+          <p>Cahier des charges à implémenter, puis solution guidée ci-dessous.</p>
+        </div>
+        <div class="project-body">
+          <ul>
+            <li><strong>Données :</strong> modèles <code class="inline">Livre</code> (titre, auteur, disponible) et <code class="inline">Emprunt</code> (livre_id, user_id, date_emprunt), avec la relation correspondante.</li>
+            <li><strong>Interface web protégée :</strong> un utilisateur connecté (Breeze) peut lister les livres, en emprunter un disponible, et voir la liste de ses propres emprunts.</li>
+            <li><strong>API publique en lecture seule :</strong> <code class="inline">GET /api/livres</code> retourne le catalogue complet, sans authentification.</li>
+            <li><strong>Livraison :</strong> l'ensemble (app + base de données) démarre avec une seule commande <code class="inline">docker compose up --build</code>, migrations et seed inclus.</li>
+          </ul>
+          <details class="sol">
+            <summary>Voir la solution guidée</summary>
+            <div class="sol-inner">
+              <pre><span class="com">// database/migrations/..._create_emprunts_table.php</span>
+Schema::create(<span class="str">'emprunts'</span>, <span class="kw">function</span> (Blueprint <span class="typ">$table</span>) {
+    <span class="typ">$table</span>->id();
+    <span class="typ">$table</span>->foreignId(<span class="str">'livre_id'</span>)->constrained();
+    <span class="typ">$table</span>->foreignId(<span class="str">'user_id'</span>)->constrained();
+    <span class="typ">$table</span>->date(<span class="str">'date_emprunt'</span>);
+    <span class="typ">$table</span>->timestamps();
+});</pre>
+              <pre><span class="com">// app/Models/Livre.php</span>
+<span class="kw">public function</span> emprunts()
+{
+    <span class="kw">return</span> <span class="typ">$this</span>->hasMany(Emprunt::class);
+}
+
+<span class="com">// app/Models/Emprunt.php</span>
+<span class="kw">protected</span> <span class="typ">$fillable</span> = [<span class="str">'livre_id'</span>, <span class="str">'user_id'</span>, <span class="str">'date_emprunt'</span>];
+
+<span class="kw">public function</span> livre()
+{
+    <span class="kw">return</span> <span class="typ">$this</span>->belongsTo(Livre::class);
+}</pre>
+              <pre><span class="com">// routes/web.php</span>
+Route::middleware(<span class="str">'auth'</span>)->group(<span class="kw">function</span> () {
+    Route::get(<span class="str">'/livres'</span>, [LivreController::class, <span class="str">'index'</span>]);
+    Route::post(<span class="str">'/livres/{livre}/emprunter'</span>, [LivreController::class, <span class="str">'emprunter'</span>]);
+    Route::get(<span class="str">'/mes-emprunts'</span>, [LivreController::class, <span class="str">'mesEmprunts'</span>]);
+});</pre>
+              <pre><span class="com">// app/Http/Controllers/LivreController.php</span>
+<span class="kw">public function</span> emprunter(Livre <span class="typ">$livre</span>)
+{
+    <span class="kw">if</span> (!<span class="typ">$livre</span>->disponible) {
+        <span class="kw">return</span> back()->with(<span class="str">'erreur'</span>, <span class="str">'Ce livre est déjà emprunté.'</span>);
+    }
+
+    Emprunt::create([
+        <span class="str">'livre_id'</span> => <span class="typ">$livre</span>->id,
+        <span class="str">'user_id'</span> => auth()->id(),
+        <span class="str">'date_emprunt'</span> => <span class="kw">now</span>(),
+    ]);
+
+    <span class="typ">$livre</span>->update([<span class="str">'disponible'</span> => <span class="kw">false</span>]);
+
+    <span class="kw">return</span> redirect(<span class="str">'/livres'</span>);
+}
+
+<span class="kw">public function</span> mesEmprunts()
+{
+    <span class="typ">$emprunts</span> = auth()->user()->emprunts()->with(<span class="str">'livre'</span>)->get();
+    <span class="kw">return</span> view(<span class="str">'livres.mes-emprunts'</span>, [<span class="str">'emprunts'</span> => <span class="typ">$emprunts</span>]);
+}</pre>
+              <pre><span class="com">// routes/api.php — lecture publique, sans middleware auth</span>
+Route::get(<span class="str">'/livres'</span>, <span class="kw">function</span> () {
+    <span class="kw">return</span> Livre::all();
+});</pre>
+              <pre><span class="com">## docker-compose.yml final — reprend celui de la séance 1</span>
+<span class="com">## avec, en plus, la commande au démarrage qui migre et seed automatiquement</span></pre>
+              <pre><span class="tag">app</span>:
+  <span class="kw">build</span>: .
+  <span class="kw">ports</span>: [<span class="str">"8000:8000"</span>]
+  <span class="kw">volumes</span>: [.:/app]
+  <span class="kw">depends_on</span>: [db]
+  <span class="kw">command</span>: >
+    sh -c <span class="str">"php artisan migrate --force &&
+           php artisan db:seed --force &&
+           php artisan serve --host=0.0.0.0"</span></pre>
+              <p class="sol-note"><strong>Pourquoi <code class="inline">command</code> plutôt que de laisser <code class="inline">CMD</code> du Dockerfile :</strong> ça garantit qu'à chaque <code class="inline">docker compose up</code>, la base est à jour avant que le serveur ne démarre — indispensable pour qu'un correcteur ou un camarade puisse lancer le projet en une seule commande sans étape manuelle oubliée.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>Développement avec Framework — Séance 4 / 4 · Laravel · Authentification, API REST, mini-projet — fin du programme</footer>
+
+</div>
+</body>
+</html>

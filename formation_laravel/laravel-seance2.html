@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Développement avec Framework — Séance 2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --blue:#4f9ee8;
+    --blue-dim:#182a3a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(28px,4vw,40px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.15;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:660px;}
+
+  .tracker{display:flex; gap:8px; margin-bottom:44px;}
+  .tstep{flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--edge-soft); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .tstep .n{display:block; font-size:10px; letter-spacing:.1em; margin-bottom:4px;}
+  .tstep.active{border-color:var(--orange); color:var(--ink); background:var(--orange-dim);}
+  .tstep.active .n{color:var(--orange);}
+  .tstep.done{border-color:var(--edge); color:var(--ink-dim);}
+  .tstep.done .n{color:var(--green);}
+
+  .term{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:10px; overflow:hidden; margin:0 0 48px;}
+  .term-bar{display:flex; align-items:center; gap:6px; padding:10px 14px; border-bottom:1px solid var(--edge-soft); background:#111120;}
+  .dot{width:9px; height:9px; border-radius:50%; background:#33334a;}
+  .term-label{margin-left:8px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .term-body{padding:20px 22px; font-family:var(--mono); font-size:13.5px; color:#d6d3e0;}
+  .term-body .c-kw{color:#ef6b34;} .term-body .c-str{color:#3fbd83;} .term-body .c-com{color:var(--ink-faint); font-style:italic;} .term-body .c-typ{color:#7fa9ec;}
+  .term-out{color:#7fd9ab; margin-top:10px; padding-top:10px; border-top:1px dashed var(--edge-soft); white-space:pre;}
+
+  section{margin:56px 0;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px;}
+  .sec-num{font-family:var(--mono); color:var(--orange); font-size:14px; min-width:26px;}
+  h2{font-size:21px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  .sec-intro{color:var(--ink-dim); margin:10px 0 22px 40px; max-width:640px;}
+  h4{font-size:14px; font-weight:600; margin:20px 0 8px; color:var(--ink);}
+
+  p{margin:0 0 14px;}
+  .content{margin-left:40px;}
+  ul, ol{margin:0 0 14px; padding-left:20px; color:var(--ink);}
+  li{margin-bottom:6px;}
+  strong{color:var(--ink); font-weight:600;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--panel); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.5px; line-height:1.6; margin:0 0 16px; color:#d6d3e0;}
+  pre .kw{color:#ef6b34;} pre .str{color:#3fbd83;} pre .com{color:var(--ink-faint); font-style:italic;} pre .typ{color:#7fa9ec;} pre .tag{color:#c98edb;}
+
+  table{width:100%; border-collapse:collapse; margin:0 0 16px; font-size:14px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--edge-soft);}
+  th{color:var(--ink-faint); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:500;}
+
+  .note{background:var(--panel); border-left:3px solid var(--orange); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .note strong{color:var(--orange);}
+  .warn{background:var(--panel); border-left:3px solid #e2444a; border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .warn strong{color:#e2696e;}
+  .docker{background:var(--blue-dim); border-left:3px solid var(--blue); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .docker strong{color:var(--blue);}
+
+  .ex{border:1px solid var(--edge-soft); border-radius:10px; margin-bottom:24px; overflow:hidden; background:var(--panel);}
+  .ex-head{padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--edge-soft);}
+  .ex-title{display:flex; align-items:baseline; gap:10px;}
+  .ex-num{font-family:var(--mono); color:var(--orange); font-size:13px;}
+  .ex-title h3{margin:0; font-size:15.5px; font-weight:600;}
+  .ex-diff{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); border:1px solid var(--edge-soft); border-radius:20px; padding:3px 10px; white-space:nowrap;}
+  .ex-body{padding:18px 20px 6px;}
+  .ex-body p:last-child{margin-bottom:0;}
+
+  details.sol{border-top:1px solid var(--edge-soft);}
+  details.sol summary{list-style:none; cursor:pointer; padding:13px 20px; font-family:var(--mono); font-size:12.5px; letter-spacing:.05em; color:var(--green); display:flex; align-items:center; gap:8px; user-select:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:'▸'; display:inline-block; transition:transform .15s ease; color:var(--green);}
+  details.sol[open] summary::before{transform:rotate(90deg);}
+  details.sol summary:hover{background:var(--green-dim);}
+  .sol-inner{padding:4px 20px 20px;}
+  .sol-inner pre{margin-top:8px;}
+  .sol-note{font-size:13.5px; color:var(--ink-dim); margin-top:10px;}
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Développement avec Framework · L3 Génie Logiciel · Laravel</p>
+  <h1 class="title">Séance 2 — Migrations, Eloquent et relations</h1>
+  <p class="subtitle">Faire dialoguer Laravel avec la base de données : schéma versionné, modèles, requêtes et relations entre tables. Durée indicative : 3h30 à 4h. Tout se fait dans le même environnement Docker que la séance 1.</p>
+
+  <div class="tracker">
+    <div class="tstep done"><span class="n">Séance 01 ✓</span>Fondamentaux : MVC, installation, routing, contrôleurs, vues</div>
+    <div class="tstep active"><span class="n">Séance 02</span>Données : migrations, Eloquent, relations</div>
+    <div class="tstep"><span class="n">Séance 03</span>Interface & logique métier : Blade avancé, formulaires, CRUD</div>
+    <div class="tstep"><span class="n">Séance 04</span>Authentification, API REST, mini-projet dockerisé</div>
+  </div>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="term-label">terminal — dans le conteneur app</span>
+    </div>
+    <div class="term-body">
+docker compose exec app php artisan make:model Etudiant -m
+docker compose exec app php artisan migrate
+      <div class="term-out">Migrated: 2026_07_16_000000_create_etudiants_table</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Objectifs de la séance</h2></div>
+    <div class="content">
+      <ul>
+        <li>Créer et faire évoluer un schéma de base de données avec les migrations Laravel.</li>
+        <li>Créer des modèles Eloquent et comprendre le lien table ↔ classe PHP.</li>
+        <li>Effectuer des opérations CRUD (Create, Read, Update, Delete) avec Eloquent, sans écrire de SQL brut.</li>
+        <li>Définir des relations <code class="inline">hasMany</code> / <code class="inline">belongsTo</code> et <code class="inline">belongsToMany</code> entre modèles.</li>
+        <li>Peupler la base avec des seeders pour disposer de données de test.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Reprendre l'environnement Docker de la séance 1</h2></div>
+    <div class="sec-intro">Le <code class="inline">docker-compose.yml</code> de la séance 1 suffit ; toutes les commandes Artisan de cette séance s'exécutent à l'intérieur du conteneur <code class="inline">app</code>.</div>
+    <div class="content">
+      <pre>docker compose up -d
+docker compose exec app php artisan migrate</pre>
+      <div class="docker"><strong>Pourquoi exécuter les commandes via <code class="inline">docker compose exec</code> :</strong> PHP et Artisan vivent à l'intérieur du conteneur <code class="inline">app</code>, pas sur la machine hôte — <code class="inline">exec</code> lance la commande dans ce conteneur déjà démarré, exactement comme si on avait ouvert un terminal dedans.</div>
+      <p>Pour visualiser la base de données plus confortablement pendant les TP, on peut ajouter phpMyAdmin au <code class="inline">docker-compose.yml</code> :</p>
+      <pre><span class="tag">phpmyadmin</span>:
+  <span class="kw">image</span>: phpmyadmin
+  <span class="kw">environment</span>:
+    PMA_HOST: db
+  <span class="kw">ports</span>:
+    - <span class="str">"8080:80"</span></pre>
+      <p>Accessible ensuite sur <code class="inline">http://localhost:8080</code>.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Les migrations</h2></div>
+    <div class="sec-intro">Une migration décrit le schéma d'une table en PHP plutôt qu'en SQL brut — versionné avec le code, partagé par toute l'équipe, et rejouable sur n'importe quelle machine.</div>
+    <div class="content">
+      <pre>docker compose exec app php artisan make:migration create_etudiants_table</pre>
+      <pre><span class="com">// database/migrations/..._create_etudiants_table.php</span>
+<span class="kw">public function</span> up(): <span class="typ">void</span>
+{
+    Schema::create(<span class="str">'etudiants'</span>, <span class="kw">function</span> (Blueprint <span class="typ">$table</span>) {
+        <span class="typ">$table</span>->id();
+        <span class="typ">$table</span>->string(<span class="str">'nom'</span>);
+        <span class="typ">$table</span>->string(<span class="str">'email'</span>)->unique();
+        <span class="typ">$table</span>->integer(<span class="str">'annee'</span>)->default(3);
+        <span class="typ">$table</span>->timestamps();
+    });
+}</pre>
+      <pre>docker compose exec app php artisan migrate</pre>
+      <table>
+        <tr><th>Méthode</th><th>Rôle</th></tr>
+        <tr><td><code class="inline">id()</code></td><td>Clé primaire auto-incrémentée</td></tr>
+        <tr><td><code class="inline">string() / integer() / boolean()</code></td><td>Types de colonnes</td></tr>
+        <tr><td><code class="inline">unique()</code></td><td>Contrainte d'unicité</td></tr>
+        <tr><td><code class="inline">timestamps()</code></td><td>Ajoute <code class="inline">created_at</code> et <code class="inline">updated_at</code>, gérés automatiquement</td></tr>
+      </table>
+      <div class="warn"><strong>Piège fréquent :</strong> modifier directement une migration déjà exécutée en production n'a aucun effet — il faut créer une nouvelle migration (par exemple avec <code class="inline">php artisan make:migration add_telephone_to_etudiants_table</code>) pour faire évoluer une table existante.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Les modèles Eloquent</h2></div>
+    <div class="content">
+      <pre>docker compose exec app php artisan make:model Etudiant</pre>
+      <pre><span class="com">// app/Models/Etudiant.php</span>
+<span class="kw">class</span> Etudiant <span class="kw">extends</span> Model
+{
+    <span class="kw">protected</span> <span class="typ">$fillable</span> = [<span class="str">'nom'</span>, <span class="str">'email'</span>, <span class="str">'annee'</span>];
+}</pre>
+      <div class="note"><strong>À quoi sert <code class="inline">$fillable</code> :</strong> Eloquent refuse par sécurité de remplir en masse un champ non listé ici, pour éviter qu'un formulaire malveillant n'écrive dans une colonne sensible (comme un rôle "admin") non prévue pour être modifiée depuis l'extérieur.</div>
+      <p>Par convention, le modèle <code class="inline">Etudiant</code> correspond automatiquement à la table <code class="inline">etudiants</code> (nom au pluriel) — pas besoin de le préciser sauf cas particulier.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Requêtes CRUD avec Eloquent</h2></div>
+    <div class="content">
+      <pre><span class="com">// Create</span>
+Etudiant::create([<span class="str">'nom'</span> => <span class="str">'Fabrice'</span>, <span class="str">'email'</span> => <span class="str">'fabrice@ecole.cg'</span>, <span class="str">'annee'</span> => 3]);
+
+<span class="com">// Read</span>
+<span class="typ">$tous</span> = Etudiant::all();
+<span class="typ">$un</span> = Etudiant::find(1);
+<span class="typ">$filtres</span> = Etudiant::where(<span class="str">'annee'</span>, 3)->get();
+
+<span class="com">// Update</span>
+<span class="typ">$etudiant</span> = Etudiant::find(1);
+<span class="typ">$etudiant</span>->annee = 4;
+<span class="typ">$etudiant</span>->save();
+
+<span class="com">// Delete</span>
+Etudiant::destroy(1);</pre>
+      <div class="note"><strong>Pourquoi Eloquent plutôt que du SQL brut :</strong> les requêtes ci-dessus fonctionnent à l'identique quelle que soit la base de données (MySQL, PostgreSQL, SQLite), et protègent automatiquement contre les injections SQL — écrire <code class="inline">"WHERE annee = " . $valeur</code> à la main serait risqué si <code class="inline">$valeur</code> vient d'un utilisateur.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Les relations entre modèles</h2></div>
+    <div class="content">
+      <h4>Un-à-plusieurs (hasMany / belongsTo)</h4>
+      <p>Un étudiant a plusieurs notes ; chaque note appartient à un étudiant :</p>
+      <pre><span class="com">// app/Models/Etudiant.php</span>
+<span class="kw">public function</span> notes()
+{
+    <span class="kw">return</span> <span class="typ">$this</span>->hasMany(Note::class);
+}
+
+<span class="com">// app/Models/Note.php</span>
+<span class="kw">public function</span> etudiant()
+{
+    <span class="kw">return</span> <span class="typ">$this</span>->belongsTo(Etudiant::class);
+}</pre>
+      <pre><span class="typ">$etudiant</span> = Etudiant::find(1);
+<span class="kw">foreach</span> (<span class="typ">$etudiant</span>->notes <span class="kw">as</span> <span class="typ">$note</span>) {
+    echo <span class="typ">$note</span>->valeur;
+}</pre>
+      <p>La migration correspondante pour <code class="inline">notes</code> doit contenir une clé étrangère :</p>
+      <pre><span class="typ">$table</span>->foreignId(<span class="str">'etudiant_id'</span>)->constrained();</pre>
+
+      <h4>Plusieurs-à-plusieurs (belongsToMany)</h4>
+      <p>Un étudiant est inscrit à plusieurs cours ; un cours a plusieurs étudiants — nécessite une table pivot <code class="inline">cours_etudiant</code> :</p>
+      <pre><span class="com">// app/Models/Etudiant.php</span>
+<span class="kw">public function</span> cours()
+{
+    <span class="kw">return</span> <span class="typ">$this</span>->belongsToMany(Cours::class);
+}</pre>
+      <div class="note"><strong>Pourquoi une table pivot :</strong> une relation plusieurs-à-plusieurs ne peut pas être stockée par une simple clé étrangère dans l'une ou l'autre table — il faut une troisième table qui associe chaque paire (étudiant, cours) possible.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Seeders : peupler la base pour les TP</h2></div>
+    <div class="content">
+      <pre>docker compose exec app php artisan make:seeder EtudiantSeeder</pre>
+      <pre><span class="com">// database/seeders/EtudiantSeeder.php</span>
+<span class="kw">public function</span> run(): <span class="typ">void</span>
+{
+    Etudiant::create([<span class="str">'nom'</span> => <span class="str">'Awa'</span>, <span class="str">'email'</span> => <span class="str">'awa@ecole.cg'</span>, <span class="str">'annee'</span> => 3]);
+    Etudiant::create([<span class="str">'nom'</span> => <span class="str">'Brice'</span>, <span class="str">'email'</span> => <span class="str">'brice@ecole.cg'</span>, <span class="str">'annee'</span> => 3]);
+}</pre>
+      <pre>docker compose exec app php artisan db:seed --class=EtudiantSeeder</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Exercices pratiques</h2></div>
+    <div class="sec-intro">À réaliser dans le conteneur Docker mis en place en séance 1. Chaque commande Artisan doit être préfixée par <code class="inline">docker compose exec app</code>.</div>
+    <div class="content">
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 1</span><h3>Table et modèle Livre</h3></div>
+          <span class="ex-diff">facile</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer une migration pour une table <code class="inline">livres</code> (<code class="inline">titre</code>, <code class="inline">auteur</code>, <code class="inline">disponible</code> booléen par défaut à <code class="inline">true</code>), le modèle <code class="inline">Livre</code> correspondant avec son <code class="inline">$fillable</code>, puis migrer.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre>docker compose exec app php artisan make:model Livre -m</pre>
+            <pre><span class="com">// database/migrations/..._create_livres_table.php</span>
+Schema::create(<span class="str">'livres'</span>, <span class="kw">function</span> (Blueprint <span class="typ">$table</span>) {
+    <span class="typ">$table</span>->id();
+    <span class="typ">$table</span>->string(<span class="str">'titre'</span>);
+    <span class="typ">$table</span>->string(<span class="str">'auteur'</span>);
+    <span class="typ">$table</span>->boolean(<span class="str">'disponible'</span>)->default(<span class="kw">true</span>);
+    <span class="typ">$table</span>->timestamps();
+});</pre>
+            <pre><span class="com">// app/Models/Livre.php</span>
+<span class="kw">class</span> Livre <span class="kw">extends</span> Model
+{
+    <span class="kw">protected</span> <span class="typ">$fillable</span> = [<span class="str">'titre'</span>, <span class="str">'auteur'</span>, <span class="str">'disponible'</span>];
+}</pre>
+            <pre>docker compose exec app php artisan migrate</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 2</span><h3>Seeder et requêtes de base</h3></div>
+          <span class="ex-diff">facile</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer un seeder qui ajoute 4 livres, l'exécuter, puis écrire une route de test qui récupère tous les livres <code class="inline">disponible = true</code> et les retourne en JSON avec <code class="inline">response()->json()</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">// database/seeders/LivreSeeder.php</span>
+<span class="kw">public function</span> run(): <span class="typ">void</span>
+{
+    Livre::create([<span class="str">'titre'</span> => <span class="str">'Une si longue lettre'</span>, <span class="str">'auteur'</span> => <span class="str">'Mariama Bâ'</span>]);
+    Livre::create([<span class="str">'titre'</span> => <span class="str">"L'enfant noir"</span>, <span class="str">'auteur'</span> => <span class="str">'Camara Laye'</span>]);
+    Livre::create([<span class="str">'titre'</span> => <span class="str">'Le pleurer-rire'</span>, <span class="str">'auteur'</span> => <span class="str">'Henri Lopes'</span>]);
+    Livre::create([<span class="str">'titre'</span> => <span class="str">"Les soleils des indépendances"</span>, <span class="str">'auteur'</span> => <span class="str">'Ahmadou Kourouma'</span>, <span class="str">'disponible'</span> => <span class="kw">false</span>]);
+}</pre>
+            <pre>docker compose exec app php artisan db:seed --class=LivreSeeder</pre>
+            <pre><span class="com">// routes/web.php</span>
+Route::get(<span class="str">'/livres-disponibles'</span>, <span class="kw">function</span> () {
+    <span class="typ">$livres</span> = Livre::where(<span class="str">'disponible'</span>, <span class="kw">true</span>)->get();
+    <span class="kw">return</span> response()->json(<span class="typ">$livres</span>);
+});</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 3</span><h3>Relation Étudiant / Notes</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer les tables et modèles <code class="inline">Etudiant</code> et <code class="inline">Note</code> (<code class="inline">valeur</code>, <code class="inline">matiere</code>, <code class="inline">etudiant_id</code>), déclarer la relation <code class="inline">hasMany</code>/<code class="inline">belongsTo</code>, puis écrire une route qui affiche, pour un étudiant donné, la liste de ses notes et leur moyenne.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">// database/migrations/..._create_notes_table.php</span>
+Schema::create(<span class="str">'notes'</span>, <span class="kw">function</span> (Blueprint <span class="typ">$table</span>) {
+    <span class="typ">$table</span>->id();
+    <span class="typ">$table</span>->foreignId(<span class="str">'etudiant_id'</span>)->constrained();
+    <span class="typ">$table</span>->string(<span class="str">'matiere'</span>);
+    <span class="typ">$table</span>->decimal(<span class="str">'valeur'</span>, 4, 2);
+    <span class="typ">$table</span>->timestamps();
+});</pre>
+            <pre><span class="com">// app/Models/Etudiant.php</span>
+<span class="kw">public function</span> notes()
+{
+    <span class="kw">return</span> <span class="typ">$this</span>->hasMany(Note::class);
+}
+
+<span class="com">// app/Models/Note.php</span>
+<span class="kw">protected</span> <span class="typ">$fillable</span> = [<span class="str">'etudiant_id'</span>, <span class="str">'matiere'</span>, <span class="str">'valeur'</span>];
+
+<span class="kw">public function</span> etudiant()
+{
+    <span class="kw">return</span> <span class="typ">$this</span>->belongsTo(Etudiant::class);
+}</pre>
+            <pre><span class="com">// routes/web.php</span>
+Route::get(<span class="str">'/etudiants/{id}/notes'</span>, <span class="kw">function</span> (<span class="typ">$id</span>) {
+    <span class="typ">$etudiant</span> = Etudiant::find(<span class="typ">$id</span>);
+    <span class="typ">$moyenne</span> = <span class="typ">$etudiant</span>->notes->avg(<span class="str">'valeur'</span>);
+
+    <span class="kw">return</span> response()->json([
+        <span class="str">'notes'</span> => <span class="typ">$etudiant</span>->notes,
+        <span class="str">'moyenne'</span> => <span class="typ">$moyenne</span>,
+    ]);
+});</pre>
+            <p class="sol-note"><code class="inline">$etudiant->notes</code> déclenche automatiquement la relation définie dans le modèle et retourne une collection, sur laquelle des méthodes comme <code class="inline">avg()</code> peuvent directement s'appliquer.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 4</span><h3>Inscriptions étudiants / cours (plusieurs-à-plusieurs)</h3></div>
+          <span class="ex-diff">défi</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer les tables <code class="inline">cours</code> et une table pivot <code class="inline">cours_etudiant</code> (<code class="inline">etudiant_id</code>, <code class="inline">cours_id</code>), déclarer <code class="inline">belongsToMany</code> dans les deux sens, inscrire un étudiant à deux cours avec <code class="inline">attach()</code>, puis afficher la liste des cours d'un étudiant.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">// database/migrations/..._create_cours_table.php</span>
+Schema::create(<span class="str">'cours'</span>, <span class="kw">function</span> (Blueprint <span class="typ">$table</span>) {
+    <span class="typ">$table</span>->id();
+    <span class="typ">$table</span>->string(<span class="str">'nom'</span>);
+    <span class="typ">$table</span>->timestamps();
+});
+
+<span class="com">// database/migrations/..._create_cours_etudiant_table.php</span>
+Schema::create(<span class="str">'cours_etudiant'</span>, <span class="kw">function</span> (Blueprint <span class="typ">$table</span>) {
+    <span class="typ">$table</span>->id();
+    <span class="typ">$table</span>->foreignId(<span class="str">'etudiant_id'</span>)->constrained();
+    <span class="typ">$table</span>->foreignId(<span class="str">'cours_id'</span>)->constrained();
+    <span class="typ">$table</span>->timestamps();
+});</pre>
+            <pre><span class="com">// app/Models/Etudiant.php</span>
+<span class="kw">public function</span> cours()
+{
+    <span class="kw">return</span> <span class="typ">$this</span>->belongsToMany(Cours::class);
+}
+
+<span class="com">// app/Models/Cours.php</span>
+<span class="kw">public function</span> etudiants()
+{
+    <span class="kw">return</span> <span class="typ">$this</span>->belongsToMany(Etudiant::class);
+}</pre>
+            <pre><span class="com">// routes/web.php — inscrire, à exécuter une seule fois</span>
+Route::get(<span class="str">'/test-inscription'</span>, <span class="kw">function</span> () {
+    <span class="typ">$etudiant</span> = Etudiant::find(1);
+    <span class="typ">$etudiant</span>->cours()->attach([1, 2]);
+    <span class="kw">return</span> <span class="str">'Inscrit'</span>;
+});
+
+Route::get(<span class="str">'/etudiants/{id}/cours'</span>, <span class="kw">function</span> (<span class="typ">$id</span>) {
+    <span class="kw">return</span> response()->json(Etudiant::find(<span class="typ">$id</span>)->cours);
+});</pre>
+            <p class="sol-note">Laravel devine automatiquement le nom de la table pivot (<code class="inline">cours_etudiant</code>, les deux noms de modèles au singulier dans l'ordre alphabétique) — c'est pourquoi elle n'a pas besoin d'être précisée dans <code class="inline">belongsToMany()</code> ici.</p>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>Développement avec Framework — Séance 2 / 4 · Laravel · Migrations, Eloquent, relations</footer>
+
+</div>
+</body>
+</html>

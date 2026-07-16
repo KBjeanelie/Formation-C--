@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Développement avec Framework — Séance 3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --blue:#4f9ee8;
+    --blue-dim:#182a3a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(28px,4vw,40px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.15;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:660px;}
+
+  .tracker{display:flex; gap:8px; margin-bottom:44px;}
+  .tstep{flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--edge-soft); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .tstep .n{display:block; font-size:10px; letter-spacing:.1em; margin-bottom:4px;}
+  .tstep.active{border-color:var(--orange); color:var(--ink); background:var(--orange-dim);}
+  .tstep.active .n{color:var(--orange);}
+  .tstep.done{border-color:var(--edge); color:var(--ink-dim);}
+  .tstep.done .n{color:var(--green);}
+
+  .term{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:10px; overflow:hidden; margin:0 0 48px;}
+  .term-bar{display:flex; align-items:center; gap:6px; padding:10px 14px; border-bottom:1px solid var(--edge-soft); background:#111120;}
+  .dot{width:9px; height:9px; border-radius:50%; background:#33334a;}
+  .term-label{margin-left:8px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .term-body{padding:20px 22px; font-family:var(--mono); font-size:13.5px; color:#d6d3e0;}
+  .term-body .c-kw{color:#ef6b34;} .term-body .c-str{color:#3fbd83;} .term-body .c-com{color:var(--ink-faint); font-style:italic;} .term-body .c-typ{color:#7fa9ec;}
+  .term-out{color:#7fd9ab; margin-top:10px; padding-top:10px; border-top:1px dashed var(--edge-soft); white-space:pre;}
+
+  section{margin:56px 0;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px;}
+  .sec-num{font-family:var(--mono); color:var(--orange); font-size:14px; min-width:26px;}
+  h2{font-size:21px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  .sec-intro{color:var(--ink-dim); margin:10px 0 22px 40px; max-width:640px;}
+  h4{font-size:14px; font-weight:600; margin:20px 0 8px; color:var(--ink);}
+
+  p{margin:0 0 14px;}
+  .content{margin-left:40px;}
+  ul, ol{margin:0 0 14px; padding-left:20px; color:var(--ink);}
+  li{margin-bottom:6px;}
+  strong{color:var(--ink); font-weight:600;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--panel); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.5px; line-height:1.6; margin:0 0 16px; color:#d6d3e0;}
+  pre .kw{color:#ef6b34;} pre .str{color:#3fbd83;} pre .com{color:var(--ink-faint); font-style:italic;} pre .typ{color:#7fa9ec;} pre .tag{color:#c98edb;}
+
+  table{width:100%; border-collapse:collapse; margin:0 0 16px; font-size:14px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--edge-soft);}
+  th{color:var(--ink-faint); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:500;}
+
+  .note{background:var(--panel); border-left:3px solid var(--orange); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .note strong{color:var(--orange);}
+  .warn{background:var(--panel); border-left:3px solid #e2444a; border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .warn strong{color:#e2696e;}
+  .docker{background:var(--blue-dim); border-left:3px solid var(--blue); border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; color:var(--ink-dim);}
+  .docker strong{color:var(--blue);}
+
+  .ex{border:1px solid var(--edge-soft); border-radius:10px; margin-bottom:24px; overflow:hidden; background:var(--panel);}
+  .ex-head{padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--edge-soft);}
+  .ex-title{display:flex; align-items:baseline; gap:10px;}
+  .ex-num{font-family:var(--mono); color:var(--orange); font-size:13px;}
+  .ex-title h3{margin:0; font-size:15.5px; font-weight:600;}
+  .ex-diff{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); border:1px solid var(--edge-soft); border-radius:20px; padding:3px 10px; white-space:nowrap;}
+  .ex-body{padding:18px 20px 6px;}
+  .ex-body p:last-child{margin-bottom:0;}
+
+  details.sol{border-top:1px solid var(--edge-soft);}
+  details.sol summary{list-style:none; cursor:pointer; padding:13px 20px; font-family:var(--mono); font-size:12.5px; letter-spacing:.05em; color:var(--green); display:flex; align-items:center; gap:8px; user-select:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:'▸'; display:inline-block; transition:transform .15s ease; color:var(--green);}
+  details.sol[open] summary::before{transform:rotate(90deg);}
+  details.sol summary:hover{background:var(--green-dim);}
+  .sol-inner{padding:4px 20px 20px;}
+  .sol-inner pre{margin-top:8px;}
+  .sol-note{font-size:13.5px; color:var(--ink-dim); margin-top:10px;}
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Développement avec Framework · L3 Génie Logiciel · Laravel</p>
+  <h1 class="title">Séance 3 — Blade avancé, formulaires et CRUD complet</h1>
+  <p class="subtitle">Composants réutilisables, formulaires sécurisés, validation des données, et un contrôleur de ressource qui assemble tout en un CRUD complet. Durée indicative : 3h30 à 4h, dans le même environnement Docker que les séances précédentes.</p>
+
+  <div class="tracker">
+    <div class="tstep done"><span class="n">Séance 01 ✓</span>Fondamentaux : MVC, installation, routing, contrôleurs, vues</div>
+    <div class="tstep done"><span class="n">Séance 02 ✓</span>Données : migrations, Eloquent, relations</div>
+    <div class="tstep active"><span class="n">Séance 03</span>Interface & logique métier : Blade avancé, formulaires, CRUD</div>
+    <div class="tstep"><span class="n">Séance 04</span>Authentification, API REST, mini-projet dockerisé</div>
+  </div>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="term-label">terminal — dans le conteneur app</span>
+    </div>
+    <div class="term-body">
+docker compose exec app php artisan make:controller LivreController --resource
+docker compose exec app php artisan route:list
+      <div class="term-out">GET|HEAD  livres ................. livre.index
+POST      livres ................. livre.store
+GET|HEAD  livres/{livre}/edit .... livre.edit
+...</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Objectifs de la séance</h2></div>
+    <div class="content">
+      <ul>
+        <li>Créer des composants Blade réutilisables pour éviter de dupliquer du HTML.</li>
+        <li>Construire des formulaires sécurisés (protection CSRF) et repeupler les champs après une erreur.</li>
+        <li>Valider les données envoyées par un formulaire, côté serveur.</li>
+        <li>Générer un contrôleur de ressource pour couvrir les 7 actions d'un CRUD en une seule ligne de routing.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Composants Blade</h2></div>
+    <div class="sec-intro">Un composant encapsule un morceau d'interface réutilisable — par exemple une carte, un bouton ou une alerte — pour ne pas répéter le même HTML dans dix vues différentes.</div>
+    <div class="content">
+      <pre>docker compose exec app php artisan make:component Alerte</pre>
+      <pre><span class="com">&lt;!-- resources/views/components/alerte.blade.php --&gt;</span>
+&lt;div class=<span class="str">"alerte alerte-{{ $type }}"</span>&gt;
+    {{ <span class="typ">$slot</span> }}
+&lt;/div&gt;</pre>
+      <p>Utilisation dans une autre vue :</p>
+      <pre>&lt;x-alerte type=<span class="str">"success"</span>&gt;
+    Livre ajouté avec succès !
+&lt;/x-alerte&gt;</pre>
+      <div class="note"><strong>Ce qu'apporte <code class="inline">$slot</code> :</strong> le contenu placé entre <code class="inline">&lt;x-alerte&gt;</code> et <code class="inline">&lt;/x-alerte&gt;</code> est injecté à la place de <code class="inline">{{ $slot }}</code> — le composant reste générique tout en acceptant un contenu différent à chaque utilisation.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Formulaires</h2></div>
+    <div class="content">
+      <pre><span class="com">&lt;!-- resources/views/livres/create.blade.php --&gt;</span>
+&lt;form method=<span class="str">"POST"</span> action=<span class="str">"/livres"</span>&gt;
+    @<span class="kw">csrf</span>
+
+    &lt;label&gt;Titre&lt;/label&gt;
+    &lt;input type=<span class="str">"text"</span> name=<span class="str">"titre"</span> value=<span class="str">"{{ old('titre') }}"</span>&gt;
+
+    &lt;label&gt;Auteur&lt;/label&gt;
+    &lt;input type=<span class="str">"text"</span> name=<span class="str">"auteur"</span> value=<span class="str">"{{ old('auteur') }}"</span>&gt;
+
+    &lt;button type=<span class="str">"submit"</span>&gt;Enregistrer&lt;/button&gt;
+&lt;/form&gt;</pre>
+      <table>
+        <tr><th>Directive / helper</th><th>Rôle</th></tr>
+        <tr><td><code class="inline">@csrf</code></td><td>Ajoute un jeton anti-falsification de requête — obligatoire sur tout formulaire Laravel</td></tr>
+        <tr><td><code class="inline">old('champ')</code></td><td>Réaffiche la valeur précédemment saisie si le formulaire est redisplayé après une erreur de validation</td></tr>
+      </table>
+      <div class="warn"><strong>Piège fréquent :</strong> oublier <code class="inline">@csrf</code> provoque une erreur <code class="inline">419 Page Expired</code> à la soumission — Laravel refuse par sécurité les requêtes POST sans jeton valide.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Validation</h2></div>
+    <div class="content">
+      <p>Validation directe dans le contrôleur, pour un cas simple :</p>
+      <pre><span class="kw">public function</span> store(Request <span class="typ">$request</span>)
+{
+    <span class="typ">$donnees</span> = <span class="typ">$request</span>->validate([
+        <span class="str">'titre'</span> => <span class="str">'required|max:255'</span>,
+        <span class="str">'auteur'</span> => <span class="str">'required|max:255'</span>,
+    ]);
+
+    Livre::create(<span class="typ">$donnees</span>);
+
+    <span class="kw">return</span> redirect(<span class="str">'/livres'</span>);
+}</pre>
+      <p>Si la validation échoue, Laravel redirige automatiquement vers le formulaire précédent avec les erreurs, accessibles en vue avec <code class="inline">@error</code> :</p>
+      <pre>&lt;input type=<span class="str">"text"</span> name=<span class="str">"titre"</span> value=<span class="str">"{{ old('titre') }}"</span>&gt;
+@<span class="kw">error</span>(<span class="str">'titre'</span>)
+    &lt;p class=<span class="str">"erreur"</span>&gt;{{ <span class="typ">$message</span> }}&lt;/p&gt;
+@<span class="kw">enderror</span></pre>
+
+      <p>Pour des règles plus complexes ou réutilisées à plusieurs endroits, une <strong>Form Request</strong> dédiée :</p>
+      <pre>docker compose exec app php artisan make:request StoreLivreRequest</pre>
+      <pre><span class="com">// app/Http/Requests/StoreLivreRequest.php</span>
+<span class="kw">public function</span> rules(): <span class="typ">array</span>
+{
+    <span class="kw">return</span> [
+        <span class="str">'titre'</span> => <span class="str">'required|max:255'</span>,
+        <span class="str">'auteur'</span> => <span class="str">'required|max:255'</span>,
+    ];
+}
+
+<span class="kw">public function</span> authorize(): <span class="typ">bool</span>
+{
+    <span class="kw">return</span> <span class="kw">true</span>;
+}</pre>
+      <pre><span class="com">// dans le contrôleur</span>
+<span class="kw">public function</span> store(StoreLivreRequest <span class="typ">$request</span>)
+{
+    Livre::create(<span class="typ">$request</span>->validated());
+    <span class="kw">return</span> redirect(<span class="str">'/livres'</span>);
+}</pre>
+      <div class="note"><strong>Pourquoi une Form Request plutôt que <code class="inline">$request-&gt;validate()</code> partout :</strong> dès que les mêmes règles doivent s'appliquer à la création et à la modification, ou qu'elles deviennent longues, centraliser dans une classe dédiée évite de dupliquer le tableau de règles dans chaque méthode du contrôleur.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>CRUD complet avec un contrôleur de ressource</h2></div>
+    <div class="sec-intro">Un CRUD suit toujours le même schéma de 7 actions (liste, formulaire de création, enregistrement, détail, formulaire d'édition, mise à jour, suppression) — Laravel les génère d'un coup.</div>
+    <div class="content">
+      <pre>docker compose exec app php artisan make:controller LivreController --resource</pre>
+      <pre><span class="com">// routes/web.php</span>
+Route::resource(<span class="str">'livres'</span>, LivreController::class);</pre>
+      <table>
+        <tr><th>Méthode</th><th>Verbe + URL</th><th>Rôle</th></tr>
+        <tr><td><code class="inline">index</code></td><td>GET /livres</td><td>Liste</td></tr>
+        <tr><td><code class="inline">create</code></td><td>GET /livres/create</td><td>Formulaire de création</td></tr>
+        <tr><td><code class="inline">store</code></td><td>POST /livres</td><td>Enregistrement</td></tr>
+        <tr><td><code class="inline">edit</code></td><td>GET /livres/{id}/edit</td><td>Formulaire de modification</td></tr>
+        <tr><td><code class="inline">update</code></td><td>PUT /livres/{id}</td><td>Mise à jour</td></tr>
+        <tr><td><code class="inline">destroy</code></td><td>DELETE /livres/{id}</td><td>Suppression</td></tr>
+      </table>
+      <pre><span class="com">// app/Http/Controllers/LivreController.php</span>
+<span class="kw">public function</span> index()
+{
+    <span class="kw">return</span> view(<span class="str">'livres.index'</span>, [<span class="str">'livres'</span> => Livre::all()]);
+}
+
+<span class="kw">public function</span> destroy(Livre <span class="typ">$livre</span>)
+{
+    <span class="typ">$livre</span>->delete();
+    <span class="kw">return</span> redirect(<span class="str">'/livres'</span>);
+}</pre>
+      <div class="note"><strong><code class="inline">Livre $livre</code> directement en paramètre :</strong> c'est le "route model binding" — Laravel va lui-même chercher le livre correspondant à l'identifiant dans l'URL, plutôt que d'écrire manuellement <code class="inline">Livre::find($id)</code> dans chaque méthode.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Exercices pratiques</h2></div>
+    <div class="sec-intro">Toujours dans le conteneur Docker mis en place en séance 1. Ces exercices construisent ensemble un CRUD complet pour la gestion des cours.</div>
+    <div class="content">
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 1</span><h3>Composant carte-cours</h3></div>
+          <span class="ex-diff">facile</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer un composant <code class="inline">carte-cours</code> qui reçoit un nom de cours en <code class="inline">$slot</code> et l'affiche dans une carte stylée, puis l'utiliser pour afficher les 4 cours du <code class="inline">CoursController</code> de la séance 1.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">&lt;!-- resources/views/components/carte-cours.blade.php --&gt;</span>
+&lt;div class=<span class="str">"carte-cours"</span>&gt;
+    {{ <span class="typ">$slot</span> }}
+&lt;/div&gt;</pre>
+            <pre><span class="com">&lt;!-- resources/views/cours/liste.blade.php --&gt;</span>
+@<span class="kw">foreach</span> (<span class="typ">$cours</span> <span class="kw">as</span> <span class="typ">$c</span>)
+    &lt;x-carte-cours&gt;{{ <span class="typ">$c</span> }}&lt;/x-carte-cours&gt;
+@<span class="kw">endforeach</span></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 2</span><h3>Formulaire d'ajout de cours avec validation</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Créer une table et un modèle <code class="inline">Cours</code> (<code class="inline">nom</code>, <code class="inline">credits</code>), un formulaire de création avec <code class="inline">@csrf</code>, et une validation qui exige <code class="inline">nom</code> et un <code class="inline">credits</code> entier entre 1 et 10, avec affichage des erreurs via <code class="inline">@error</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">&lt;!-- resources/views/cours/create.blade.php --&gt;</span>
+&lt;form method=<span class="str">"POST"</span> action=<span class="str">"/cours"</span>&gt;
+    @<span class="kw">csrf</span>
+    &lt;input type=<span class="str">"text"</span> name=<span class="str">"nom"</span> value=<span class="str">"{{ old('nom') }}"</span>&gt;
+    @<span class="kw">error</span>(<span class="str">'nom'</span>)&lt;p&gt;{{ <span class="typ">$message</span> }}&lt;/p&gt;@<span class="kw">enderror</span>
+
+    &lt;input type=<span class="str">"number"</span> name=<span class="str">"credits"</span> value=<span class="str">"{{ old('credits') }}"</span>&gt;
+    @<span class="kw">error</span>(<span class="str">'credits'</span>)&lt;p&gt;{{ <span class="typ">$message</span> }}&lt;/p&gt;@<span class="kw">enderror</span>
+
+    &lt;button type=<span class="str">"submit"</span>&gt;Ajouter&lt;/button&gt;
+&lt;/form&gt;</pre>
+            <pre><span class="com">// app/Http/Controllers/CoursController.php</span>
+<span class="kw">public function</span> store(Request <span class="typ">$request</span>)
+{
+    <span class="typ">$donnees</span> = <span class="typ">$request</span>->validate([
+        <span class="str">'nom'</span> => <span class="str">'required|max:255'</span>,
+        <span class="str">'credits'</span> => <span class="str">'required|integer|min:1|max:10'</span>,
+    ]);
+
+    Cours::create(<span class="typ">$donnees</span>);
+
+    <span class="kw">return</span> redirect(<span class="str">'/cours'</span>);
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 3</span><h3>Form Request dédiée</h3></div>
+          <span class="ex-diff">intermédiaire</span>
+        </div>
+        <div class="ex-body">
+          <p>Reprendre l'exercice 2 et déplacer les règles de validation dans une <code class="inline">StoreCoursRequest</code>, réutilisée à la fois pour <code class="inline">store</code> et pour <code class="inline">update</code>.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre>docker compose exec app php artisan make:request StoreCoursRequest</pre>
+            <pre><span class="com">// app/Http/Requests/StoreCoursRequest.php</span>
+<span class="kw">public function</span> authorize(): <span class="typ">bool</span> { <span class="kw">return</span> <span class="kw">true</span>; }
+
+<span class="kw">public function</span> rules(): <span class="typ">array</span>
+{
+    <span class="kw">return</span> [
+        <span class="str">'nom'</span> => <span class="str">'required|max:255'</span>,
+        <span class="str">'credits'</span> => <span class="str">'required|integer|min:1|max:10'</span>,
+    ];
+}</pre>
+            <pre><span class="com">// app/Http/Controllers/CoursController.php</span>
+<span class="kw">public function</span> store(StoreCoursRequest <span class="typ">$request</span>)
+{
+    Cours::create(<span class="typ">$request</span>->validated());
+    <span class="kw">return</span> redirect(<span class="str">'/cours'</span>);
+}
+
+<span class="kw">public function</span> update(StoreCoursRequest <span class="typ">$request</span>, Cours <span class="typ">$cours</span>)
+{
+    <span class="typ">$cours</span>->update(<span class="typ">$request</span>->validated());
+    <span class="kw">return</span> redirect(<span class="str">'/cours'</span>);
+}</pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="ex">
+        <div class="ex-head">
+          <div class="ex-title"><span class="ex-num">Ex. 4</span><h3>CRUD complet des cours</h3></div>
+          <span class="ex-diff">défi</span>
+        </div>
+        <div class="ex-body">
+          <p>Générer un <code class="inline">CoursController</code> en <code class="inline">--resource</code>, déclarer <code class="inline">Route::resource('cours', CoursController::class)</code>, implémenter les 6 méthodes restantes (<code class="inline">index</code>, <code class="inline">create</code>, <code class="inline">edit</code>, <code class="inline">update</code>, <code class="inline">destroy</code> — <code class="inline">store</code> vient de l'exercice 3), avec des vues <code class="inline">index.blade.php</code> et <code class="inline">edit.blade.php</code>. Vérifier tout le cycle : créer un cours, le modifier, le supprimer, en le testant via <code class="inline">docker compose exec app</code> et le navigateur.</p>
+        </div>
+        <details class="sol">
+          <summary>Voir la solution</summary>
+          <div class="sol-inner">
+            <pre><span class="com">// routes/web.php</span>
+Route::resource(<span class="str">'cours'</span>, CoursController::class);</pre>
+            <pre><span class="com">// app/Http/Controllers/CoursController.php</span>
+<span class="kw">public function</span> index()
+{
+    <span class="kw">return</span> view(<span class="str">'cours.index'</span>, [<span class="str">'cours'</span> => Cours::all()]);
+}
+
+<span class="kw">public function</span> create()
+{
+    <span class="kw">return</span> view(<span class="str">'cours.create'</span>);
+}
+
+<span class="kw">public function</span> edit(Cours <span class="typ">$cours</span>)
+{
+    <span class="kw">return</span> view(<span class="str">'cours.edit'</span>, [<span class="str">'cours'</span> => <span class="typ">$cours</span>]);
+}
+
+<span class="kw">public function</span> destroy(Cours <span class="typ">$cours</span>)
+{
+    <span class="typ">$cours</span>->delete();
+    <span class="kw">return</span> redirect(<span class="str">'/cours'</span>);
+}</pre>
+            <pre><span class="com">&lt;!-- resources/views/cours/index.blade.php --&gt;</span>
+@<span class="kw">foreach</span> (<span class="typ">$cours</span> <span class="kw">as</span> <span class="typ">$c</span>)
+    &lt;p&gt;
+        {{ <span class="typ">$c</span>->nom }} ({{ <span class="typ">$c</span>->credits }} crédits)
+        &lt;a href=<span class="str">"/cours/{{ $c->id }}/edit"</span>&gt;Modifier&lt;/a&gt;
+        &lt;form method=<span class="str">"POST"</span> action=<span class="str">"/cours/{{ $c->id }}"</span> style=<span class="str">"display:inline"</span>&gt;
+            @<span class="kw">csrf</span> @<span class="kw">method</span>(<span class="str">'DELETE'</span>)
+            &lt;button type=<span class="str">"submit"</span>&gt;Supprimer&lt;/button&gt;
+        &lt;/form&gt;
+    &lt;/p&gt;
+@<span class="kw">endforeach</span></pre>
+            <p class="sol-note"><code class="inline">@method('DELETE')</code> est nécessaire car les formulaires HTML ne savent envoyer que du GET ou du POST — cette directive simule une requête DELETE que Laravel sait reconnaître, en complément du POST réel envoyé par le navigateur.</p>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>Développement avec Framework — Séance 3 / 4 · Laravel · Blade avancé, formulaires, CRUD</footer>
+
+</div>
+</body>
+</html>
