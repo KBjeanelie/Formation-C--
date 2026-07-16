@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Formation C++ - Accueil</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --orange:#ef6b34;
+    --orange-dim:#3a271d;
+    --green:#3fbd83;
+    --green-dim:#16332a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:840px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(30px,4.2vw,42px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.1;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:640px;}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px; margin-bottom:48px;}
+  
+  .module-card {
+    background: var(--panel);
+    border: 1px solid var(--edge-soft);
+    border-radius: 12px;
+    padding: 24px;
+    text-decoration: none;
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .module-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--orange);
+  }
+  
+  .module-card .badge {
+    align-self: flex-start;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--orange);
+    border: 1px solid var(--edge-soft);
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin-bottom: 16px;
+    background: var(--bg);
+  }
+  .module-card.accent:hover {
+    border-color: var(--green);
+  }
+  .module-card.accent .badge {
+    color: var(--green);
+  }
+
+  .module-card h2 {
+    font-size: 18px;
+    margin: 0 0 8px;
+    font-weight: 600;
+  }
+  .module-card p {
+    font-size: 14px;
+    color: var(--ink-dim);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="../index.html" class="back-link" style="display:inline-block; margin-bottom:24px; color:var(--ink-dim); text-decoration:none; font-family:var(--mono); font-size:13px; border:1px solid var(--edge-soft); padding:6px 12px; border-radius:6px; transition:all 0.2s;">← Retour au Portail</a>
+
+  <p class="eyebrow">Dashboard Principal</p>
+  <h1 class="title">Formation C++</h1>
+  <p class="subtitle">Bienvenue sur votre plateforme d'apprentissage C++. Choisissez un module ci-dessous pour commencer ou poursuivre votre formation.</p>
+
+  <div class="grid">
+    <a href="configuration-environnement-cpp.html" class="module-card">
+      <span class="badge">Prérequis</span>
+      <h2>Configuration Environnement</h2>
+      <p>Installez les outils nécessaires (compilateurs, IDE) sur Windows, macOS ou Linux.</p>
+    </a>
+
+    <a href="tp1-cpp-seance1.html" class="module-card">
+      <span class="badge">Séance 1</span>
+      <h2>Bases et variables</h2>
+      <p>Entrées/sorties, types de base, variables et structures de contrôle.</p>
+    </a>
+
+    <a href="tp2-cpp-seance2.html" class="module-card">
+      <span class="badge">Séance 2</span>
+      <h2>Tableaux et boucles</h2>
+      <p>Manipulation des tableaux (statiques et dynamiques) et algorithmique de base.</p>
+    </a>
+
+    <a href="tp3-cpp-seance3.html" class="module-card">
+      <span class="badge">Séance 3</span>
+      <h2>Fonctions et références</h2>
+      <p>Modularité, passage par valeur ou par référence, surcharge de fonctions.</p>
+    </a>
+
+    <a href="tp4-cpp-seance4.html" class="module-card">
+      <span class="badge">Séance 4</span>
+      <h2>Introduction à la POO</h2>
+      <p>Classes, objets, constructeurs et encapsulation (public/private).</p>
+    </a>
+
+    <a href="cours-cpp-notions-complementaires.html" class="module-card">
+      <span class="badge">Avancé</span>
+      <h2>Notions Complémentaires</h2>
+      <p>Gestion de la mémoire, pointeurs, classes avancées et STL.</p>
+    </a>
+
+    <a href="mini-projets-cpp.html" class="module-card accent">
+      <span class="badge">Mise en pratique</span>
+      <h2>Mini-Projets du Réel</h2>
+      <p>10 cas pratiques avec solutions guidées pour appliquer vos connaissances dans des scénarios réalistes.</p>
+    </a>
+  </div>
+
+  <footer>Cours C++ — Point d'entrée de l'application</footer>
+
+</div>
+</body>
+</html>

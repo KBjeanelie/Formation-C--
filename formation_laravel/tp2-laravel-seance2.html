@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Laravel - Séance 2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --red:#ff2d20; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
+  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
+  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; }
+  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--red); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
+  section{margin:64px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
+  h2{font-size:24px; font-weight:700; margin:0 0 16px; color:var(--ink);}
+  p{margin:0 0 14px;}
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; font-family:var(--mono); font-size:13.5px; color:#d6d3e0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour au Dashboard Laravel</a>
+  <p class="eyebrow">Séance 2</p>
+  <h1 class="title">Blade et Contrôleurs</h1>
+  <section>
+    <h2>Les Contrôleurs</h2>
+    <p>Pour éviter d'encombrer le fichier de routes, on utilise des contrôleurs :</p>
+    <pre>php artisan make:controller PostController</pre>
+  </section>
+  <section>
+    <h2>Le moteur de template Blade</h2>
+    <p>Blade permet d'écrire du PHP de manière élégante dans les vues HTML. Les fichiers doivent avoir l'extension <code>.blade.php</code>.</p>
+    <pre>@if(count($articles) > 0)
+  &lt;ul&gt;
+    @foreach($articles as $article)
+      &lt;li&gt;{{ $article->titre }}&lt;/li&gt;
+    @endforeach
+  &lt;/ul&gt;
+@else
+  &lt;p&gt;Aucun article trouvé.&lt;/p&gt;
+@endif</pre>
+  </section>
+</div>
+</body>
+</html>

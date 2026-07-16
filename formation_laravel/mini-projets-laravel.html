@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Laravel - 10 Mini TPs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14141f;
+    --panel:#1c1c2b;
+    --edge:#33334a;
+    --edge-soft:#292939;
+    --ink:#eeece4;
+    --ink-dim:#a8a5b8;
+    --ink-faint:#726f85;
+    --red:#ff2d20;
+    --red-dim:#4a1310;
+    --blue:#4d90fe;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
+
+  .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--red); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(30px,4.2vw,42px); margin:0 0 8px; letter-spacing:-.01em; line-height:1.1;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 36px; max-width:700px;}
+  
+  .back-link {
+    display: inline-block;
+    margin-bottom: 24px;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 13px;
+    border: 1px solid var(--edge-soft);
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .back-link:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  section{margin:64px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:16px;}
+  .sec-num{font-family:var(--mono); color:var(--red); font-size:16px; min-width:26px;}
+  h2{font-size:24px; font-weight:700; margin:0; letter-spacing:-.01em;}
+  
+  .context-box {
+    background: #0d0d16;
+    border-left: 3px solid var(--blue);
+    padding: 16px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 24px;
+    font-size: 15px;
+    color: var(--ink-dim);
+  }
+
+  p{margin:0 0 14px;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
+
+  details {
+    margin-top: 16px;
+    background: var(--bg);
+    border: 1px solid var(--edge-soft);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  summary {
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--ink);
+    outline: none;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  summary:hover { color: var(--red); }
+  details[open] summary { margin-bottom: 16px; border-bottom: 1px solid var(--edge-soft); padding-bottom: 8px; }
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--edge-soft); color:var(--ink-faint); font-size:13px; font-family:var(--mono); text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="index.html" class="back-link">← Retour au Dashboard Laravel</a>
+
+  <p class="eyebrow">Mise en pratique</p>
+  <h1 class="title">10 Mini-TPs Laravel</h1>
+  <p class="subtitle">Entraînez-vous avec ces 10 petits exercices couvrant les notions fondamentales du framework. Les solutions sont cachées, cherchez d'abord par vous-même !</p>
+
+  <!-- TP 1 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>La Route et la Vue (Hello World)</h2></div>
+    <div class="context-box">
+      <strong>Objectif :</strong> Créer une route accessible sur <code class="inline">/hello</code> qui retourne une vue simple affichant "Bienvenue sur Laravel".
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <p>1. Dans <code>routes/web.php</code> :</p>
+      <pre>Route::get('/hello', function () {
+    return view('hello');
+});</pre>
+      <p>2. Créer un fichier <code>resources/views/hello.blade.php</code> :</p>
+      <pre>&lt;h1&gt;Bienvenue sur Laravel&lt;/h1&gt;</pre>
+    </details>
+  </section>
+
+  <!-- TP 2 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Contrôleur et Paramètres</h2></div>
+    <div class="context-box">
+      <strong>Objectif :</strong> Créer une route dynamique <code class="inline">/user/{name}</code> liée à une méthode de contrôleur qui renvoie le nom en majuscule.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <p>1. Générer le contrôleur :</p>
+      <pre>php artisan make:controller UserController</pre>
+      <p>2. Dans <code>UserController.php</code> :</p>
+      <pre>public function show($name) {
+    return "Bonjour " . strtoupper($name);
+}</pre>
+      <p>3. Dans <code>routes/web.php</code> :</p>
+      <pre>use App\Http\Controllers\UserController;
+Route::get('/user/{name}', [UserController::class, 'show']);</pre>
+    </details>
+  </section>
+
+  <!-- TP 3 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Migration et Modèle</h2></div>
+    <div class="context-box">
+      <strong>Objectif :</strong> Créer une table <code class="inline">tasks</code> (id, title, is_completed) et son modèle Eloquent associé en une seule commande artisan.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <p>1. La commande artisan (le -m génère la migration) :</p>
+      <pre>php artisan make:model Task -m</pre>
+      <p>2. Dans le fichier de migration (<code>database/migrations/xxxx_create_tasks_table.php</code>) :</p>
+      <pre>public function up() {
+    Schema::create('tasks', function (Blueprint $table) {
+        $table->id();
+        $table->string('title');
+        $table->boolean('is_completed')->default(false);
+        $table->timestamps();
+    });
+}</pre>
+    </details>
+  </section>
+
+  <!-- TP 4 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Validation de Formulaire</h2></div>
+    <div class="context-box">
+      <strong>Objectif :</strong> Valider une requête POST pour créer une tâche (le titre est obligatoire et doit faire au moins 3 caractères).
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <p>Dans un contrôleur <code>TaskController</code> :</p>
+      <pre>public function store(Request $request) {
+    $validated = $request->validate([
+        'title' => 'required|min:3',
+    ]);
+
+    Task::create($validated);
+    
+    return redirect()->back()->with('success', 'Tâche ajoutée');
+}</pre>
+    </details>
+  </section>
+
+  <!-- TP 5 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Eloquent ORM : Filtres</h2></div>
+    <div class="context-box">
+      <strong>Objectif :</strong> Récupérer uniquement les tâches qui ne sont pas terminées (is_completed = false), triées par date de création décroissante.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>$tasks = Task::where('is_completed', false)
+             ->orderBy('created_at', 'desc')
+             ->get();</pre>
+    </details>
+  </section>
+
+  <!-- TP 6 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Relations Eloquent (1-N)</h2></div>
+    <div class="context-box">
+      <strong>Objectif :</strong> Lier un <code class="inline">User</code> à plusieurs <code class="inline">Post</code>. Définir la méthode de relation dans le modèle User.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <p>Dans <code>app/Models/User.php</code> :</p>
+      <pre>public function posts() {
+    return $this->hasMany(Post::class);
+}</pre>
+      <p>Pour récupérer les posts de l'utilisateur n°1 :</p>
+      <pre>$user = User::find(1);
+$mesPosts = $user->posts; // Notez l'absence de ()</pre>
+    </details>
+  </section>
+
+  <!-- TP 7 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Middleware (Filtre HTTP)</h2></div>
+    <div class="context-box">
+      <strong>Objectif :</strong> Créer un Middleware <code class="inline">CheckAge</code> qui redirige vers l'accueil si l'âge passé en paramètre de requête est inférieur à 18.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <p>1. Génération :</p>
+      <pre>php artisan make:middleware CheckAge</pre>
+      <p>2. Dans <code>CheckAge.php</code> :</p>
+      <pre>public function handle(Request $request, Closure $next) {
+    if ($request->age &lt; 18) {
+        return redirect('/');
+    }
+    return $next($request);
+}</pre>
+    </details>
+  </section>
+
+  <!-- TP 8 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Moteur de template Blade</h2></div>
+    <div class="context-box">
+      <strong>Objectif :</strong> Faire une boucle <code class="inline">@foreach</code> dans une vue Blade pour afficher une liste de tâches, et afficher "Aucune tâche" si le tableau est vide.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>&lt;ul&gt;
+@forelse($tasks as $task)
+    &lt;li&gt;{{ $task-&gt;title }}&lt;/li&gt;
+@empty
+    &lt;li&gt;Aucune tâche pour le moment.&lt;/li&gt;
+@endforelse
+&lt;/ul&gt;</pre>
+    </details>
+  </section>
+
+  <!-- TP 9 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Seeder et Factory</h2></div>
+    <div class="context-box">
+      <strong>Objectif :</strong> Créer 50 utilisateurs fictifs dans la base de données via une commande artisan.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <p>Dans <code>database/seeders/DatabaseSeeder.php</code> :</p>
+      <pre>public function run() {
+    \App\Models\User::factory(50)->create();
+}</pre>
+      <p>Lancement :</p>
+      <pre>php artisan db:seed</pre>
+    </details>
+  </section>
+
+  <!-- TP 10 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">10</span><h2>API et Réponses JSON</h2></div>
+    <div class="context-box">
+      <strong>Objectif :</strong> Renvoyer un message d'erreur JSON avec un code HTTP 404 lorsqu'une ressource n'est pas trouvée manuellement dans un contrôleur.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>public function show($id) {
+    $item = Item::find($id);
+    
+    if (!$item) {
+        return response()->json([
+            'error' => 'Ressource introuvable'
+        ], 404);
+    }
+    
+    return response()->json($item);
+}</pre>
+    </details>
+  </section>
+
+  <footer>Cours Laravel — 10 Mini-TPs Pratiques</footer>
+
+</div>
+</body>
+</html>
