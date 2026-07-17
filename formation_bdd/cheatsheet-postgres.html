@@ -141,6 +141,37 @@ INNER JOIN departements ON employes.departement_id = departements.id;
 -- RIGHT JOIN : Garde les départements même sans employés</pre>
   </section>
 
+  <section>
+    <h2>8. Gestion des Utilisateurs et Droits (Sécurité)</h2>
+    <p>PostgreSQL utilise le concept de "Rôles" qui peuvent agir comme des utilisateurs (avec mot de passe) ou des groupes de permissions.</p>
+    
+    <h3>Créer et modifier des rôles</h3>
+    <pre>-- Créer un utilisateur pouvant se connecter
+CREATE ROLE dev WITH LOGIN PASSWORD 'secret123';
+
+-- Créer un rôle "groupe" (sans mot de passe)
+CREATE ROLE lecteurs;
+
+-- Ajouter l'utilisateur "dev" au groupe "lecteurs"
+GRANT lecteurs TO dev;
+
+-- Donner les droits d'administrateur (Superuser)
+ALTER ROLE dev WITH SUPERUSER;</pre>
+
+    <h3>Gérer les permissions (GRANT / REVOKE)</h3>
+    <pre>-- 1. Donner l'accès au schéma
+GRANT USAGE ON SCHEMA public TO lecteurs;
+
+-- 2. Donner le droit de lecture sur TOUTES les tables du schéma
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO lecteurs;
+
+-- Donner des droits spécifiques sur une table précise
+GRANT INSERT, UPDATE ON employes TO dev;
+
+-- Retirer (révoquer) un droit
+REVOKE UPDATE ON employes FROM dev;</pre>
+  </section>
+
 </div>
 </body>
 </html>
