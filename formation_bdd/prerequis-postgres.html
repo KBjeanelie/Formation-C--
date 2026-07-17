@@ -66,6 +66,17 @@ brew services start postgresql</pre>
        Hôte : <code class="inline">localhost</code>, Port : <code class="inline">5432</code>, Base : <code class="inline">postgres</code>, Utilisateur : <code class="inline">postgres</code>, et votre mot de passe.
     </p>
   </section>
+  <section>
+    <h2>Notions de base (Pour les habitués de MySQL)</h2>
+    <p>PostgreSQL est plus strict et respectueux des standards SQL que MySQL. Voici quelques différences clés :</p>
+    <ul>
+      <li><strong>AUTO_INCREMENT devient SERIAL :</strong> En PostgreSQL, pour avoir un ID qui s'incrémente tout seul, on utilise le type <code class="inline">SERIAL</code> (ou <code class="inline">BIGSERIAL</code>) lors de la création de la table.</li>
+      <li><strong>Base de données != Schéma :</strong> Dans MySQL, créer une base revient à créer un schéma. Dans PostgreSQL, une base de données peut contenir <em>plusieurs schémas</em>. Par défaut, vos tables sont créées dans le schéma nommé <code class="inline">public</code>.</li>
+      <li><strong>Sensibilité à la casse :</strong> PostgreSQL met automatiquement tous les noms de tables et colonnes en minuscules. Si vous forcez des majuscules avec des guillemets (ex: <code class="inline">CREATE TABLE "MaTable"</code>), vous devrez TOUJOURS utiliser les guillemets dans vos requêtes. Il est recommandé de tout écrire en minuscules avec des underscores (<code class="inline">ma_table</code>).</li>
+      <li><strong>Types stricts :</strong> PostgreSQL ne fera pas de conversion silencieuse et magique entre une chaîne "123" et un entier si cela peut poser problème. Il faut utiliser le cast (ex: <code class="inline">'123'::INT</code>).</li>
+      <li><strong>Booléens :</strong> Utilisez les vrais booléens <code class="inline">TRUE</code> / <code class="inline">FALSE</code> au lieu de <code class="inline">1</code> / <code class="inline">0</code> (qui est le type TINYINT de MySQL).</li>
+    </ul>
+  </section>
 </div>
 </body>
 </html>

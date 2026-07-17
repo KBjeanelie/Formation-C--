@@ -2,97 +2,290 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>BDD Avancée - Séance 3</title>
+<title>BDD Avancée — Séance 3 : Optimisation & Indexation</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
-  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --green:#3fbd83; --blue:#4d90fe; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
-  *{box-sizing:border-box;}
-  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
-  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
-  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
-  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
-  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--green); margin:0 0 14px; text-transform: uppercase; letter-spacing: 0.1em;}
-  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
-  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:700px;}
-  
-  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
-  h2{font-size:24px; font-weight:700; margin:0 0 16px; color:var(--green);}
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--green:#3fbd83;--blue:#4d90fe;--orange:#ef6b34;--red:#ff2d20;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--green);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;letter-spacing:-.01em;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--green);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--blue);margin:28px 0 10px;}
   p{margin:0 0 14px;}
-  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
-  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
-  .context-box { border-left: 3px solid var(--blue); padding: 16px; background: #0d0d16; border-radius: 0 8px 8px 0; margin-bottom: 24px; color: var(--ink-dim); }
-  details { margin-top: 16px; background: var(--bg); border: 1px solid var(--edge-soft); border-radius: 8px; padding: 12px 16px; }
-  summary { font-weight: 600; cursor: pointer; color: var(--ink); font-family: var(--mono); font-size: 14px; outline: none; }
-  summary:hover { color: var(--green); }
+  ul,ol{padding-left:22px;color:var(--dim);margin:0 0 18px;}
+  li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(77,144,254,.08);border-left:3px solid var(--blue);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .info strong{color:var(--blue);}
+  .warn{background:rgba(255,45,32,.08);border-left:3px solid var(--red);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .warn strong{color:var(--red);}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--orange);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--green);}
+  details[open] summary{color:var(--green);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a href="index.html" class="back-link">← Retour au Dashboard BDD</a>
-  <p class="eyebrow">Séance 3</p>
-  <h1 class="title">Crash Test & Indexation</h1>
-  <p class="subtitle">Comment une base de données gère-t-elle des millions de lignes ? Découvrez le pouvoir des index B-Tree et la lecture des plans d'exécution.</p>
+  <a href="index.html" class="back-link">← Dashboard BDD</a>
+  <p class="eyebrow">Séance 3 — 4 heures</p>
+  <h1 class="title">Crash Test & Optimisation : Les Index</h1>
+  <p class="subtitle">Comment une base de données gère-t-elle des millions de lignes ? Découvrez le fonctionnement des index B-Tree, analysez les plans d'exécution et apprenez à diviser vos temps de réponse par 100.</p>
 
+  <!-- THEORIE -->
   <section>
-    <h2>Introduction (Théorie - 15 min)</h2>
-    <p>Sans index, pour trouver une ligne, la base doit lire TOUTE la table (<strong>Seq Scan</strong> / Full Table Scan). Un <strong>Index (B-Tree)</strong> agit comme l'index à la fin d'un livre : il pointe directement vers la bonne page (<strong>Index Scan</strong>).</p>
-    <p>Pour auditer une requête lente, on ajoute <code>EXPLAIN ANALYZE</code> avant le <code>SELECT</code>.</p>
+    <h2>1. Comprendre l'Indexation et les Plans d'Exécution</h2>
+    <p>Une table sans index est comme un livre sans sommaire. Pour trouver une information, la base de données doit lire chaque page depuis le début. C'est ce qu'on appelle un <strong>Sequential Scan (Seq Scan)</strong> ou <em>Full Table Scan</em>.</p>
+    
+    <h3>L'Index B-Tree</h3>
+    <p>PostgreSQL utilise par défaut des arbres équilibrés (<strong>B-Tree</strong>) pour ses index. Ils permettent de trouver une valeur (ou une plage de valeurs) en un temps logarithmique O(log N) très rapide, en "sautant" directement aux bonnes pages de données (<strong>Index Scan</strong>).</p>
+
+    <div class="info">
+      <strong>Attention :</strong> Les index ralentissent les opérations d'écriture (<code class="i">INSERT</code>, <code class="i">UPDATE</code>, <code class="i">DELETE</code>) car l'arbre doit être mis à jour. Il ne faut donc indexer que les colonnes fréquemment utilisées dans les clauses <code class="i">WHERE</code>, <code class="i">JOIN</code> ou <code class="i">ORDER BY</code>.
+    </div>
+
+    <h3>Analyser les requêtes avec EXPLAIN</h3>
+    <p>L'instruction <code class="i">EXPLAIN</code> permet de demander à PostgreSQL comment il prévoit d'exécuter une requête (le <em>Query Plan</em>). <code class="i">EXPLAIN ANALYZE</code> va plus loin en exécutant réellement la requête pour donner les temps précis.</p>
+    <pre>EXPLAIN ANALYZE SELECT * FROM ma_table WHERE ma_colonne = 'valeur';</pre>
+    <p>Ce qu'il faut surveiller dans le plan :</p>
+    <ul>
+      <li><strong>Seq Scan :</strong> Mauvais sur une grande table (parcourt tout).</li>
+      <li><strong>Index Scan :</strong> Bon, utilise l'index et va chercher la ligne.</li>
+      <li><strong>Index Only Scan :</strong> Excellent, l'index contient toutes les données demandées, pas besoin de lire la table.</li>
+      <li><strong>Bitmap Heap Scan :</strong> Bon compromis utilisé quand l'index renvoie beaucoup de résultats.</li>
+    </ul>
+
+    <h3>Types d'index avancés</h3>
+    <ul>
+      <li><strong>Index Composites :</strong> Sur plusieurs colonnes (ex: <code class="i">CREATE INDEX idx_a_b ON table (a, b)</code>). Utile si les deux colonnes sont souvent interrogées ensemble.</li>
+      <li><strong>Index Partiels :</strong> Seulement sur une partie des données (ex: <code class="i">WHERE status = 'actif'</code>). Gagne de l'espace disque.</li>
+      <li><strong>Index sur expression :</strong> Ex: <code class="i">CREATE INDEX idx_lower_email ON users(LOWER(email))</code>.</li>
+    </ul>
   </section>
 
+  <!-- BASE DE TRAVAIL -->
   <section>
-    <h2>TP 1 : Génération du Million de lignes</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Créer une table <code>logs</code> et la remplir avec 2 millions de fausses requêtes HTTP à l'aide de <code>generate_series</code>.
-    </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <pre>CREATE TABLE logs (
+    <h2>2. Base de travail — Les Logs Serveur</h2>
+    <p>Nous allons générer une table massive pour ressentir la douleur d'un Seq Scan.</p>
+    <pre>DROP TABLE IF EXISTS server_logs CASCADE;
+
+CREATE TABLE server_logs (
     id SERIAL PRIMARY KEY,
     ip_address VARCHAR(15),
+    endpoint VARCHAR(100),
     status_code INT,
+    response_time_ms INT,
+    user_agent TEXT,
     created_at TIMESTAMP
-);
+);</pre>
+  </section>
 
--- Insertion de 2 millions de lignes aléatoires (Prend quelques secondes)
-INSERT INTO logs (ip_address, status_code, created_at)
+  <!-- TPs -->
+  <section>
+    <h2>3. Travaux Pratiques (10 exercices)</h2>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Générer 2 millions de lignes (Le Crash Test)</h4>
+      <p>Utilisez <code class="i">generate_series</code> pour insérer 2 000 000 de fausses lignes dans <code class="i">server_logs</code>. (L'exécution peut prendre 10 à 30 secondes selon votre machine).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>INSERT INTO server_logs (ip_address, endpoint, status_code, response_time_ms, user_agent, created_at)
 SELECT 
     '192.168.1.' || (random() * 255)::int,
-    (ARRAY[200, 404, 500])[ceil(random()*3)],
+    (ARRAY['/home', '/api/users', '/login', '/dashboard', '/api/data'])[ceil(random()*5)],
+    (ARRAY[200, 201, 400, 401, 403, 404, 500])[ceil(random()*7)],
+    (random() * 1000)::int,
+    (ARRAY['Mozilla Firefox', 'Google Chrome', 'Safari', 'curl/7.68.0'])[ceil(random()*4)],
     NOW() - (random() * interval '365 days')
-FROM generate_series(1, 2000000);</pre>
-    </details>
-  </section>
+FROM generate_series(1, 2000000);
 
-  <section>
-    <h2>TP 2 : Analyse et Constat (Le Seq Scan)</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Compter combien de requêtes proviennent de l'IP "192.168.1.50". Analyser la performance de cette requête.
+-- Vérifiez le nombre de lignes :
+SELECT count(*) FROM server_logs;</pre>
+      </details>
     </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <pre>EXPLAIN ANALYZE 
-SELECT COUNT(*) FROM logs WHERE ip_address = '192.168.1.50';</pre>
-      <p>Observez le résultat : Le moteur indique un <code>Seq Scan on logs</code>. Le temps d'exécution (Execution Time) sera probablement supérieur à 100ms ou 200ms, ce qui est énorme pour une simple recherche web.</p>
-    </details>
-  </section>
 
-  <section>
-    <h2>TP 3 : La Magie de l'Index</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Créer un index sur la colonne <code>ip_address</code> et relancer l'analyse.
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>Le Seq Scan (L'analyse de base)</h4>
+      <p>Trouvez tous les logs de l'IP <code class="i">192.168.1.42</code>. Utilisez <code class="i">EXPLAIN ANALYZE</code> pour voir combien de temps PostgreSQL met pour trouver les résultats. Quel type de scan est utilisé ?</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>EXPLAIN ANALYZE 
+SELECT * FROM server_logs WHERE ip_address = '192.168.1.42';
+
+-- Résultat attendu :
+-- -> Seq Scan on server_logs
+-- Execution Time: XXX ms (souvent > 150ms)</pre>
+      </details>
     </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <pre>-- Création de l'index (Prend un peu de temps car il doit trier 2M de lignes)
-CREATE INDEX idx_logs_ip ON logs(ip_address);
 
--- Relançons l'analyse :
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>L'Index Simple (La révélation)</h4>
+      <p>Créez un index B-Tree sur la colonne <code class="i">ip_address</code>. Relancez la requête précédente avec <code class="i">EXPLAIN ANALYZE</code>. Observez la différence de plan et de temps.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Création de l'index (prend un peu de temps à construire)
+CREATE INDEX idx_logs_ip ON server_logs(ip_address);
+
+-- Nouvelle analyse :
 EXPLAIN ANALYZE 
-SELECT COUNT(*) FROM logs WHERE ip_address = '192.168.1.50';</pre>
-      <p>Le résultat indique maintenant un <code>Bitmap Index Scan</code> ou <code>Index Only Scan</code>. Le temps d'exécution devrait s'effondrer autour de 1ms ! L'optimisation a été multipliée par 100.</p>
-    </details>
+SELECT * FROM server_logs WHERE ip_address = '192.168.1.42';
+
+-- Résultat attendu :
+-- -> Bitmap Index Scan on idx_logs_ip
+-- -> Bitmap Heap Scan on server_logs
+-- Execution Time: X ms (souvent < 5ms, l'amélioration est drastique !)</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>Le piège du LIKE et les Index</h4>
+      <p>Faites un <code class="i">EXPLAIN ANALYZE</code> pour chercher les requêtes dont le endpoint commence par <code class="i">/api%</code>, puis une autre pour ceux qui se terminent par <code class="i">%data</code>. Quel est le problème avec le joker <code class="i">%</code> au début ?</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Requête 1 (Wildcard à la fin) :
+EXPLAIN ANALYZE SELECT count(*) FROM server_logs WHERE endpoint LIKE '/api%';
+-- Si on avait un index standard sur endpoint, il pourrait être utilisé (Index Scan).
+
+-- Requête 2 (Wildcard au début) :
+EXPLAIN ANALYZE SELECT count(*) FROM server_logs WHERE endpoint LIKE '%data';
+-- PostgreSQL est OBLIGÉ de faire un Seq Scan.
+-- Un index B-Tree trie de gauche à droite (comme l'annuaire). 
+-- Si on cherche "%data", l'index ne sert à rien car on ne connait pas la première lettre.</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Index sur Expression (LOWER)</h4>
+      <p>Parfois on cherche sans se soucier de la casse : <code class="i">WHERE LOWER(user_agent) = 'safari'</code>. Faites le test, créez l'index adapté, et relancez.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Sans index (Seq Scan) :
+EXPLAIN ANALYZE SELECT * FROM server_logs WHERE LOWER(user_agent) = 'safari';
+
+-- Un index classique sur user_agent ne marchera PAS ici, car on applique une fonction.
+-- Il faut indexer le RÉSULTAT de la fonction :
+CREATE INDEX idx_logs_lower_ua ON server_logs(LOWER(user_agent));
+
+-- Avec index (Bitmap Heap Scan / Index Scan) :
+EXPLAIN ANALYZE SELECT * FROM server_logs WHERE LOWER(user_agent) = 'safari';</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>L'Index Composite (Multi-colonnes)</h4>
+      <p>Vous cherchez souvent les erreurs 500 sur un endpoint spécifique : <code class="i">WHERE status_code = 500 AND endpoint = '/login'</code>. Créez l'index idéal pour cette requête précise.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- L'index composite
+CREATE INDEX idx_logs_status_endpoint ON server_logs(status_code, endpoint);
+
+-- Test :
+EXPLAIN ANALYZE 
+SELECT * FROM server_logs WHERE status_code = 500 AND endpoint = '/login';
+
+-- L'ordre des colonnes dans l'index compte !
+-- (status_code, endpoint) est très efficace pour WHERE status_code=X AND endpoint=Y
+-- ou WHERE status_code=X tout court.
+-- MAIS il sera inefficace pour WHERE endpoint=Y tout court (il faut un autre index).</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>L'Index Partiel (Gain de place)</h4>
+      <p>Vous avez souvent besoin de retrouver uniquement les logs d'erreur (status_code >= 400). Les 200 OK ne vous intéressent pas dans vos recherches. Créez un index qui ne pèsera pas lourd sur le disque.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- L'index partiel ne stocke que les lignes vérifiant la condition
+CREATE INDEX idx_logs_erreurs ON server_logs(status_code) WHERE status_code >= 400;
+
+-- Test :
+EXPLAIN ANALYZE SELECT * FROM server_logs WHERE status_code = 500;
+-- PostgreSQL utilisera cet index partiel.
+
+-- Test 2 :
+EXPLAIN ANALYZE SELECT * FROM server_logs WHERE status_code = 200;
+-- PostgreSQL fera un Seq Scan car il sait que les "200" ne sont pas dans l'index partiel.</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Index Only Scan (Le Graal)</h4>
+      <p>Créez un index qui permet à la requête <code class="i">SELECT ip_address, status_code FROM server_logs WHERE ip_address = '192.168.1.10';</code> de s'exécuter <strong>sans même lire la table</strong>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Si l'index contient TOUTES les colonnes demandées dans le SELECT,
+-- PostgreSQL n'a pas besoin de consulter la table.
+
+CREATE INDEX idx_logs_ip_status ON server_logs(ip_address, status_code);
+
+EXPLAIN ANALYZE 
+SELECT ip_address, status_code FROM server_logs WHERE ip_address = '192.168.1.10';
+
+-- Résultat attendu :
+-- -> Index Only Scan using idx_logs_ip_status on server_logs</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>Le tri avec ORDER BY</h4>
+      <p>Les index stockent les données triées. Utilisez <code class="i">EXPLAIN ANALYZE</code> sur <code class="i">ORDER BY created_at DESC LIMIT 10</code>. Créez l'index adéquat pour supprimer l'étape coûteuse de tri (<code class="i">Sort</code> ou <code class="i">Top-N heapsort</code>) dans le plan.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Avant index (Seq Scan + Top-N heapsort) :
+EXPLAIN ANALYZE SELECT * FROM server_logs ORDER BY created_at DESC LIMIT 10;
+
+-- L'index :
+CREATE INDEX idx_logs_date ON server_logs(created_at DESC);
+
+-- Après index (Index Scan Backward ou Forward) :
+EXPLAIN ANALYZE SELECT * FROM server_logs ORDER BY created_at DESC LIMIT 10;
+-- Le tri a disparu du plan car les données sont déjà triées dans l'index !</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Auditer ses index</h4>
+      <p>Les index coûtent cher en écriture. Comment savoir s'ils sont réellement utilisés par PostgreSQL ? Interrogez la vue système <code class="i">pg_stat_user_indexes</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT 
+    relname AS table_name, 
+    indexrelname AS index_name, 
+    idx_scan AS number_of_scans,
+    idx_tup_read AS tuples_read,
+    idx_tup_fetch AS tuples_fetched
+FROM pg_stat_user_indexes 
+WHERE relname = 'server_logs'
+ORDER BY idx_scan DESC;
+
+-- Si idx_scan = 0, cela signifie que votre index n'a JAMAIS été utilisé
+-- depuis le dernier redémarrage des stats. Vous pouvez probablement le supprimer (DROP INDEX) !</pre>
+      </details>
+    </div>
+
   </section>
 
+  <footer>BDD Avancée — Séance 3 : Optimisation & Indexation</footer>
 </div>
 </body>
 </html>

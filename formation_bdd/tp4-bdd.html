@@ -2,96 +2,269 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>BDD Avancée - Séance 4</title>
+<title>BDD Avancée — Séance 4 : Introduction au NoSQL (MongoDB)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
-  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --green:#3fbd83; --blue:#4d90fe; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
-  *{box-sizing:border-box;}
-  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
-  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
-  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
-  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
-  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--green); margin:0 0 14px; text-transform: uppercase; letter-spacing: 0.1em;}
-  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
-  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:700px;}
-  
-  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
-  h2{font-size:24px; font-weight:700; margin:0 0 16px; color:var(--green);}
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--green:#3fbd83;--blue:#4d90fe;--orange:#ef6b34;--red:#ff2d20;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--green);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;letter-spacing:-.01em;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--green);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--blue);margin:28px 0 10px;}
   p{margin:0 0 14px;}
-  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
-  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
-  .context-box { border-left: 3px solid var(--blue); padding: 16px; background: #0d0d16; border-radius: 0 8px 8px 0; margin-bottom: 24px; color: var(--ink-dim); }
-  details { margin-top: 16px; background: var(--bg); border: 1px solid var(--edge-soft); border-radius: 8px; padding: 12px 16px; }
-  summary { font-weight: 600; cursor: pointer; color: var(--ink); font-family: var(--mono); font-size: 14px; outline: none; }
-  summary:hover { color: var(--green); }
+  ul,ol{padding-left:22px;color:var(--dim);margin:0 0 18px;}
+  li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(77,144,254,.08);border-left:3px solid var(--blue);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .info strong{color:var(--blue);}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--orange);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--green);}
+  details[open] summary{color:var(--green);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a href="index.html" class="back-link">← Retour au Dashboard BDD</a>
-  <p class="eyebrow">Séance 4</p>
-  <h1 class="title">Introduction au NoSQL (MongoDB)</h1>
-  <p class="subtitle">Oubliez les tables et les jointures. Stockons nos données sous forme de documents JSON ultra-flexibles !</p>
+  <a href="index.html" class="back-link">← Dashboard BDD</a>
+  <p class="eyebrow">Séance 4 — 4 heures</p>
+  <h1 class="title">Bascule vers le NoSQL (MongoDB)</h1>
+  <p class="subtitle">Oubliez les tables, les colonnes rigides et les jointures SQL complexes. Découvrez le monde du stockage Documentaire JSON avec MongoDB.</p>
 
+  <!-- THEORIE -->
   <section>
-    <h2>Prérequis & Installation</h2>
-    <p>1. Installez MongoDB Community Edition depuis <a href="https://www.mongodb.com/try/download/community" target="_blank" style="color:var(--blue);">mongodb.com</a>.</p>
-    <p>2. Installez le client graphique <strong>MongoDB Compass</strong> pour visualiser vos collections facilement.</p>
-    <p>3. Ouvrez un terminal (mongosh) pour exécuter les commandes suivantes.</p>
+    <h2>1. Le paradigme NoSQL (Not Only SQL)</h2>
+    <p>Le NoSQL a été créé pour répondre aux problèmes d'évolution (scalabilité horizontale) des géants du web. Plutôt que d'avoir un gros serveur très cher, on répartit la donnée sur des dizaines de petits serveurs.</p>
+
+    <h3>Le modèle Documentaire</h3>
+    <p>Contrairement à PostgreSQL où une donnée est découpée dans plusieurs tables (Client, Commande, Produit), dans MongoDB (Document-Oriented), on va tout regrouper dans un objet <strong>JSON</strong> (BSON en interne).</p>
+    <ul>
+      <li>Une <strong>Table</strong> SQL s'appelle une <strong>Collection</strong>.</li>
+      <li>Une <strong>Ligne (Row)</strong> SQL s'appelle un <strong>Document</strong>.</li>
+      <li>Il n'y a <strong>pas de schéma fixe</strong> : deux documents d'une même collection peuvent avoir des champs différents.</li>
+    </ul>
+
+    <div class="info">
+      <strong>L'avantage de l'imbrication :</strong> Si un article a des tags et des commentaires, en SQL il faudrait 3 tables et faire 2 <code class="i">JOIN</code>. Dans MongoDB, les tags sont un simple tableau <code class="i">["NoSQL", "Tuto"]</code>, et les commentaires sont des sous-documents inclus directement dans l'article. Une seule lecture disque suffit !
+    </div>
+
+    <h3>Syntaxe de base (CRUD)</h3>
+    <pre>-- SQL
+INSERT INTO users (nom, age) VALUES ('Alice', 25);
+SELECT * FROM users WHERE age > 20;
+UPDATE users SET age = 26 WHERE nom = 'Alice';
+
+-- MongoDB (JavaScript Shell)
+db.users.insertOne({ nom: 'Alice', age: 25 });
+db.users.find({ age: { $gt: 20 } });
+db.users.updateOne({ nom: 'Alice' }, { $set: { age: 26 } });</pre>
   </section>
 
+  <!-- PREPARATION -->
   <section>
-    <h2>TP 1 : Création et Insertion (CRUD)</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Sélectionner une base <code>blog</code> (qui se créera toute seule). Insérer un article avec des tags et des commentaires imbriqués (ce qui nécessiterait 3 tables en SQL).
-    </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <pre>use blog
+    <h2>2. Préparation du Shell (mongosh)</h2>
+    <p>Ouvrez votre terminal et tapez <code class="i">mongosh</code> (ou utilisez l'onglet mongosh de MongoDB Compass).</p>
+    <p>Sélectionnez la base de données (elle sera créée automatiquement dès qu'on y insérera quelque chose) :</p>
+    <pre>use blog_db</pre>
+  </section>
 
-db.articles.insertOne({
+  <!-- TPs -->
+  <section>
+    <h2>3. Travaux Pratiques (10 exercices)</h2>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Insert One : Créer un Document complexe</h4>
+      <p>Créez un document dans la collection <code class="i">articles</code> contenant un titre, un auteur, un tableau de tags (string) et un tableau de commentaires (objets avec utilisateur et texte).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>db.articles.insertOne({
     titre: "Découvrir MongoDB",
     auteur: "Walter",
     tags: ["NoSQL", "Base de données", "JSON"],
     commentaires: [
-        { user: "Alice", texte: "Super article !", like: 5 },
-        { user: "Bob", texte: "Très clair.", like: 2 }
-    ]
-})
+        { user: "Alice", texte: "Super introduction !", date: new Date() },
+        { user: "Bob", texte: "Très clair, merci.", date: new Date() }
+    ],
+    vues: 120
+});
 
--- Pour vérifier :
-db.articles.find().pretty()</pre>
-    </details>
-  </section>
-
-  <section>
-    <h2>TP 2 : La Recherche Avancée</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Trouver tous les articles qui possèdent le tag "NoSQL" et dont le nom de l'auteur est "Walter".
+-- Afficher le résultat :
+db.articles.find().pretty();</pre>
+      </details>
     </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <pre>db.articles.find({ 
-    tags: "NoSQL", 
-    auteur: "Walter" 
-})</pre>
-    </details>
-  </section>
 
-  <section>
-    <h2>TP 3 : Mise à jour dans un Document</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Ajouter un nouveau tag "Tutoriel" au tableau de tags de l'article précédent, sans écraser les existants.
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>Insert Many : Insérer plusieurs données</h4>
+      <p>Insérez au moins 3 nouveaux articles en une seule requête avec <code class="i">insertMany</code>. Variez les auteurs et le nombre de vues.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>db.articles.insertMany([
+    {
+        titre: "PostgreSQL vs MongoDB",
+        auteur: "Clara",
+        tags: ["SQL", "NoSQL", "Comparatif"],
+        vues: 450
+    },
+    {
+        titre: "Le Pipeline d'Agrégation",
+        auteur: "Walter",
+        tags: ["MongoDB", "Avancé"],
+        vues: 80
+    },
+    {
+        titre: "Tutoriel ExpressJS",
+        auteur: "Alice",
+        tags: ["JS", "Web"],
+        vues: 15
+    }
+]);</pre>
+      </details>
     </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <pre>db.articles.updateOne(
-    { titre: "Découvrir MongoDB" },
-    { $push: { tags: "Tutoriel" } }
-)</pre>
-    </details>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>Find : Recherche exacte et imbriquée</h4>
+      <p>Trouvez tous les articles écrits par "Walter" qui ont le tag "NoSQL".</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Le ET (AND) est implicite quand on sépare les champs par une virgule.
+-- MongoDB cherche automatiquement dans les tableaux si on passe une valeur simple.
+
+db.articles.find({
+    auteur: "Walter",
+    tags: "NoSQL"
+});</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>Les Opérateurs (Greater Than)</h4>
+      <p>Trouvez les articles qui ont strictement plus de 100 vues. Utilisez l'opérateur <code class="i">$gt</code> (greater than).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>db.articles.find({
+    vues: { $gt: 100 }
+});
+
+-- Note : Pour "supérieur ou égal", utilisez $gte. 
+-- Pour "inférieur", c'est $lt et $lte.</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Update : Modifier un champ</h4>
+      <p>Mettez à jour le titre de l'article écrit par "Clara" pour qu'il devienne "SQL vs NoSQL : Le guide définitif". (Utilisez l'opérateur <code class="i">$set</code>).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- updateOne prend 2 paramètres : { condition }, { modification }
+
+db.articles.updateOne(
+    { auteur: "Clara" },
+    { $set: { titre: "SQL vs NoSQL : Le guide définitif" } }
+);
+
+-- Si on oublie le $set et qu'on fait juste { titre: "..." }, 
+-- MongoDB remplace TOUT le document par ce seul champ ! (Attention)</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>Update : Incrémenter (Maths)</h4>
+      <p>L'article de Clara vient d'être lu. Ajoutez 1 au compteur de <code class="i">vues</code> sans utiliser <code class="i">$set</code> (pour éviter les problèmes de concurrence). Utilisez l'opérateur mathématique <code class="i">$inc</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>db.articles.updateOne(
+    { auteur: "Clara" },
+    { $inc: { vues: 1 } }
+);
+
+-- Pratique : pas besoin de faire un SELECT avant pour connaître la valeur, 
+-- le moteur incrémente de manière atomique.</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>Update : Pousser dans un tableau</h4>
+      <p>Ajoutez le tag "Performance" à l'article de Clara (qui est un tableau). Utilisez l'opérateur <code class="i">$push</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>db.articles.updateOne(
+    { auteur: "Clara" },
+    { $push: { tags: "Performance" } }
+);
+
+-- Si vous vouliez ajouter un commentaire :
+-- { $push: { commentaires: { user: "David", texte: "Intéressant" } } }</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Suppression de Document</h4>
+      <p>Supprimez l'article dont le titre est "Tutoriel ExpressJS" avec <code class="i">deleteOne</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>db.articles.deleteOne({
+    titre: "Tutoriel ExpressJS"
+});</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>L'Agrégation : Regrouper et Calculer (L'équivalent du GROUP BY)</h4>
+      <p>On rentre dans le dur ! Utilisez <code class="i">aggregate</code> pour calculer le total des vues pour CHAQUE auteur. (Utilisez le stage <code class="i">$group</code>).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Le pipeline d'agrégation est un tableau d'étapes (stages)
+
+db.articles.aggregate([
+    {
+        $group: {
+            _id: "$auteur",                 -- On groupe par la clé auteur (notez le $ avant le nom)
+            total_vues: { $sum: "$vues" },  -- On fait la somme de la clé vues
+            nb_articles: { $sum: 1 }        -- On compte +1 pour chaque document trouvé
+        }
+    }
+]);</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Indexation MongoDB</h4>
+      <p>Tout comme PostgreSQL, MongoDB a besoin d'index pour les grandes collections. Créez un index B-Tree sur le champ <code class="i">auteur</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Créer l'index croissant (1) ou décroissant (-1)
+db.articles.createIndex({ auteur: 1 });
+
+-- Afficher tous les index de la collection
+db.articles.getIndexes();
+
+-- On peut aussi analyser une requête avec explain :
+db.articles.find({ auteur: "Walter" }).explain("executionStats");</pre>
+      </details>
+    </div>
+
   </section>
 
+  <footer>BDD Avancée — Séance 4 : Introduction au NoSQL (MongoDB)</footer>
 </div>
 </body>
 </html>

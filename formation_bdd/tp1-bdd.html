@@ -2,173 +2,462 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>BDD Avancée - Séance 1</title>
+<title>BDD Avancée — Séance 1 : PL/pgSQL</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
-  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --green:#3fbd83; --blue:#4d90fe; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
-  *{box-sizing:border-box;}
-  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
-  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
-  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
-  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
-  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--green); margin:0 0 14px; text-transform: uppercase; letter-spacing: 0.1em;}
-  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
-  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:700px;}
-  
-  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
-  h2{font-size:24px; font-weight:700; margin:0 0 16px; color:var(--green);}
-  h3{font-size:18px; color:var(--ink); margin:24px 0 12px;}
-  p{margin:0 0 14px;}
-  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
-  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
-  
-  .context-box { border-left: 3px solid var(--blue); padding: 16px; background: #0d0d16; border-radius: 0 8px 8px 0; margin-bottom: 24px; color: var(--ink-dim); }
-  
-  details { margin-top: 16px; background: var(--bg); border: 1px solid var(--edge-soft); border-radius: 8px; padding: 12px 16px; }
-  summary { font-weight: 600; cursor: pointer; color: var(--ink); font-family: var(--mono); font-size: 14px; outline: none; }
-  summary:hover { color: var(--green); }
-  details[open] summary { margin-bottom: 16px; border-bottom: 1px solid var(--edge-soft); padding-bottom: 8px; }
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--green:#3fbd83;--blue:#4d90fe;--orange:#ef6b34;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--green);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;letter-spacing:-.01em;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--green);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--blue);margin:28px 0 10px;}
+  p{margin:0 0 14px;color:var(--ink);}
+  ul,ol{padding-left:22px;color:var(--dim);margin:0 0 18px;}
+  li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(77,144,254,.08);border-left:3px solid var(--blue);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;color:var(--dim);}
+  .info strong{color:var(--blue);}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--orange);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--green);}
+  details[open] summary{color:var(--green);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a href="index.html" class="back-link">← Retour au Dashboard BDD</a>
-  <p class="eyebrow">Séance 1</p>
-  <h1 class="title">PL/pgSQL : Procédures & Triggers</h1>
-  <p class="subtitle">L'objectif de cette séance est de déporter la logique métier (calculs, vérifications, historisation) directement dans le moteur de base de données PostgreSQL.</p>
+  <a href="index.html" class="back-link">← Dashboard BDD</a>
+  <p class="eyebrow">Séance 1 — 4 heures</p>
+  <h1 class="title">PL/pgSQL : Fonctions, Procédures et Triggers</h1>
+  <p class="subtitle">Programmez directement dans PostgreSQL. Apprenez à encapsuler la logique métier côté serveur pour des bases de données plus robustes, sécurisées et performantes.</p>
 
+  <!-- THEORIE -->
   <section>
-    <h2>Introduction (Théorie - 15 min)</h2>
-    <p>Le <strong>PL/pgSQL</strong> (Procedural Language/PostgreSQL) ajoute des éléments de programmation (variables, boucles, conditions) au SQL classique.</p>
+    <h2>1. Pourquoi programmer côté base de données ?</h2>
+    <p>En architecture classique, la logique métier est dans l'application (PHP, Java, Python). Mais certaines opérations critiques (intégrité des données, calculs intensifs, audit) sont bien plus efficaces et sûres si elles vivent <strong>dans le moteur de base de données lui-même</strong>.</p>
     <ul>
-      <li><strong>Fonction :</strong> Retourne une valeur. Utilisée pour des calculs.</li>
-      <li><strong>Procédure (depuis PG 11) :</strong> Ne retourne rien, mais peut exécuter des transactions complètes.</li>
-      <li><strong>Trigger :</strong> Une fonction qui s'exécute automatiquement AVANT ou APRÈS un INSERT/UPDATE/DELETE.</li>
+      <li><strong>Performance :</strong> Les données ne transitent pas inutilement par le réseau.</li>
+      <li><strong>Intégrité garantie :</strong> Les règles s'appliquent même si on accède à la BDD via un autre outil (Excel, DBeaver...).</li>
+      <li><strong>Centralisation :</strong> La logique est en un seul endroit, peu importe le langage de l'application.</li>
     </ul>
+
+    <h3>Structure de base d'une fonction PL/pgSQL</h3>
+    <pre>CREATE OR REPLACE FUNCTION nom_fonction(param1 TYPE, param2 TYPE)
+RETURNS TYPE_DE_RETOUR AS $$
+DECLARE
+    -- Déclaration des variables locales
+    ma_variable INT := 0;
+BEGIN
+    -- Corps de la fonction (logique SQL + impératif)
+    -- ...
+    RETURN ma_variable;
+END;
+$$ LANGUAGE plpgsql;</pre>
+
+    <h3>Les différences clés</h3>
+    <div class="info">
+      <strong>FUNCTION vs PROCEDURE vs TRIGGER :</strong><br>
+      — <strong>Fonction :</strong> retourne une valeur, utilisable dans un SELECT.<br>
+      — <strong>Procédure</strong> (PG &ge;11) : pas de retour, peut gérer ses propres COMMIT/ROLLBACK.<br>
+      — <strong>Trigger :</strong> une FONCTION spéciale (retournant TRIGGER) exécutée automatiquement sur un événement INSERT/UPDATE/DELETE.
+    </div>
+
+    <h3>Variables spéciales dans un Trigger</h3>
+    <ul>
+      <li><code class="i">NEW</code> — La nouvelle ligne (disponible sur INSERT et UPDATE).</li>
+      <li><code class="i">OLD</code> — L'ancienne ligne (disponible sur UPDATE et DELETE).</li>
+      <li><code class="i">TG_OP</code> — L'opération déclenchante ('INSERT', 'UPDATE', 'DELETE').</li>
+      <li><code class="i">TG_TABLE_NAME</code> — Le nom de la table concernée.</li>
+    </ul>
+
+    <h3>Exemple complet : Trigger d'audit</h3>
+    <pre>-- 1. Table d'audit
+CREATE TABLE audit_log (
+    id SERIAL PRIMARY KEY,
+    table_name TEXT,
+    operation TEXT,
+    changed_by TEXT DEFAULT current_user,
+    changed_at TIMESTAMP DEFAULT now()
+);
+
+-- 2. Fonction trigger
+CREATE OR REPLACE FUNCTION log_operation()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO audit_log(table_name, operation)
+    VALUES (TG_TABLE_NAME, TG_OP);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Attacher le trigger
+CREATE TRIGGER trg_audit
+AFTER INSERT OR UPDATE OR DELETE ON clients
+FOR EACH ROW EXECUTE FUNCTION log_operation();</pre>
   </section>
 
+  <!-- BASE DE TRAVAIL -->
   <section>
-    <h2>Préparation : Base E-Commerce</h2>
-    <p>Exécutez ce script pour créer les tables de notre TP :</p>
-    <pre>CREATE TABLE clients (
+    <h2>2. Base de travail — E-Commerce</h2>
+    <p>Exécutez ce script <strong>une seule fois</strong> pour créer les tables qui serviront à tous les TPs de la séance.</p>
+    <pre>-- Nettoyage (si besoin)
+DROP TABLE IF EXISTS commandes, produits, clients, audit_prix CASCADE;
+
+CREATE TABLE clients (
     id SERIAL PRIMARY KEY,
-    nom VARCHAR(100),
-    points_fidelite INT DEFAULT 0
+    nom VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE,
+    points_fidelite INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE produits (
     id SERIAL PRIMARY KEY,
-    nom VARCHAR(100),
-    prix DECIMAL(10,2),
-    stock INT
+    nom VARCHAR(100) NOT NULL,
+    prix DECIMAL(10,2) CHECK (prix >= 0),
+    stock INT DEFAULT 0,
+    categorie VARCHAR(50)
 );
 
 CREATE TABLE commandes (
     id SERIAL PRIMARY KEY,
-    client_id INT REFERENCES clients(id),
+    client_id INT REFERENCES clients(id) ON DELETE CASCADE,
     produit_id INT REFERENCES produits(id),
-    quantite INT,
-    date_commande TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    quantite INT CHECK (quantite > 0),
+    prix_total DECIMAL(10,2),
+    date_cmd TIMESTAMP DEFAULT now()
 );
 
-INSERT INTO clients (nom, points_fidelite) VALUES ('Alice', 150), ('Bob', 20);
-INSERT INTO produits (nom, prix, stock) VALUES ('Laptop', 1000.00, 5), ('Souris', 25.00, 50);</pre>
+-- Données initiales
+INSERT INTO clients (nom, email, points_fidelite) VALUES
+    ('Alice Martin', 'alice@mail.com', 250),
+    ('Bob Dupont', 'bob@mail.com', 45),
+    ('Clara Simon', 'clara@mail.com', 500),
+    ('David Leblanc', 'david@mail.com', 0);
+
+INSERT INTO produits (nom, prix, stock, categorie) VALUES
+    ('Laptop Pro', 1200.00, 8, 'Informatique'),
+    ('Souris Ergonomique', 35.00, 50, 'Accessoires'),
+    ('Clavier Mécanique', 95.00, 20, 'Accessoires'),
+    ('Moniteur 27"', 450.00, 5, 'Informatique'),
+    ('Webcam HD', 75.00, 30, 'Accessoires');</pre>
   </section>
 
+  <!-- TPs -->
   <section>
-    <h2>TP 1 : La Fonction de Réduction</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Créer une fonction <code>calculer_reduction(client_id)</code> qui retourne un pourcentage de réduction. Si le client a plus de 100 points, il a 10% de réduction, sinon 0%.
-    </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <pre>CREATE OR REPLACE FUNCTION calculer_reduction(p_client_id INT) 
+    <h2>3. Travaux Pratiques (10 exercices)</h2>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Fonction : Calcul de la remise fidélité</h4>
+      <p>Créez une fonction <code class="i">get_remise(client_id INT)</code> qui retourne un taux de remise DECIMAL. Règle : &lt; 100 pts → 0%, entre 100 et 499 → 10%, ≥ 500 → 20%.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE FUNCTION get_remise(p_id INT)
 RETURNS DECIMAL AS $$
 DECLARE
-    v_points INT;
-    v_reduction DECIMAL;
+    pts INT;
 BEGIN
-    -- Récupération des points
-    SELECT points_fidelite INTO v_points 
-    FROM clients WHERE id = p_client_id;
-    
-    -- Logique
-    IF v_points >= 100 THEN
-        v_reduction := 0.10; -- 10%
-    ELSE
-        v_reduction := 0.00;
+    SELECT points_fidelite INTO pts FROM clients WHERE id = p_id;
+    IF pts IS NULL THEN RETURN 0; END IF;
+    IF pts >= 500 THEN RETURN 0.20;
+    ELSIF pts >= 100 THEN RETURN 0.10;
+    ELSE RETURN 0.00;
     END IF;
-    
-    RETURN v_reduction;
-END;
-$$ LANGUAGE plpgsql;
-
--- Test de la fonction :
-SELECT nom, calculer_reduction(id) FROM clients;</pre>
-    </details>
-  </section>
-
-  <section>
-    <h2>TP 2 : La Procédure d'Achat</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Créer une procédure <code>valider_commande(p_client, p_produit, p_qte)</code> qui insère la commande ET déduit le stock.
-    </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <pre>CREATE OR REPLACE PROCEDURE valider_commande(
-    p_client INT, p_produit INT, p_qte INT
-) AS $$
-BEGIN
-    -- 1. Insérer la commande
-    INSERT INTO commandes (client_id, produit_id, quantite) 
-    VALUES (p_client, p_produit, p_qte);
-    
-    -- 2. Mettre à jour le stock
-    UPDATE produits 
-    SET stock = stock - p_qte 
-    WHERE id = p_produit;
-    
-    -- Le COMMIT est implicite dans une procédure appelée correctement
 END;
 $$ LANGUAGE plpgsql;
 
 -- Test :
-CALL valider_commande(1, 1, 1);
-SELECT * FROM produits; -- Le stock de Laptop doit être à 4</pre>
-    </details>
-  </section>
-
-  <section>
-    <h2>TP 3 : Le Trigger Anti-Rupture</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Créer un Trigger qui se déclenche AVANT la mise à jour d'un produit. Si le nouveau stock est inférieur à 0, il lève une exception pour bloquer la transaction.
+SELECT nom, points_fidelite, get_remise(id)*100 || '%' AS remise FROM clients;</pre>
+      </details>
     </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <p>Un trigger nécessite d'abord une fonction de type TRIGGER :</p>
-      <pre>CREATE OR REPLACE FUNCTION verifier_stock()
-RETURNS TRIGGER AS $$
+
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>Fonction : Prix final avec remise</h4>
+      <p>Créez une fonction <code class="i">prix_final(p_client INT, p_produit INT)</code> qui retourne le prix d'un produit après application de la remise du client.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE FUNCTION prix_final(p_client INT, p_produit INT)
+RETURNS DECIMAL AS $$
+DECLARE
+    v_prix DECIMAL;
+    v_remise DECIMAL;
 BEGIN
-    -- NEW représente la nouvelle ligne (après UPDATE)
-    IF NEW.stock &lt; 0 THEN
-        RAISE EXCEPTION 'Stock insuffisant pour le produit % !', NEW.nom;
-    END IF;
-    
-    RETURN NEW; -- Obligatoire pour un trigger BEFORE
+    SELECT prix INTO v_prix FROM produits WHERE id = p_produit;
+    v_remise := get_remise(p_client);
+    RETURN ROUND(v_prix * (1 - v_remise), 2);
 END;
 $$ LANGUAGE plpgsql;
 
--- Attacher la fonction à la table
-CREATE TRIGGER trg_check_stock
+-- Test : Prix du Laptop (1200€) pour Alice (20%) → 960€
+SELECT prix_final(3, 1); -- Clara (500pts) sur Laptop</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>Procédure : Passer une commande</h4>
+      <p>Créez une procédure <code class="i">passer_commande(p_client, p_produit, p_qte)</code> qui : (1) vérifie le stock, (2) lève une exception si insuffisant, (3) insère la commande avec le prix final, (4) déduit le stock.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE PROCEDURE passer_commande(
+    p_client INT, p_produit INT, p_qte INT
+) AS $$
+DECLARE
+    v_stock INT;
+    v_prix_final DECIMAL;
+BEGIN
+    SELECT stock INTO v_stock FROM produits WHERE id = p_produit;
+
+    IF v_stock < p_qte THEN
+        RAISE EXCEPTION 'Stock insuffisant: % disponible(s), % demandé(s)', v_stock, p_qte;
+    END IF;
+
+    v_prix_final := prix_final(p_client, p_produit) * p_qte;
+
+    INSERT INTO commandes (client_id, produit_id, quantite, prix_total)
+    VALUES (p_client, p_produit, p_qte, v_prix_final);
+
+    UPDATE produits SET stock = stock - p_qte WHERE id = p_produit;
+
+    RAISE NOTICE 'Commande validée. Total: % EUR', v_prix_final;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Test :
+CALL passer_commande(1, 2, 3);  -- Alice commande 3 souris
+SELECT * FROM commandes;
+SELECT id, nom, stock FROM produits;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>Trigger : Bloquer le stock négatif</h4>
+      <p>Créez un trigger <code class="i">BEFORE UPDATE</code> sur <code class="i">produits</code> qui empêche toute modification portant le stock en dessous de 0.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE FUNCTION check_stock_negatif()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.stock < 0 THEN
+        RAISE EXCEPTION 'Opération refusée: le stock de "%" ne peut pas être négatif (valeur: %)', NEW.nom, NEW.stock;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_stock_negatif
 BEFORE UPDATE ON produits
 FOR EACH ROW
-EXECUTE FUNCTION verifier_stock();
+WHEN (NEW.stock IS DISTINCT FROM OLD.stock)
+EXECUTE FUNCTION check_stock_negatif();
 
--- Test pour forcer l'erreur :
-UPDATE produits SET stock = stock - 10 WHERE id = 1;</pre>
-    </details>
+-- Test : doit échouer
+UPDATE produits SET stock = stock - 100 WHERE id = 2;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Trigger : Audit des changements de prix</h4>
+      <p>Créez une table <code class="i">audit_prix(id, produit_id, ancien_prix, nouveau_prix, modifie_par, modifie_le)</code> et un trigger qui l'alimente automatiquement à chaque modification du prix d'un produit.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE TABLE audit_prix (
+    id SERIAL PRIMARY KEY,
+    produit_id INT,
+    ancien_prix DECIMAL(10,2),
+    nouveau_prix DECIMAL(10,2),
+    modifie_par TEXT DEFAULT current_user,
+    modifie_le TIMESTAMP DEFAULT now()
+);
+
+CREATE OR REPLACE FUNCTION log_changement_prix()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.prix <> OLD.prix THEN
+        INSERT INTO audit_prix(produit_id, ancien_prix, nouveau_prix)
+        VALUES (OLD.id, OLD.prix, NEW.prix);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_audit_prix
+AFTER UPDATE ON produits
+FOR EACH ROW EXECUTE FUNCTION log_changement_prix();
+
+-- Test :
+UPDATE produits SET prix = 1350.00 WHERE id = 1;
+UPDATE produits SET prix = 40.00 WHERE id = 2;
+SELECT * FROM audit_prix;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>Fonction : Valeur totale du stock</h4>
+      <p>Créez une fonction <code class="i">valeur_stock_categorie(cat TEXT)</code> qui retourne la valeur totale du stock (prix × quantité) pour une catégorie donnée.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE FUNCTION valeur_stock_categorie(p_cat TEXT)
+RETURNS DECIMAL AS $$
+DECLARE
+    v_total DECIMAL;
+BEGIN
+    SELECT COALESCE(SUM(prix * stock), 0)
+    INTO v_total
+    FROM produits
+    WHERE categorie = p_cat;
+    RETURN v_total;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Test :
+SELECT valeur_stock_categorie('Informatique');
+SELECT valeur_stock_categorie('Accessoires');</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>Trigger : Accumulation automatique des points</h4>
+      <p>Créez un trigger <code class="i">AFTER INSERT</code> sur <code class="i">commandes</code> qui ajoute 1 point de fidélité par euro dépensé (arrondi) au client concerné.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE FUNCTION ajouter_points_fidelite()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clients
+    SET points_fidelite = points_fidelite + ROUND(NEW.prix_total)
+    WHERE id = NEW.client_id;
+
+    RAISE NOTICE 'Client % a gagné % points', NEW.client_id, ROUND(NEW.prix_total);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_points_fidelite
+AFTER INSERT ON commandes
+FOR EACH ROW EXECUTE FUNCTION ajouter_points_fidelite();
+
+-- Test :
+CALL passer_commande(2, 3, 1);  -- Bob commande 1 clavier (95€)
+SELECT id, nom, points_fidelite FROM clients WHERE id = 2;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Procédure : Réapprovisionner le stock</h4>
+      <p>Créez une procédure <code class="i">reapprovisionner(p_produit INT, p_quantite INT)</code> qui incrémente le stock. Elle doit rejeter toute quantité nulle ou négative et afficher un message de confirmation.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE PROCEDURE reapprovisionner(p_produit INT, p_qte INT)
+AS $$
+DECLARE
+    v_nom TEXT;
+    v_stock_avant INT;
+BEGIN
+    IF p_qte <= 0 THEN
+        RAISE EXCEPTION 'La quantité doit être positive (reçu: %)', p_qte;
+    END IF;
+
+    SELECT nom, stock INTO v_nom, v_stock_avant FROM produits WHERE id = p_produit;
+
+    UPDATE produits SET stock = stock + p_qte WHERE id = p_produit;
+
+    RAISE NOTICE 'Réappro OK: "%" — % → % unités', v_nom, v_stock_avant, v_stock_avant + p_qte;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Tests :
+CALL reapprovisionner(4, 10);  -- OK
+CALL reapprovisionner(1, -5);  -- Doit échouer</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>Fonction retournant une table : Historique client</h4>
+      <p>Créez une fonction <code class="i">historique_client(p_id INT)</code> qui retourne un tableau (RETURNS TABLE) avec : nom_produit, quantite, prix_total, date de chaque commande d'un client.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE FUNCTION historique_client(p_id INT)
+RETURNS TABLE(
+    produit TEXT,
+    qte INT,
+    total DECIMAL,
+    date_achat TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.nom,
+        c.quantite,
+        c.prix_total,
+        c.date_cmd
+    FROM commandes c
+    JOIN produits p ON p.id = c.produit_id
+    WHERE c.client_id = p_id
+    ORDER BY c.date_cmd DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Test :
+SELECT * FROM historique_client(1);  -- Historique d'Alice</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Trigger : Empêcher la suppression des commandes</h4>
+      <p>Créez un trigger <code class="i">BEFORE DELETE</code> sur <code class="i">commandes</code> qui bloque toute suppression d'une commande de moins de 30 jours et enregistre la tentative dans une table <code class="i">tentatives_suppression</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE TABLE tentatives_suppression (
+    id SERIAL PRIMARY KEY,
+    commande_id INT,
+    tente_par TEXT DEFAULT current_user,
+    tente_le TIMESTAMP DEFAULT now()
+);
+
+CREATE OR REPLACE FUNCTION bloquer_suppression_commande()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.date_cmd > now() - INTERVAL '30 days' THEN
+        INSERT INTO tentatives_suppression(commande_id) VALUES (OLD.id);
+        RAISE EXCEPTION 'Suppression refusée : commande % datée du % (moins de 30 jours)',
+            OLD.id, OLD.date_cmd::date;
+    END IF;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_protect_commandes
+BEFORE DELETE ON commandes
+FOR EACH ROW EXECUTE FUNCTION bloquer_suppression_commande();
+
+-- Test (doit échouer pour les commandes récentes) :
+DELETE FROM commandes WHERE id = 1;
+SELECT * FROM tentatives_suppression;</pre>
+      </details>
+    </div>
+
   </section>
 
+  <footer>BDD Avancée — Séance 1 : PL/pgSQL</footer>
 </div>
 </body>
 </html>

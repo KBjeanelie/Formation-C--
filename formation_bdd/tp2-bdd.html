@@ -2,116 +2,478 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>BDD Avancée - Séance 2</title>
+<title>BDD Avancée — Séance 2 : Transactions & Sécurité</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
-  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --green:#3fbd83; --blue:#4d90fe; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
-  *{box-sizing:border-box;}
-  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
-  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
-  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
-  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
-  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--green); margin:0 0 14px; text-transform: uppercase; letter-spacing: 0.1em;}
-  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
-  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:700px;}
-  
-  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
-  h2{font-size:24px; font-weight:700; margin:0 0 16px; color:var(--green);}
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--green:#3fbd83;--blue:#4d90fe;--orange:#ef6b34;--red:#ff2d20;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--green);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;letter-spacing:-.01em;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--green);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--blue);margin:28px 0 10px;}
   p{margin:0 0 14px;}
-  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
-  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
-  .context-box { border-left: 3px solid var(--blue); padding: 16px; background: #0d0d16; border-radius: 0 8px 8px 0; margin-bottom: 24px; color: var(--ink-dim); }
-  details { margin-top: 16px; background: var(--bg); border: 1px solid var(--edge-soft); border-radius: 8px; padding: 12px 16px; }
-  summary { font-weight: 600; cursor: pointer; color: var(--ink); font-family: var(--mono); font-size: 14px; outline: none; }
-  summary:hover { color: var(--green); }
+  ul,ol{padding-left:22px;color:var(--dim);margin:0 0 18px;}
+  li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(77,144,254,.08);border-left:3px solid var(--blue);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .info strong{color:var(--blue);}
+  .warn{background:rgba(255,45,32,.08);border-left:3px solid var(--red);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .warn strong{color:var(--red);}
+  .acid-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 20px;}
+  .acid-card{background:var(--bg);border:1px solid var(--edge);border-radius:8px;padding:16px;}
+  .acid-card .letter{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--green);margin-bottom:6px;}
+  .acid-card h4{font-size:14px;font-weight:700;margin:0 0 6px;color:var(--ink);}
+  .acid-card p{font-size:13px;color:var(--dim);margin:0;}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--orange);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--green);}
+  details[open] summary{color:var(--green);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a href="index.html" class="back-link">← Retour au Dashboard BDD</a>
-  <p class="eyebrow">Séance 2</p>
-  <h1 class="title">Sécurité & Transactions</h1>
-  <p class="subtitle">Gérez les accès à vos données et assurez-vous de l'intégrité de vos opérations critiques grâce aux principes ACID.</p>
+  <a href="index.html" class="back-link">← Dashboard BDD</a>
+  <p class="eyebrow">Séance 2 — 4 heures</p>
+  <h1 class="title">Transactions ACID & Sécurité PostgreSQL</h1>
+  <p class="subtitle">Garantissez l'intégrité des données sous haute charge et protégez votre base avec un système de droits granulaires. Deux piliers indispensables en production.</p>
 
+  <!-- THEORIE TRANSACTIONS -->
   <section>
-    <h2>Introduction (Théorie - 15 min)</h2>
-    <p>Une <strong>transaction</strong> est une séquence d'opérations exécutées comme un seul bloc. Soit TOUT réussit (<code>COMMIT</code>), soit TOUT est annulé (<code>ROLLBACK</code>).</p>
-    <p>La <strong>sécurité</strong> passe par la création de <code>ROLES</code> (utilisateurs) et l'attribution de droits (<code>GRANT</code> / <code>REVOKE</code>).</p>
+    <h2>1. Les Transactions et le modèle ACID</h2>
+    <p>Une <strong>transaction</strong> est un ensemble d'opérations SQL traitées comme une unité indivisible. En PostgreSQL, toute requête est implicitement dans une transaction. Vous pouvez les contrôler manuellement avec <code class="i">BEGIN</code>, <code class="i">COMMIT</code> et <code class="i">ROLLBACK</code>.</p>
+
+    <div class="acid-grid">
+      <div class="acid-card"><div class="letter">A</div><h4>Atomicité</h4><p>Tout ou rien. Si une étape échoue, l'ensemble de la transaction est annulé.</p></div>
+      <div class="acid-card"><div class="letter">C</div><h4>Cohérence</h4><p>La base passe d'un état valide à un autre état valide. Les contraintes sont toujours respectées.</p></div>
+      <div class="acid-card"><div class="letter">I</div><h4>Isolation</h4><p>Les transactions concurrentes ne se "voient" pas mutuellement jusqu'au COMMIT.</p></div>
+      <div class="acid-card"><div class="letter">D</div><h4>Durabilité</h4><p>Une fois commitée, la transaction est persistée même en cas de crash serveur.</p></div>
+    </div>
+
+    <h3>Anatomie d'une transaction</h3>
+    <pre>BEGIN;  -- Ouvre la transaction
+
+  UPDATE comptes SET solde = solde - 200 WHERE id = 1;  -- Étape 1
+  UPDATE comptes SET solde = solde + 200 WHERE id = 2;  -- Étape 2
+
+COMMIT;  -- Valide définitivement les deux changements
+
+-- Si une erreur survient entre les deux UPDATE :
+ROLLBACK;  -- Annule tout, comme si rien ne s'était passé</pre>
+
+    <h3>Les SAVEPOINT : annulation partielle</h3>
+    <p>Un SAVEPOINT permet de définir des points de restauration intermédiaires à l'intérieur d'une transaction longue, sans annuler toute la transaction.</p>
+    <pre>BEGIN;
+  INSERT INTO logs (msg) VALUES ('Étape 1 OK');
+  SAVEPOINT sp1;
+
+  INSERT INTO logs (msg) VALUES ('Étape 2 OK');
+  SAVEPOINT sp2;
+
+  -- Une erreur survient ici...
+  ROLLBACK TO sp1;  -- On revient après l'étape 1 seulement
+  -- sp2 est détruit, mais sp1 existe encore
+
+COMMIT;  -- Seule l'étape 1 est commitée</pre>
+
+    <h3>Niveaux d'isolation</h3>
+    <p>PostgreSQL propose 4 niveaux d'isolation, contrôlant ce qu'une transaction peut "voir" des autres :</p>
+    <pre>-- Défaut : READ COMMITTED (voit uniquement les données commitées)
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+-- Plus strict : REPEATABLE READ (chaque lecture retourne le même résultat)
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
+-- Le plus strict : SERIALIZABLE (transactions exécutées comme si elles étaient séquentielles)
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;</pre>
+
+    <div class="warn">
+      <strong>⚠️ Le Deadlock (Verrou mortel) :</strong> Deux transactions se bloquent mutuellement en attendant que l'autre libère une ressource. PostgreSQL les détecte automatiquement et en tue une pour débloquer la situation. La solution est d'<strong>accéder toujours aux ressources dans le même ordre</strong>.
+    </div>
   </section>
 
+  <!-- THEORIE SECURITE -->
   <section>
-    <h2>TP 1 : Création d'un Rôle de Lecture</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Créer un utilisateur "stagiaire" avec le mot de passe "1234", qui ne peut faire que des SELECT sur la table <code>produits</code>.
-    </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <pre>-- Création du rôle avec droit de connexion
-CREATE ROLE stagiaire WITH LOGIN PASSWORD '1234';
+    <h2>2. Sécurité : Rôles et Privilèges</h2>
+    <p>PostgreSQL utilise un système de <strong>ROLES</strong> (qui remplacent à la fois les utilisateurs et les groupes). Un rôle peut se connecter, posséder des objets, et avoir des privilèges sur d'autres objets.</p>
 
--- Donner le droit d'utiliser le schéma public
-GRANT USAGE ON SCHEMA public TO stagiaire;
+    <h3>Créer et gérer des rôles</h3>
+    <pre>-- Créer un rôle utilisateur (avec login)
+CREATE ROLE app_user WITH LOGIN PASSWORD 'motdepasse_fort';
 
--- Donner le droit de SELECT uniquement sur produits
-GRANT SELECT ON produits TO stagiaire;
+-- Créer un rôle groupe (sans login, pour grouper les droits)
+CREATE ROLE lecteurs;
 
--- Essayez de vous connecter en tant que 'stagiaire' et tentez un UPDATE !</pre>
-    </details>
+-- Ajouter un utilisateur à un groupe
+GRANT lecteurs TO app_user;
+
+-- Supprimer un rôle
+DROP ROLE app_user;</pre>
+
+    <h3>GRANT : donner des droits</h3>
+    <pre>-- Droits sur une table spécifique
+GRANT SELECT ON produits TO lecteurs;
+GRANT SELECT, INSERT, UPDATE ON commandes TO app_user;
+
+-- Droits sur toutes les tables d'un schéma
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO lecteurs;
+
+-- Permettre à un rôle d'accorder ses droits à d'autres (WITH GRANT OPTION)
+GRANT SELECT ON produits TO manager WITH GRANT OPTION;
+
+-- Droit d'utiliser le schéma (obligatoire en pratique)
+GRANT USAGE ON SCHEMA public TO lecteurs;</pre>
+
+    <h3>REVOKE : retirer des droits</h3>
+    <pre>REVOKE INSERT ON commandes FROM app_user;
+REVOKE ALL ON produits FROM lecteurs;</pre>
+
+    <h3>Row Level Security (RLS) — Sécurité niveau ligne</h3>
+    <p>Une fonctionnalité avancée de PostgreSQL qui permet de filtrer automatiquement les lignes qu'un utilisateur peut voir ou modifier, sans changer les requêtes.</p>
+    <pre>-- Activer RLS sur la table
+ALTER TABLE commandes ENABLE ROW LEVEL SECURITY;
+
+-- Politique : un utilisateur ne voit que ses propres commandes
+CREATE POLICY user_isolation ON commandes
+    USING (client_id = current_setting('app.current_user_id')::INT);</pre>
   </section>
 
+  <!-- BASE DE TRAVAIL -->
   <section>
-    <h2>TP 2 : Le Virement Bancaire (Transactions)</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Créer une table <code>comptes (id, solde)</code>. Faire un virement de 100€ du compte A vers le compte B dans un bloc transactionnel. Provoquer une erreur pour voir le ROLLBACK en action.
-    </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <pre>CREATE TABLE comptes (id INT PRIMARY KEY, solde DECIMAL);
-INSERT INTO comptes VALUES (1, 500), (2, 500);
+    <h2>3. Base de travail — Système Bancaire</h2>
+    <p>Exécutez ce script avant de démarrer les TPs :</p>
+    <pre>DROP TABLE IF EXISTS comptes, virements, journal_erreurs CASCADE;
 
--- Début de la transaction
+CREATE TABLE comptes (
+    id SERIAL PRIMARY KEY,
+    titulaire VARCHAR(100) NOT NULL,
+    solde DECIMAL(12,2) DEFAULT 0 CHECK (solde >= 0),
+    type_compte VARCHAR(20) DEFAULT 'courant'
+);
+
+CREATE TABLE virements (
+    id SERIAL PRIMARY KEY,
+    compte_source INT REFERENCES comptes(id),
+    compte_dest INT REFERENCES comptes(id),
+    montant DECIMAL(12,2),
+    statut VARCHAR(20) DEFAULT 'en_attente',
+    effectue_le TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE journal_erreurs (
+    id SERIAL PRIMARY KEY,
+    message TEXT,
+    contexte TEXT,
+    survenu_le TIMESTAMP DEFAULT now()
+);
+
+INSERT INTO comptes (titulaire, solde, type_compte) VALUES
+    ('Alice Martin', 1500.00, 'courant'),
+    ('Bob Dupont', 300.00, 'courant'),
+    ('Clara Simon', 5000.00, 'epargne'),
+    ('Société XYZ', 50000.00, 'professionnel'),
+    ('David Leblanc', 0.00, 'courant');</pre>
+  </section>
+
+  <!-- TPs -->
+  <section>
+    <h2>4. Travaux Pratiques (10 exercices)</h2>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Transaction simple : Virement sécurisé</h4>
+      <p>Effectuez un virement de 200€ du compte d'Alice (id=1) vers Bob (id=2) dans un bloc transactionnel manuel. Vérifiez les soldes avant et après.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Avant
+SELECT id, titulaire, solde FROM comptes WHERE id IN (1,2);
+
 BEGIN;
-
--- 1. Retirer à A
-UPDATE comptes SET solde = solde - 100 WHERE id = 1;
-
--- 2. Ajouter à B
-UPDATE comptes SET solde = solde + 100 WHERE id = 2;
-
--- Si tout est ok :
+  UPDATE comptes SET solde = solde - 200 WHERE id = 1;
+  UPDATE comptes SET solde = solde + 200 WHERE id = 2;
 COMMIT;
 
--- Test d'erreur :
-BEGIN;
-UPDATE comptes SET solde = solde - 1000 WHERE id = 1;
--- Simulation d'une coupure serveur ici... on annule :
-ROLLBACK;
--- Le solde est revenu à son état initial !</pre>
-    </details>
-  </section>
-
-  <section>
-    <h2>TP 3 : Simulation d'un Deadlock (Verrou mortel)</h2>
-    <div class="context-box">
-      <strong>Objectif :</strong> Simuler deux utilisateurs qui tentent de modifier les mêmes ressources en croisé, bloquant ainsi la base. (Ouvrez 2 terminaux / fenêtres psql).
+-- Après
+SELECT id, titulaire, solde FROM comptes WHERE id IN (1,2);
+-- Alice: 1300€  |  Bob: 500€</pre>
+      </details>
     </div>
-    <details>
-      <summary>Voir la solution</summary>
-      <p>Dans le <strong>Terminal 1</strong> :</p>
-      <pre>BEGIN;
-UPDATE comptes SET solde = solde + 10 WHERE id = 1;</pre>
-      <p>Dans le <strong>Terminal 2</strong> :</p>
-      <pre>BEGIN;
-UPDATE comptes SET solde = solde + 10 WHERE id = 2;</pre>
-      <p>De retour dans le <strong>Terminal 1</strong> :</p>
-      <pre>UPDATE comptes SET solde = solde - 10 WHERE id = 2;
--- (Ça bloque, il attend que le T2 finisse)</pre>
-      <p>Dans le <strong>Terminal 2</strong> :</p>
-      <pre>UPDATE comptes SET solde = solde - 10 WHERE id = 1;
--- ERREUR ! PostgreSQL détecte le deadlock et tue l'une des transactions.</pre>
-    </details>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>ROLLBACK : Simuler un crash</h4>
+      <p>Ouvrez une transaction, débitez 100€ d'Alice, puis utilisez <code class="i">ROLLBACK</code>. Vérifiez que son solde est inchangé.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT solde FROM comptes WHERE id = 1; -- 1300€
+
+BEGIN;
+  UPDATE comptes SET solde = solde - 100 WHERE id = 1;
+  SELECT solde FROM comptes WHERE id = 1; -- 1200€ (visible dans cette session)
+ROLLBACK;
+
+SELECT solde FROM comptes WHERE id = 1; -- 1300€ : annulation totale !</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>Procédure transactionnelle : Virement avec validation</h4>
+      <p>Créez une procédure <code class="i">effectuer_virement(source, dest, montant)</code> qui : vérifie que le solde source est suffisant, effectue le virement, enregistre l'opération dans <code class="i">virements</code>, et lève une exception en cas de fonds insuffisants.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE PROCEDURE effectuer_virement(
+    p_source INT, p_dest INT, p_montant DECIMAL
+) AS $$
+DECLARE
+    v_solde DECIMAL;
+BEGIN
+    IF p_montant <= 0 THEN
+        RAISE EXCEPTION 'Le montant doit être positif';
+    END IF;
+
+    SELECT solde INTO v_solde FROM comptes WHERE id = p_source FOR UPDATE;
+
+    IF v_solde < p_montant THEN
+        INSERT INTO journal_erreurs(message, contexte)
+        VALUES ('Fonds insuffisants', format('Compte %s: solde=%.2f, demande=%.2f', p_source, v_solde, p_montant));
+        RAISE EXCEPTION 'Fonds insuffisants (solde: %.2f€, demandé: %.2f€)', v_solde, p_montant;
+    END IF;
+
+    UPDATE comptes SET solde = solde - p_montant WHERE id = p_source;
+    UPDATE comptes SET solde = solde + p_montant WHERE id = p_dest;
+
+    INSERT INTO virements(compte_source, compte_dest, montant, statut)
+    VALUES (p_source, p_dest, p_montant, 'effectue');
+
+    RAISE NOTICE 'Virement de %.2f€ : compte % → compte % OK', p_montant, p_source, p_dest;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Tests :
+CALL effectuer_virement(1, 2, 50);    -- OK
+CALL effectuer_virement(5, 1, 100);   -- Doit échouer (David, solde 0)
+SELECT * FROM virements;
+SELECT * FROM journal_erreurs;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>SAVEPOINT : Transaction à étapes multiples</h4>
+      <p>Simulez une série de virements dans une seule transaction. Si l'un échoue, revenez au point précédent grâce à un SAVEPOINT, sans annuler les virements réussis.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>BEGIN;
+  CALL effectuer_virement(1, 2, 30);
+  SAVEPOINT apres_premier;
+
+  CALL effectuer_virement(3, 1, 100);
+  SAVEPOINT apres_deuxieme;
+
+  -- Ce virement va échouer (David n'a pas de solde)
+  BEGIN
+    CALL effectuer_virement(5, 2, 500);
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Virement 3 échoué: %, retour au savepoint', SQLERRM;
+    ROLLBACK TO apres_deuxieme;
+  END;
+
+COMMIT;
+
+SELECT id, titulaire, solde FROM comptes ORDER BY id;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Créer des rôles avec droits limités</h4>
+      <p>Créez un rôle <code class="i">conseiller</code> qui peut lire tous les comptes mais ne peut ni modifier les soldes ni supprimer de lignes. Vérifiez en tentant un UPDATE.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE ROLE conseiller WITH LOGIN PASSWORD 'conseiller123';
+
+GRANT USAGE ON SCHEMA public TO conseiller;
+GRANT SELECT ON comptes, virements TO conseiller;
+-- Note : pas de GRANT UPDATE ni DELETE
+
+-- Pour tester, connectez-vous en tant que conseiller :
+-- psql -U conseiller -d votre_base
+
+-- Depuis une session conseiller :
+SELECT * FROM comptes;  -- OK
+UPDATE comptes SET solde = 99999 WHERE id = 1;  -- ERREUR: permission denied</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>Rôle applicatif avec droits sur procédures uniquement</h4>
+      <p>Créez un rôle <code class="i">app_banking</code> qui peut uniquement exécuter la procédure <code class="i">effectuer_virement</code>, mais sans accès direct aux tables. Ainsi l'application ne peut pas faire des UPDATE arbitraires.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE ROLE app_banking WITH LOGIN PASSWORD 'banking_secret!';
+
+GRANT USAGE ON SCHEMA public TO app_banking;
+-- Pas de GRANT sur les tables !
+GRANT EXECUTE ON PROCEDURE effectuer_virement(INT, INT, DECIMAL) TO app_banking;
+
+-- L'app peut seulement :
+CALL effectuer_virement(1, 2, 10);  -- OK si exécuté avec SECURITY DEFINER
+
+-- Mais ne peut pas :
+UPDATE comptes SET solde = 0;  -- ERREUR: permission denied
+
+-- ASTUCE : ajoutez SECURITY DEFINER à la procédure pour qu'elle s'exécute
+-- avec les droits de son créateur (le superuser), pas de l'appelant.
+-- Cela sécurise complètement l'accès aux données.</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>Trigger : Bloquer les virements suspects</h4>
+      <p>Créez un trigger <code class="i">BEFORE INSERT</code> sur <code class="i">virements</code> qui bloque tout virement supérieur à 10 000€ et le journalise dans <code class="i">journal_erreurs</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE FUNCTION bloquer_gros_virement()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.montant > 10000 THEN
+        INSERT INTO journal_erreurs(message, contexte)
+        VALUES (
+            'Virement bloqué : montant excessif',
+            format('Montant: %.2f€ | Source: %s | Dest: %s | User: %s',
+                   NEW.montant, NEW.compte_source, NEW.compte_dest, current_user)
+        );
+        RAISE EXCEPTION 'Virement de %.2f€ refusé: dépasse le plafond de 10 000€', NEW.montant;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_virement_suspect
+BEFORE INSERT ON virements
+FOR EACH ROW EXECUTE FUNCTION bloquer_gros_virement();
+
+-- Test :
+INSERT INTO virements(compte_source, compte_dest, montant)
+VALUES (4, 1, 15000);  -- Doit être bloqué
+SELECT * FROM journal_erreurs;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Isolation : Observer la lecture sale (Read Committed)</h4>
+      <p>Simulez deux sessions concurrentes. Dans la session A, ouvrez une transaction et modifiez un solde sans committer. Dans la session B, lisez le même solde. Observez ce que B peut voir (ou pas).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- === SESSION A (ouvrez un premier psql) ===
+BEGIN;
+UPDATE comptes SET solde = 99999 WHERE id = 1;
+-- NE PAS COMMITTER encore !
+
+-- === SESSION B (ouvrez un second psql) ===
+SELECT solde FROM comptes WHERE id = 1;
+-- Résultat : 1300€ (l'ancienne valeur)
+-- PostgreSQL utilise READ COMMITTED par défaut :
+-- la session B ne voit PAS les données non-commitées de A.
+
+-- === SESSION A ===
+COMMIT;
+
+-- === SESSION B ===
+SELECT solde FROM comptes WHERE id = 1;
+-- Résultat : 99999€ (maintenant visible après le COMMIT)
+
+-- Remise en état :
+UPDATE comptes SET solde = 1300 WHERE id = 1;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>Fonction sécurisée : Rapport solde masqué</h4>
+      <p>Créez une fonction <code class="i">rapport_compte(p_id INT)</code> avec l'attribut <code class="i">SECURITY DEFINER</code> accessible au rôle <code class="i">conseiller</code>. Elle retourne le titulaire et le solde masqué (ex: "****500.00€") pour protéger l'information sensible.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE FUNCTION rapport_compte(p_id INT)
+RETURNS TABLE(titulaire TEXT, solde_masque TEXT)
+SECURITY DEFINER  -- S'exécute avec les droits du créateur
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        c.titulaire::TEXT,
+        ('****' || RIGHT(c.solde::TEXT, 6))::TEXT AS solde_masque
+    FROM comptes c
+    WHERE c.id = p_id;
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT EXECUTE ON FUNCTION rapport_compte(INT) TO conseiller;
+
+-- Test :
+SELECT * FROM rapport_compte(1);
+-- titulaire: Alice Martin | solde_masque: ****300.00</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Bilan : Procédure de clôture mensuelle</h4>
+      <p>Créez une procédure <code class="i">cloture_mensuelle()</code> qui : (1) applique un intérêt de 2% sur tous les comptes épargne, (2) prélève des frais de tenue de 5€ sur les comptes courants en positif, (3) enregistre un rapport dans <code class="i">journal_erreurs</code> avec le nombre de comptes traités. Tout doit être dans une seule transaction.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR REPLACE PROCEDURE cloture_mensuelle()
+AS $$
+DECLARE
+    nb_epargne INT := 0;
+    nb_courant INT := 0;
+BEGIN
+    -- 1. Intérêts sur comptes épargne
+    UPDATE comptes
+    SET solde = ROUND(solde * 1.02, 2)
+    WHERE type_compte = 'epargne';
+    GET DIAGNOSTICS nb_epargne = ROW_COUNT;
+
+    -- 2. Frais sur comptes courants
+    UPDATE comptes
+    SET solde = solde - 5
+    WHERE type_compte = 'courant' AND solde > 0;
+    GET DIAGNOSTICS nb_courant = ROW_COUNT;
+
+    -- 3. Rapport
+    INSERT INTO journal_erreurs(message, contexte)
+    VALUES (
+        'CLOTURE MENSUELLE OK',
+        format('%s comptes épargne (intérêts +2%%), %s comptes courants (frais -5€)', nb_epargne, nb_courant)
+    );
+
+    RAISE NOTICE 'Clôture terminée: % épargne, % courants traités', nb_epargne, nb_courant;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Exécution :
+CALL cloture_mensuelle();
+SELECT id, titulaire, solde, type_compte FROM comptes ORDER BY type_compte;
+SELECT message, contexte FROM journal_erreurs ORDER BY id DESC LIMIT 1;</pre>
+      </details>
+    </div>
+
   </section>
 
+  <footer>BDD Avancée — Séance 2 : Transactions & Sécurité</footer>
 </div>
 </body>
 </html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Cheatsheet PostgreSQL - De 0 à Expert</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --orange:#ef6b34; --green:#3fbd83; --blue:#4d90fe; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
+  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
+  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--orange); text-transform:uppercase; letter-spacing:.12em; margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:700px;}
+  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
+  h2{font-size:22px; font-weight:700; margin:0 0 16px; color:var(--orange);}
+  h3{font-size:17px; font-weight:600; color:var(--blue); margin:28px 0 10px;}
+  p{margin:0 0 14px;}
+  ul{padding-left: 20px; color:var(--ink-dim);}
+  li{margin-bottom:8px;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour au Dashboard BDD</a>
+  <p class="eyebrow">Guide de Survie</p>
+  <h1 class="title">Cheatsheet PostgreSQL</h1>
+  <p class="subtitle">Un aide-mémoire complet pour retrouver ses marques de 0 à expert. Idéal pour se rafraîchir la mémoire avant de démarrer la Séance 1.</p>
+
+  <section>
+    <h2>1. Les Méta-commandes psql (Terminal)</h2>
+    <p>Si vous utilisez l'outil en ligne de commande <code class="inline">psql</code>, ces commandes "antislash" sont indispensables :</p>
+    <ul>
+      <li><code class="inline">\l</code> : Lister toutes les bases de données.</li>
+      <li><code class="inline">\c ma_base</code> : Se connecter à la base "ma_base" (comme <code class="inline">USE ma_base</code> sous MySQL).</li>
+      <li><code class="inline">\dt</code> : Lister toutes les tables de la base actuelle.</li>
+      <li><code class="inline">\d ma_table</code> : Décrire la structure d'une table précise (colonnes, types, index).</li>
+      <li><code class="inline">\dn</code> : Lister les schémas.</li>
+      <li><code class="inline">\du</code> : Lister les rôles et utilisateurs.</li>
+      <li><code class="inline">\q</code> : Quitter psql.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>2. Bases de Données et Schémas</h2>
+    <p>Contrairement à MySQL, une instance PostgreSQL contient plusieurs Bases de données, et chaque Base contient plusieurs Schémas (espaces de noms). Le schéma par défaut s'appelle <code class="inline">public</code>.</p>
+    <pre>-- Créer une base de données
+CREATE DATABASE e_commerce;
+
+-- (Pensez à vous y connecter ensuite : \c e_commerce)
+
+-- Créer un nouveau schéma pour organiser ses tables
+CREATE SCHEMA compta;
+
+-- Utiliser explicitement un schéma :
+CREATE TABLE compta.factures (id SERIAL);</pre>
+  </section>
+
+  <section>
+    <h2>3. Création de Tables & Types de base</h2>
+    <p>PostgreSQL est strictement typé. L'auto-incrémentation se fait via le type magique <code class="inline">SERIAL</code> (qui crée une séquence en arrière-plan).</p>
+    <pre>CREATE TABLE employes (
+    id SERIAL PRIMARY KEY,             -- Auto-incrément (1, 2, 3...)
+    nom VARCHAR(100) NOT NULL,         -- Chaîne avec limite
+    bio TEXT,                          -- Chaîne sans limite (plus performant que VARCHAR)
+    age INT CHECK (age >= 18),         -- Entier avec contrainte
+    salaire DECIMAL(10,2),             -- Décimal précis (10 chiffres total, 2 après virgule)
+    is_active BOOLEAN DEFAULT TRUE,    -- Vrai booléen (TRUE / FALSE)
+    date_embauche TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);</pre>
+  </section>
+
+  <section>
+    <h2>4. Clés Étrangères (Relations)</h2>
+    <p>Lier deux tables ensemble et définir le comportement en cas de suppression.</p>
+    <pre>CREATE TABLE departements (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(50)
+);
+
+CREATE TABLE employes (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(100),
+    departement_id INT REFERENCES departements(id) ON DELETE CASCADE
+);
+-- ON DELETE CASCADE : Si on supprime un département, 
+-- tous ses employés sont supprimés automatiquement.</pre>
+  </section>
+
+  <section>
+    <h2>5. Opérations CRUD (Manipulation des données)</h2>
+    
+    <h3>Insertion (CREATE)</h3>
+    <pre>INSERT INTO employes (nom, age, salaire) 
+VALUES ('Alice', 30, 2500.50),
+       ('Bob', 25, 2100.00)
+RETURNING id; -- Astuce PG: Récupère l'ID généré immédiatement</pre>
+
+    <h3>Lecture (READ)</h3>
+    <pre>SELECT nom, salaire FROM employes 
+WHERE age >= 25 
+ORDER BY salaire DESC 
+LIMIT 10 OFFSET 5; -- Pagination</pre>
+
+    <h3>Mise à jour (UPDATE)</h3>
+    <pre>UPDATE employes 
+SET salaire = salaire + 100, is_active = TRUE 
+WHERE nom = 'Bob';</pre>
+
+    <h3>Suppression (DELETE)</h3>
+    <pre>DELETE FROM employes WHERE is_active = FALSE;</pre>
+  </section>
+
+  <section>
+    <h2>6. Modifier une structure existante (ALTER TABLE)</h2>
+    <p>Il arrive souvent de devoir modifier une table après sa création.</p>
+    <pre>-- Ajouter une colonne
+ALTER TABLE employes ADD COLUMN email VARCHAR(150);
+
+-- Renommer une colonne
+ALTER TABLE employes RENAME COLUMN nom TO nom_complet;
+
+-- Modifier le type d'une colonne (attention aux données existantes)
+ALTER TABLE employes ALTER COLUMN salaire TYPE NUMERIC(12,2);
+
+-- Supprimer une colonne
+ALTER TABLE employes DROP COLUMN bio;</pre>
+  </section>
+
+  <section>
+    <h2>7. Les Jointures de base (Rappel)</h2>
+    <p>Pour récupérer des données réparties dans plusieurs tables.</p>
+    <pre>SELECT employes.nom, departements.nom AS nom_dep
+FROM employes
+INNER JOIN departements ON employes.departement_id = departements.id;
+-- LEFT JOIN : Garde les employés même s'ils n'ont pas de département
+-- RIGHT JOIN : Garde les départements même sans employés</pre>
+  </section>
+
+</div>
+</body>
+</html>
