@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>BDD Avancée - Séance 3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --green:#3fbd83; --blue:#4d90fe; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
+  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
+  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--green); margin:0 0 14px; text-transform: uppercase; letter-spacing: 0.1em;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:700px;}
+  
+  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
+  h2{font-size:24px; font-weight:700; margin:0 0 16px; color:var(--green);}
+  p{margin:0 0 14px;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
+  .context-box { border-left: 3px solid var(--blue); padding: 16px; background: #0d0d16; border-radius: 0 8px 8px 0; margin-bottom: 24px; color: var(--ink-dim); }
+  details { margin-top: 16px; background: var(--bg); border: 1px solid var(--edge-soft); border-radius: 8px; padding: 12px 16px; }
+  summary { font-weight: 600; cursor: pointer; color: var(--ink); font-family: var(--mono); font-size: 14px; outline: none; }
+  summary:hover { color: var(--green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour au Dashboard BDD</a>
+  <p class="eyebrow">Séance 3</p>
+  <h1 class="title">Crash Test & Indexation</h1>
+  <p class="subtitle">Comment une base de données gère-t-elle des millions de lignes ? Découvrez le pouvoir des index B-Tree et la lecture des plans d'exécution.</p>
+
+  <section>
+    <h2>Introduction (Théorie - 15 min)</h2>
+    <p>Sans index, pour trouver une ligne, la base doit lire TOUTE la table (<strong>Seq Scan</strong> / Full Table Scan). Un <strong>Index (B-Tree)</strong> agit comme l'index à la fin d'un livre : il pointe directement vers la bonne page (<strong>Index Scan</strong>).</p>
+    <p>Pour auditer une requête lente, on ajoute <code>EXPLAIN ANALYZE</code> avant le <code>SELECT</code>.</p>
+  </section>
+
+  <section>
+    <h2>TP 1 : Génération du Million de lignes</h2>
+    <div class="context-box">
+      <strong>Objectif :</strong> Créer une table <code>logs</code> et la remplir avec 2 millions de fausses requêtes HTTP à l'aide de <code>generate_series</code>.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>CREATE TABLE logs (
+    id SERIAL PRIMARY KEY,
+    ip_address VARCHAR(15),
+    status_code INT,
+    created_at TIMESTAMP
+);
+
+-- Insertion de 2 millions de lignes aléatoires (Prend quelques secondes)
+INSERT INTO logs (ip_address, status_code, created_at)
+SELECT 
+    '192.168.1.' || (random() * 255)::int,
+    (ARRAY[200, 404, 500])[ceil(random()*3)],
+    NOW() - (random() * interval '365 days')
+FROM generate_series(1, 2000000);</pre>
+    </details>
+  </section>
+
+  <section>
+    <h2>TP 2 : Analyse et Constat (Le Seq Scan)</h2>
+    <div class="context-box">
+      <strong>Objectif :</strong> Compter combien de requêtes proviennent de l'IP "192.168.1.50". Analyser la performance de cette requête.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>EXPLAIN ANALYZE 
+SELECT COUNT(*) FROM logs WHERE ip_address = '192.168.1.50';</pre>
+      <p>Observez le résultat : Le moteur indique un <code>Seq Scan on logs</code>. Le temps d'exécution (Execution Time) sera probablement supérieur à 100ms ou 200ms, ce qui est énorme pour une simple recherche web.</p>
+    </details>
+  </section>
+
+  <section>
+    <h2>TP 3 : La Magie de l'Index</h2>
+    <div class="context-box">
+      <strong>Objectif :</strong> Créer un index sur la colonne <code>ip_address</code> et relancer l'analyse.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>-- Création de l'index (Prend un peu de temps car il doit trier 2M de lignes)
+CREATE INDEX idx_logs_ip ON logs(ip_address);
+
+-- Relançons l'analyse :
+EXPLAIN ANALYZE 
+SELECT COUNT(*) FROM logs WHERE ip_address = '192.168.1.50';</pre>
+      <p>Le résultat indique maintenant un <code>Bitmap Index Scan</code> ou <code>Index Only Scan</code>. Le temps d'exécution devrait s'effondrer autour de 1ms ! L'optimisation a été multipliée par 100.</p>
+    </details>
+  </section>
+
+</div>
+</body>
+</html>

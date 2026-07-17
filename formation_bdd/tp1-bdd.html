@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>BDD Avancée - Séance 1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --green:#3fbd83; --blue:#4d90fe; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
+  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
+  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--green); margin:0 0 14px; text-transform: uppercase; letter-spacing: 0.1em;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:700px;}
+  
+  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
+  h2{font-size:24px; font-weight:700; margin:0 0 16px; color:var(--green);}
+  h3{font-size:18px; color:var(--ink); margin:24px 0 12px;}
+  p{margin:0 0 14px;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
+  
+  .context-box { border-left: 3px solid var(--blue); padding: 16px; background: #0d0d16; border-radius: 0 8px 8px 0; margin-bottom: 24px; color: var(--ink-dim); }
+  
+  details { margin-top: 16px; background: var(--bg); border: 1px solid var(--edge-soft); border-radius: 8px; padding: 12px 16px; }
+  summary { font-weight: 600; cursor: pointer; color: var(--ink); font-family: var(--mono); font-size: 14px; outline: none; }
+  summary:hover { color: var(--green); }
+  details[open] summary { margin-bottom: 16px; border-bottom: 1px solid var(--edge-soft); padding-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour au Dashboard BDD</a>
+  <p class="eyebrow">Séance 1</p>
+  <h1 class="title">PL/pgSQL : Procédures & Triggers</h1>
+  <p class="subtitle">L'objectif de cette séance est de déporter la logique métier (calculs, vérifications, historisation) directement dans le moteur de base de données PostgreSQL.</p>
+
+  <section>
+    <h2>Introduction (Théorie - 15 min)</h2>
+    <p>Le <strong>PL/pgSQL</strong> (Procedural Language/PostgreSQL) ajoute des éléments de programmation (variables, boucles, conditions) au SQL classique.</p>
+    <ul>
+      <li><strong>Fonction :</strong> Retourne une valeur. Utilisée pour des calculs.</li>
+      <li><strong>Procédure (depuis PG 11) :</strong> Ne retourne rien, mais peut exécuter des transactions complètes.</li>
+      <li><strong>Trigger :</strong> Une fonction qui s'exécute automatiquement AVANT ou APRÈS un INSERT/UPDATE/DELETE.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Préparation : Base E-Commerce</h2>
+    <p>Exécutez ce script pour créer les tables de notre TP :</p>
+    <pre>CREATE TABLE clients (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(100),
+    points_fidelite INT DEFAULT 0
+);
+
+CREATE TABLE produits (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(100),
+    prix DECIMAL(10,2),
+    stock INT
+);
+
+CREATE TABLE commandes (
+    id SERIAL PRIMARY KEY,
+    client_id INT REFERENCES clients(id),
+    produit_id INT REFERENCES produits(id),
+    quantite INT,
+    date_commande TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO clients (nom, points_fidelite) VALUES ('Alice', 150), ('Bob', 20);
+INSERT INTO produits (nom, prix, stock) VALUES ('Laptop', 1000.00, 5), ('Souris', 25.00, 50);</pre>
+  </section>
+
+  <section>
+    <h2>TP 1 : La Fonction de Réduction</h2>
+    <div class="context-box">
+      <strong>Objectif :</strong> Créer une fonction <code>calculer_reduction(client_id)</code> qui retourne un pourcentage de réduction. Si le client a plus de 100 points, il a 10% de réduction, sinon 0%.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>CREATE OR REPLACE FUNCTION calculer_reduction(p_client_id INT) 
+RETURNS DECIMAL AS $$
+DECLARE
+    v_points INT;
+    v_reduction DECIMAL;
+BEGIN
+    -- Récupération des points
+    SELECT points_fidelite INTO v_points 
+    FROM clients WHERE id = p_client_id;
+    
+    -- Logique
+    IF v_points >= 100 THEN
+        v_reduction := 0.10; -- 10%
+    ELSE
+        v_reduction := 0.00;
+    END IF;
+    
+    RETURN v_reduction;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Test de la fonction :
+SELECT nom, calculer_reduction(id) FROM clients;</pre>
+    </details>
+  </section>
+
+  <section>
+    <h2>TP 2 : La Procédure d'Achat</h2>
+    <div class="context-box">
+      <strong>Objectif :</strong> Créer une procédure <code>valider_commande(p_client, p_produit, p_qte)</code> qui insère la commande ET déduit le stock.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>CREATE OR REPLACE PROCEDURE valider_commande(
+    p_client INT, p_produit INT, p_qte INT
+) AS $$
+BEGIN
+    -- 1. Insérer la commande
+    INSERT INTO commandes (client_id, produit_id, quantite) 
+    VALUES (p_client, p_produit, p_qte);
+    
+    -- 2. Mettre à jour le stock
+    UPDATE produits 
+    SET stock = stock - p_qte 
+    WHERE id = p_produit;
+    
+    -- Le COMMIT est implicite dans une procédure appelée correctement
+END;
+$$ LANGUAGE plpgsql;
+
+-- Test :
+CALL valider_commande(1, 1, 1);
+SELECT * FROM produits; -- Le stock de Laptop doit être à 4</pre>
+    </details>
+  </section>
+
+  <section>
+    <h2>TP 3 : Le Trigger Anti-Rupture</h2>
+    <div class="context-box">
+      <strong>Objectif :</strong> Créer un Trigger qui se déclenche AVANT la mise à jour d'un produit. Si le nouveau stock est inférieur à 0, il lève une exception pour bloquer la transaction.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <p>Un trigger nécessite d'abord une fonction de type TRIGGER :</p>
+      <pre>CREATE OR REPLACE FUNCTION verifier_stock()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- NEW représente la nouvelle ligne (après UPDATE)
+    IF NEW.stock &lt; 0 THEN
+        RAISE EXCEPTION 'Stock insuffisant pour le produit % !', NEW.nom;
+    END IF;
+    
+    RETURN NEW; -- Obligatoire pour un trigger BEFORE
+END;
+$$ LANGUAGE plpgsql;
+
+-- Attacher la fonction à la table
+CREATE TRIGGER trg_check_stock
+BEFORE UPDATE ON produits
+FOR EACH ROW
+EXECUTE FUNCTION verifier_stock();
+
+-- Test pour forcer l'erreur :
+UPDATE produits SET stock = stock - 10 WHERE id = 1;</pre>
+    </details>
+  </section>
+
+</div>
+</body>
+</html>

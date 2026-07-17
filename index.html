@@ -14,6 +14,7 @@
     --ink-dim:#a8a5b8;
     --orange:#ef6b34;
     --red:#ff2d20;
+    --green:#3fbd83;
     --mono:'JetBrains Mono', monospace;
     --sans:'Inter', sans-serif;
   }
@@ -55,6 +56,9 @@
   .card-laravel { border-top: 4px solid var(--red); }
   .card-laravel:hover { box-shadow: 0 12px 30px rgba(255, 45, 32, 0.15); border-color: var(--red); }
   
+  .card-bdd { border-top: 4px solid var(--green); }
+  .card-bdd:hover { box-shadow: 0 12px 30px rgba(63, 189, 131, 0.15); border-color: var(--green); }
+  
   .logo {
     font-size: 48px;
     font-weight: 700;
@@ -63,6 +67,7 @@
   }
   .card-cpp .logo { color: var(--orange); }
   .card-laravel .logo { color: var(--red); }
+  .card-bdd .logo { color: var(--green); }
 
   .card h2 { font-size: 24px; margin: 0 0 12px; font-weight: 600; }
   .card p { font-size: 15px; color: var(--ink-dim); margin: 0; line-height: 1.5; }
@@ -87,6 +92,12 @@
       <div class="logo">Laravel</div>
       <h2>Formation Laravel</h2>
       <p>Développement web moderne avec PHP, conteneurisation Docker, notions avancées, APIs et architecture MVC.</p>
+    </a>
+
+    <a href="formation_bdd/index.html" class="card card-bdd">
+      <div class="logo">BDD</div>
+      <h2>Base de Données Avancée</h2>
+      <p>PostgreSQL, PL/pgSQL, Transactions, Optimisation des performances et introduction au NoSQL (MongoDB).</p>
     </a>
   </div>
 </div>

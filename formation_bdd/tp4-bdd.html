@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>BDD Avancée - Séance 4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --green:#3fbd83; --blue:#4d90fe; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
+  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
+  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--green); margin:0 0 14px; text-transform: uppercase; letter-spacing: 0.1em;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:700px;}
+  
+  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
+  h2{font-size:24px; font-weight:700; margin:0 0 16px; color:var(--green);}
+  p{margin:0 0 14px;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
+  .context-box { border-left: 3px solid var(--blue); padding: 16px; background: #0d0d16; border-radius: 0 8px 8px 0; margin-bottom: 24px; color: var(--ink-dim); }
+  details { margin-top: 16px; background: var(--bg); border: 1px solid var(--edge-soft); border-radius: 8px; padding: 12px 16px; }
+  summary { font-weight: 600; cursor: pointer; color: var(--ink); font-family: var(--mono); font-size: 14px; outline: none; }
+  summary:hover { color: var(--green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour au Dashboard BDD</a>
+  <p class="eyebrow">Séance 4</p>
+  <h1 class="title">Introduction au NoSQL (MongoDB)</h1>
+  <p class="subtitle">Oubliez les tables et les jointures. Stockons nos données sous forme de documents JSON ultra-flexibles !</p>
+
+  <section>
+    <h2>Prérequis & Installation</h2>
+    <p>1. Installez MongoDB Community Edition depuis <a href="https://www.mongodb.com/try/download/community" target="_blank" style="color:var(--blue);">mongodb.com</a>.</p>
+    <p>2. Installez le client graphique <strong>MongoDB Compass</strong> pour visualiser vos collections facilement.</p>
+    <p>3. Ouvrez un terminal (mongosh) pour exécuter les commandes suivantes.</p>
+  </section>
+
+  <section>
+    <h2>TP 1 : Création et Insertion (CRUD)</h2>
+    <div class="context-box">
+      <strong>Objectif :</strong> Sélectionner une base <code>blog</code> (qui se créera toute seule). Insérer un article avec des tags et des commentaires imbriqués (ce qui nécessiterait 3 tables en SQL).
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>use blog
+
+db.articles.insertOne({
+    titre: "Découvrir MongoDB",
+    auteur: "Walter",
+    tags: ["NoSQL", "Base de données", "JSON"],
+    commentaires: [
+        { user: "Alice", texte: "Super article !", like: 5 },
+        { user: "Bob", texte: "Très clair.", like: 2 }
+    ]
+})
+
+-- Pour vérifier :
+db.articles.find().pretty()</pre>
+    </details>
+  </section>
+
+  <section>
+    <h2>TP 2 : La Recherche Avancée</h2>
+    <div class="context-box">
+      <strong>Objectif :</strong> Trouver tous les articles qui possèdent le tag "NoSQL" et dont le nom de l'auteur est "Walter".
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>db.articles.find({ 
+    tags: "NoSQL", 
+    auteur: "Walter" 
+})</pre>
+    </details>
+  </section>
+
+  <section>
+    <h2>TP 3 : Mise à jour dans un Document</h2>
+    <div class="context-box">
+      <strong>Objectif :</strong> Ajouter un nouveau tag "Tutoriel" au tableau de tags de l'article précédent, sans écraser les existants.
+    </div>
+    <details>
+      <summary>Voir la solution</summary>
+      <pre>db.articles.updateOne(
+    { titre: "Découvrir MongoDB" },
+    { $push: { tags: "Tutoriel" } }
+)</pre>
+    </details>
+  </section>
+
+</div>
+</body>
+</html>
