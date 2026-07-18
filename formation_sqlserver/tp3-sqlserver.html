@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>SQL Server — Séance 3 : Plans d'Exécution & Index</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--red:#CC292B;--blue:#4d90fe;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--red);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--red);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--blue);margin:28px 0 10px;}
+  p{margin:0 0 14px;} ul{padding-left:22px;color:var(--dim);margin:0 0 18px;} li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(77,144,254,.08);border-left:3px solid var(--blue);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .info strong{color:var(--blue);}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--red);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--red);}
+  details[open] summary{color:var(--red);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Dashboard SQL Server</a>
+  <p class="eyebrow">Séance 3 — 4 heures</p>
+  <h1 class="title">Plans d'Exécution & Indexation SQL Server</h1>
+  <p class="subtitle">Découvrez la différence fondamentale entre les Clustered Index et Non-Clustered Index de SQL Server, et apprenez à lire les plans d'exécution graphiques de SSMS.</p>
+
+  <section>
+    <h2>1. La grande différence : Clustered vs Non-Clustered Index</h2>
+    <p>C'est une notion clé unique à SQL Server. Chaque table ne peut avoir qu'<strong>un seul Clustered Index</strong> (et une Primary Key crée automatiquement un Clustered Index).</p>
+    <ul>
+      <li><strong>Clustered Index :</strong> Les données de la table sont physiquement triées et stockées dans l'ordre de l'index. C'est comme trier les pages d'un livre. Accès ultra-rapide par cette colonne.</li>
+      <li><strong>Non-Clustered Index :</strong> Une structure séparée qui contient les clés de recherche et un pointeur (la clé du Clustered Index) vers la ligne réelle. C'est comme l'index en fin de livre.</li>
+    </ul>
+    <div class="info">
+      <strong>Heap vs Clustered Table :</strong> Si une table n'a pas de Primary Key (pas de Clustered Index), elle est appelée un "Heap" (tas). Les données sont en désordre total. SQL Server fait alors un "Table Scan" (équivalent du Full Table Scan).
+    </div>
+
+    <h3>Lire les plans d'exécution T-SQL</h3>
+    <ul>
+      <li><strong>Dans SSMS :</strong> Cliquez sur "Inclure le plan d'exécution réel" (Ctrl+M) puis exécutez la requête. Un onglet graphique apparaît.</li>
+      <li><strong>Table Scan / Clustered Index Scan :</strong> Lit tout (mauvais sur grande table).</li>
+      <li><strong>Index Seek :</strong> Utilise l'index pour aller directement (excellent !).</li>
+      <li><strong>Key Lookup :</strong> Après un Index Seek sur un Non-Clustered Index, SQL Server doit "sauter" vers la table pour récupérer les colonnes manquantes (coûteux).</li>
+    </ul>
+    <pre>-- En mode texte (compatible avec tous les clients) :
+SET STATISTICS IO ON;   -- Affiche le nombre de lectures logiques
+SET STATISTICS TIME ON; -- Affiche les temps CPU et elapsed
+
+SELECT * FROM server_logs WHERE ip_address = '192.168.1.42';
+
+SET STATISTICS IO OFF;
+SET STATISTICS TIME OFF;</pre>
+  </section>
+
+  <section>
+    <h2>2. Base de travail — Les Logs Serveur</h2>
+    <pre>USE master;
+IF EXISTS(SELECT * FROM sys.databases WHERE name='logs_db') DROP DATABASE logs_db;
+CREATE DATABASE logs_db; GO
+USE logs_db; GO
+
+CREATE TABLE server_logs (
+    id INT IDENTITY(1,1) PRIMARY KEY,  -- Crée automatiquement un Clustered Index sur id
+    ip_address NVARCHAR(15),
+    endpoint NVARCHAR(100),
+    status_code INT,
+    response_time_ms INT,
+    user_agent NVARCHAR(200),
+    created_at DATETIME2
+);
+GO</pre>
+  </section>
+
+  <section>
+    <h2>3. Travaux Pratiques (10 exercices)</h2>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Générer 2 millions de lignes (Boucle WHILE)</h4>
+      <p>Créez une procédure qui insère 2 millions de lignes par lots (pour éviter un log de transaction trop grand).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR ALTER PROCEDURE dbo.generer_logs @n INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @i INT = 0, @batch INT = 10000;
+    DECLARE @statuses TABLE (s INT);
+    INSERT INTO @statuses VALUES(200),(201),(400),(401),(403),(404),(500);
+
+    WHILE @i < @n
+    BEGIN
+        INSERT INTO server_logs(ip_address, endpoint, status_code, response_time_ms, user_agent, created_at)
+        SELECT TOP(@batch)
+            N'192.168.1.' + CAST(ABS(CHECKSUM(NEWID())) % 255 AS NVARCHAR),
+            CHOOSE(ABS(CHECKSUM(NEWID())) % 5 + 1, N'/home',N'/api/users',N'/login',N'/dashboard',N'/api/data'),
+            CHOOSE(ABS(CHECKSUM(NEWID())) % 7 + 1, 200,201,400,401,403,404,500),
+            ABS(CHECKSUM(NEWID())) % 1000,
+            CHOOSE(ABS(CHECKSUM(NEWID())) % 4 + 1, N'Mozilla',N'Chrome',N'Safari',N'curl'),
+            DATEADD(DAY, -(ABS(CHECKSUM(NEWID())) % 365), GETDATE())
+        FROM sys.objects a CROSS JOIN sys.objects b CROSS JOIN sys.objects c;
+        SET @i = @i + @batch;
+    END;
+END;
+GO
+
+EXEC dbo.generer_logs 2000000;
+SELECT COUNT(*) FROM server_logs;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>Clustered Index Scan (le Seq Scan de SQL Server)</h4>
+      <p>Analysez la requête sur <code class="i">ip_address</code> avec <code class="i">SET STATISTICS IO ON</code>. Quel est le nombre de "logical reads" ? Quel opérateur voit-on dans le plan ?</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SET STATISTICS IO ON;
+SET STATISTICS TIME ON;
+
+SELECT * FROM server_logs WHERE ip_address = N'192.168.1.42';
+-- Plan : Clustered Index Scan (lit tout l'index clusterisé, équivalent d'un Full Table Scan)
+-- Logical reads: plusieurs milliers
+
+SET STATISTICS IO OFF;
+SET STATISTICS TIME OFF;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>Non-Clustered Index et Index Seek</h4>
+      <p>Créez un Non-Clustered Index sur <code class="i">ip_address</code>. Relancez la requête. Le plan passe-t-il en "Index Seek" ? Observez le "Key Lookup".</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE INDEX IX_logs_ip ON server_logs(ip_address);
+
+SET STATISTICS IO ON;
+SELECT * FROM server_logs WHERE ip_address = N'192.168.1.42';
+-- Plan: Non-Clustered Index Seek → Key Lookup → Nested Loops
+-- "Key Lookup" : SQL Server trouve les IDs via l'index, puis va chercher les autres colonnes dans le Clustered Index</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>Éliminer le Key Lookup avec un Covering Index</h4>
+      <p>Un Key Lookup est coûteux. Éliminez-le en incluant les colonnes du SELECT dans l'index via la clause <code class="i">INCLUDE</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- L'index INCLUDE stocke des colonnes supplémentaires dans le niveau feuille de l'index
+-- sans qu'elles participent à l'arbre de recherche
+CREATE INDEX IX_logs_ip_covering ON server_logs(ip_address)
+INCLUDE (endpoint, status_code, response_time_ms, created_at);
+
+SET STATISTICS IO ON;
+SELECT ip_address, endpoint, status_code FROM server_logs WHERE ip_address = N'192.168.1.42';
+-- Plan: Index Seek (sans Key Lookup !) → Toutes les données sont dans l'index</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Le piège du LIKE avec wildcard initial</h4>
+      <p>Créez un index sur <code class="i">endpoint</code> et testez pourquoi <code class="i">LIKE '%data'</code> ne peut pas l'utiliser.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE INDEX IX_logs_endpoint ON server_logs(endpoint);
+
+-- Index Seek possible :
+SELECT * FROM server_logs WHERE endpoint LIKE N'/api%';
+
+-- Clustered Index Scan (index inutilisable) :
+SELECT * FROM server_logs WHERE endpoint LIKE N'%data';
+-- SQL Server ne sait pas par où commencer l'index.</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>Index Filtré (l'équivalent du Partial Index)</h4>
+      <p>SQL Server supporte les index filtrés (Filtered Index) avec une clause WHERE. Créez un index uniquement sur les lignes d'erreur (status_code >= 400).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE INDEX IX_logs_erreurs ON server_logs(status_code)
+WHERE status_code >= 400;  -- Index filtré !
+
+-- SQL Server utilisera cet index léger pour les requêtes sur les erreurs :
+SET STATISTICS IO ON;
+SELECT * FROM server_logs WHERE status_code = 500;
+-- Logical reads: beaucoup moins qu'un scan complet !</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>Index Composé</h4>
+      <p>Créez l'index optimal pour la requête <code class="i">WHERE status_code = 500 AND endpoint = '/login'</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE INDEX IX_logs_status_endpoint ON server_logs(status_code, endpoint);
+
+SELECT * FROM server_logs WHERE status_code = 500 AND endpoint = N'/login';
+-- Plan: Index Seek ✓</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Optimiser ORDER BY</h4>
+      <p>Analysez la requête avec <code class="i">ORDER BY created_at DESC</code>. L'opérateur "Sort" apparaît-il dans le plan ? Créez l'index pour l'éliminer.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Avant (Sort dans le plan) :
+SELECT TOP 10 * FROM server_logs ORDER BY created_at DESC;
+
+-- Créer l'index trié :
+CREATE INDEX IX_logs_date ON server_logs(created_at DESC);
+
+-- Après : l'opérateur Sort disparaît du plan !</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>Reconstruire les Index (Maintenance)</h4>
+      <p>Après de nombreux INSERT/DELETE/UPDATE, les index se fragmentent. Utilisez <code class="i">ALTER INDEX</code> pour les reconstruire ou les réorganiser.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Voir la fragmentation de tous les index d'une table :
+SELECT
+    i.name AS index_name,
+    s.avg_fragmentation_in_percent
+FROM sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID('server_logs'), NULL, NULL, 'SAMPLED') s
+JOIN sys.indexes i ON s.object_id = i.object_id AND s.index_id = i.index_id
+WHERE s.avg_fragmentation_in_percent > 5
+ORDER BY s.avg_fragmentation_in_percent DESC;
+
+-- < 30% fragmenté : REORGANIZE (opération légère, en ligne)
+ALTER INDEX IX_logs_ip ON server_logs REORGANIZE;
+
+-- > 30% fragmenté : REBUILD (reconstruction complète)
+ALTER INDEX IX_logs_ip ON server_logs REBUILD;
+
+-- Reconstruire TOUS les index de la table :
+ALTER INDEX ALL ON server_logs REBUILD;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Missing Index Suggestions (Conseils automatiques)</h4>
+      <p>SQL Server trace les opportunités d'index manquants. Après avoir exécuté vos requêtes lentes, consultez la DMV <code class="i">sys.dm_db_missing_index_details</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Voir les index suggérés par SQL Server (trié par impact potentiel) :
+SELECT TOP 10
+    migs.avg_total_user_cost * migs.avg_user_impact * (migs.user_seeks + migs.user_scans) AS improvement_measure,
+    mid.statement AS table_name,
+    mid.equality_columns,
+    mid.inequality_columns,
+    mid.included_columns
+FROM sys.dm_db_missing_index_group_stats migs
+JOIN sys.dm_db_missing_index_groups mig ON migs.group_handle = mig.index_group_handle
+JOIN sys.dm_db_missing_index_details mid ON mig.index_handle = mid.index_handle
+ORDER BY improvement_measure DESC;
+
+-- SQL Server vous dit exactement quels index créer pour améliorer les performances !</pre>
+      </details>
+    </div>
+  </section>
+
+  <footer>SQL Server Avancé — Séance 3 : Plans d'Exécution & Index</footer>
+</div>
+</body>
+</html>

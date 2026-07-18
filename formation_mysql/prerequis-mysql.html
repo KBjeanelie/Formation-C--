@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Prérequis - Installation MySQL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --mysql-blue:#00758F; --mysql-orange:#F29111; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
+  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
+  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--mysql-orange); margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
+  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
+  h2{font-size:24px; font-weight:700; margin:0 0 16px; color:var(--mysql-blue);}
+  p{margin:0 0 14px;}
+  ul{padding-left: 20px;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour au Dashboard MySQL</a>
+  <p class="eyebrow">Préparation</p>
+  <h1 class="title">Installation de MySQL</h1>
+  
+  <section>
+    <h2>Windows</h2>
+    <p>1. Téléchargez <strong>MySQL Installer</strong> sur <a href="https://dev.mysql.com/downloads/installer/" target="_blank" style="color:var(--mysql-blue);">dev.mysql.com</a>.</p>
+    <p>2. Lancez l'installation en choisissant "Developer Default" (ou "Custom" pour ne prendre que MySQL Server et MySQL Workbench).</p>
+    <p>3. Laissez les ports par défaut (<code class="inline">3306</code>).</p>
+    <p>4. <strong>Très important :</strong> Un mot de passe pour l'utilisateur superadmin <code class="inline">root</code> vous sera demandé. Notez-le soigneusement !</p>
+  </section>
+
+  <section>
+    <h2>Linux (Ubuntu / Debian)</h2>
+    <p>Ouvrez votre terminal et tapez :</p>
+    <pre>sudo apt update
+sudo apt install mysql-server</pre>
+    <p>Sécurisez l'installation (mot de passe root, suppression des utilisateurs anonymes) :</p>
+    <pre>sudo mysql_secure_installation</pre>
+  </section>
+
+  <section>
+    <h2>macOS</h2>
+    <p>La méthode la plus simple est d'utiliser Homebrew :</p>
+    <pre>brew install mysql
+brew services start mysql</pre>
+    <p>Pour sécuriser l'installation :</p>
+    <pre>mysql_secure_installation</pre>
+  </section>
+
+  <section>
+    <h2>L'interface graphique (Client SQL)</h2>
+    <p>Pour écrire vos requêtes et procédures stockées de manière confortable, il vous faut un client. Deux excellents choix :</p>
+    <ul>
+      <li><strong>MySQL Workbench :</strong> L'outil officiel de conception et d'administration, souvent installé avec MySQL sous Windows.</li>
+      <li><strong>DBeaver (Recommandé) :</strong> Client universel très léger et puissant. Téléchargeable sur <a href="https://dbeaver.io/" target="_blank" style="color:var(--mysql-blue);">dbeaver.io</a>.</li>
+    </ul>
+    <p>Pour vous connecter dans Workbench ou DBeaver :
+       Hôte : <code class="inline">localhost</code>, Port : <code class="inline">3306</code>, Utilisateur : <code class="inline">root</code>, et votre mot de passe.
+    </p>
+  </section>
+</div>
+</body>
+</html>

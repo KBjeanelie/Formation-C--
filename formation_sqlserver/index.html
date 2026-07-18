@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>SQL Server Avancé - Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge-soft:#292939;--ink:#eeece4;--ink-dim:#a8a5b8;--ink-faint:#726f85;--red:#CC292B;--red-dim:#e05555;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:16px;}
+  .wrap{max-width:840px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--ink-dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge-soft);padding:6px 12px;border-radius:6px;transition:all 0.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--ink-faint);}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin:0 0 14px;}
+  h1.title{font-family:var(--sans);font-weight:700;font-size:clamp(30px,4.2vw,42px);margin:0 0 8px;letter-spacing:-.01em;line-height:1.1;}
+  .subtitle{color:var(--ink-dim);font-size:17px;margin:0 0 48px;max-width:640px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:24px;margin-bottom:48px;}
+  .module-card{background:var(--panel);border:1px solid var(--edge-soft);border-radius:12px;padding:24px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;transition:transform 0.2s, border-color 0.2s;}
+  .module-card:hover{transform:translateY(-4px);border-color:var(--red);}
+  .module-card .badge{align-self:flex-start;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--red);border:1px solid var(--edge-soft);border-radius:20px;padding:3px 10px;margin-bottom:16px;background:var(--bg);}
+  .module-card h2{font-size:18px;margin:0 0 8px;font-weight:600;}
+  .module-card p{font-size:14px;color:var(--ink-dim);margin:0;line-height:1.5;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge-soft);color:var(--ink-faint);font-size:13px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="../index.html" class="back-link">← Retour au Portail</a>
+  <p class="eyebrow">Dashboard SQL Server Avancé</p>
+  <h1 class="title">Bases de Données (SQL Server L3)</h1>
+  <p class="subtitle">Formation axée 100% TP sur le T-SQL, les transactions TRY...CATCH, l'optimisation avec les plans d'exécution et l'introduction au NoSQL.</p>
+  <div class="grid">
+    <a href="prerequis-sqlserver.html" class="module-card" style="border-left:4px solid var(--red);">
+      <span class="badge">Prérequis</span>
+      <h2>Installation SQL Server</h2>
+      <p>Configurez SQL Server Developer Edition et SSMS/Azure Data Studio sur Windows, macOS ou Linux.</p>
+    </a>
+    <a href="cheatsheet-sqlserver.html" class="module-card" style="border-left:4px solid var(--red);">
+      <span class="badge">Guide / Doc</span>
+      <h2>Cheatsheet T-SQL</h2>
+      <p>Rappels : IDENTITY, GO, types de données, commandes de survie et gestion des utilisateurs et connexions.</p>
+    </a>
+    <a href="tp1-sqlserver.html" class="module-card">
+      <span class="badge">Séance 1 (4h)</span>
+      <h2>T-SQL : Procédures & Triggers</h2>
+      <p>Programmation serveur en T-SQL. Procédures stockées, fonctions scalaires et triggers Statement-Level avec les tables virtuelles <code>inserted</code> et <code>deleted</code>.</p>
+    </a>
+    <a href="tp2-sqlserver.html" class="module-card">
+      <span class="badge">Séance 2 (4h)</span>
+      <h2>Transactions & Sécurité</h2>
+      <p>Gestion robuste des erreurs avec TRY...CATCH, XACT_ABORT, et système de sécurité avec Logins, Users et Rôles.</p>
+    </a>
+    <a href="tp3-sqlserver.html" class="module-card">
+      <span class="badge">Séance 3 (4h)</span>
+      <h2>Plans d'exécution & Index</h2>
+      <p>Analysez les plans d'exécution graphiques (SSMS) et textuels (SET STATISTICS). Différence Clustered vs Non-Clustered Index.</p>
+    </a>
+    <a href="tp4-sqlserver.html" class="module-card">
+      <span class="badge">Séance 4 (4h)</span>
+      <h2>Bascule vers le NoSQL</h2>
+      <p>Introduction à MongoDB. Stockage orienté document (JSON), requêtes CRUD et pipeline d'agrégation.</p>
+    </a>
+  </div>
+  <footer>Cours Base de Données Avancée — Dashboard SQL Server</footer>
+</div>
+</body>
+</html>

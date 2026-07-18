@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Prérequis - Installation SQL Server</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge-soft:#292939;--ink:#eeece4;--ink-dim:#a8a5b8;--red:#CC292B;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:16px;}
+  .wrap{max-width:900px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--ink-dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge-soft);padding:6px 12px;border-radius:6px;transition:all 0.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--ink-dim);}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;color:var(--red);margin:0 0 14px;}
+  h1.title{font-family:var(--sans);font-weight:700;font-size:42px;margin:0 0 8px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge-soft);border-radius:12px;padding:32px;}
+  h2{font-size:24px;font-weight:700;margin:0 0 16px;color:var(--red);}
+  h3{font-size:17px;font-weight:600;color:#e05555;margin:20px 0 10px;}
+  p{margin:0 0 14px;}
+  ul{padding-left:20px;}
+  code.inline{font-family:var(--mono);font-size:.88em;background:var(--bg);border:1px solid var(--edge-soft);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge-soft);border-radius:8px;padding:16px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.6;margin:0 0 24px;color:#d6d3e0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour au Dashboard SQL Server</a>
+  <p class="eyebrow">Préparation</p>
+  <h1 class="title">Installation de SQL Server</h1>
+
+  <section>
+    <h2>Windows</h2>
+    <p>1. Téléchargez <strong>SQL Server Developer Edition</strong> (gratuite pour apprendre) sur <a href="https://www.microsoft.com/fr-fr/sql-server/sql-server-downloads" target="_blank" style="color:var(--red);">microsoft.com</a>.</p>
+    <p>2. Lancez l'installation avec l'option "Basic" pour une installation rapide. Le port par défaut est <code class="inline">1433</code>.</p>
+    <p>3. Téléchargez ensuite <strong>SQL Server Management Studio (SSMS)</strong> depuis <a href="https://aka.ms/ssmsfullsetup" target="_blank" style="color:var(--red);">aka.ms/ssmsfullsetup</a>. C'est l'outil graphique officiel.</p>
+  </section>
+
+  <section>
+    <h2>Linux (Ubuntu)</h2>
+    <pre>curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+curl https://packages.microsoft.com/config/ubuntu/22.04/mssql-server-2022.list | sudo tee /etc/apt/sources.list.d/mssql-server-2022.list
+sudo apt-get update
+sudo apt-get install -y mssql-server
+sudo /opt/mssql/bin/mssql-conf setup</pre>
+    <p>Pour les outils en ligne de commande (<code class="inline">sqlcmd</code>) :</p>
+    <pre>sudo apt-get install -y mssql-tools18 unixodbc-dev
+echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
+source ~/.bashrc</pre>
+  </section>
+
+  <section>
+    <h2>macOS</h2>
+    <p>SQL Server ne tourne pas nativement sur macOS. La solution officielle est de l'utiliser via <strong>Docker</strong> :</p>
+    <pre>docker pull mcr.microsoft.com/mssql/server:2022-latest
+docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=VotreMotDePasse!1" \
+   -p 1433:1433 --name sqlserver -d mcr.microsoft.com/mssql/server:2022-latest</pre>
+    <p>Utilisez ensuite <strong>Azure Data Studio</strong> (aussi disponible sur Windows et Linux) comme client graphique. Téléchargez-le sur <a href="https://aka.ms/azuredatastudio" target="_blank" style="color:var(--red);">aka.ms/azuredatastudio</a>.</p>
+  </section>
+
+  <section>
+    <h2>Interface graphique (Client SQL)</h2>
+    <ul>
+      <li><strong>SSMS (SQL Server Management Studio) :</strong> L'outil de référence, très complet mais uniquement disponible sur Windows. Affiche les plans d'exécution graphiques.</li>
+      <li><strong>Azure Data Studio (Recommandé) :</strong> Multi-plateforme (Windows, Mac, Linux), moderne et léger. Extension IntelliSense pour T-SQL incluse.</li>
+      <li><strong>DBeaver :</strong> Client universel, compatible SQL Server via le driver JDBC.</li>
+    </ul>
+    <p>Connexion : Serveur <code class="inline">localhost</code> ou <code class="inline">127.0.0.1,1433</code>, Login : <code class="inline">sa</code>, Mot de passe : celui défini lors de l'installation.</p>
+  </section>
+
+  <section>
+    <h2>Notions de base pour les habitués de MySQL/PostgreSQL</h2>
+    <ul>
+      <li><strong>GO n'est pas du T-SQL :</strong> C'est une commande du client (SSMS/sqlcmd). Elle sépare les batches. Vous devez parfois recréer le contexte (<code class="inline">USE ma_base; GO</code>) après un GO.</li>
+      <li><strong>IDENTITY au lieu d'AUTO_INCREMENT/SERIAL :</strong> <code class="inline">id INT IDENTITY(1,1) PRIMARY KEY</code> (commence à 1, incrément de 1).</li>
+      <li><strong>VARCHAR vs NVARCHAR :</strong> <code class="inline">NVARCHAR</code> supporte les caractères Unicode (accents, emojis). Utilisez <code class="inline">NVARCHAR</code> pour les textes utilisateur.</li>
+      <li><strong>TRY...CATCH au lieu de DECLARE HANDLER :</strong> La gestion d'erreur en T-SQL est très similaire aux exceptions Java/C#.</li>
+      <li><strong>Bases système :</strong> Ne touchez pas à <code class="inline">master</code>, <code class="inline">model</code>, <code class="inline">msdb</code> et <code class="inline">tempdb</code>. Ce sont les bases système de SQL Server.</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>SQL Server — Séance 1 : T-SQL, Procédures & Triggers</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--red:#CC292B;--blue:#4d90fe;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--red);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--red);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--blue);margin:28px 0 10px;}
+  p{margin:0 0 14px;} ul{padding-left:22px;color:var(--dim);margin:0 0 18px;} li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(77,144,254,.08);border-left:3px solid var(--blue);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .info strong{color:var(--blue);}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--red);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--red);}
+  details[open] summary{color:var(--red);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Dashboard SQL Server</a>
+  <p class="eyebrow">Séance 1 — 4 heures</p>
+  <h1 class="title">T-SQL : Procédures Stockées & Triggers</h1>
+  <p class="subtitle">Maîtrisez la programmation serveur en T-SQL. Le langage procédural de SQL Server est proche du C# et très puissant pour la logique métier.</p>
+
+  <section>
+    <h2>1. Structure d'une Procédure Stockée T-SQL</h2>
+    <p>Contrairement à PostgreSQL (PL/pgSQL avec $$) et MySQL (DELIMITER), T-SQL n'a pas de délimiteur spécial. La procédure est un objet autonome délimité par <code class="i">CREATE PROCEDURE ... AS BEGIN ... END</code>.</p>
+    <pre>CREATE OR ALTER PROCEDURE nom_procedure   -- CREATE OR ALTER remplace CREATE + DROP si existe
+    @param1 INT,                -- Paramètres préfixés par @
+    @param2 NVARCHAR(100) OUTPUT  -- Paramètre de sortie
+AS
+BEGIN
+    SET NOCOUNT ON;  -- Bonne pratique : ne pas renvoyer les "X lignes affectées"
+    DECLARE @ma_variable INT = 0;  -- Déclaration des variables locales
+
+    IF @param1 > 10
+        SET @param2 = N'Grand';
+    ELSE
+        SET @param2 = N'Petit';
+END;
+GO</pre>
+
+    <h3>Les Triggers T-SQL : Statement-Level avec tables virtuelles</h3>
+    <p>C'est la grande différence avec PostgreSQL et MySQL. En SQL Server, les triggers s'exécutent <strong>une fois par opération</strong> (pas par ligne). Deux tables virtuelles sont disponibles :</p>
+    <ul>
+      <li><code class="i">inserted</code> — Table contenant toutes les nouvelles lignes (INSERT / UPDATE).</li>
+      <li><code class="i">deleted</code> — Table contenant toutes les anciennes lignes (UPDATE / DELETE).</li>
+    </ul>
+    <div class="info">
+      <strong>Exemple :</strong> Si un UPDATE affecte 100 lignes, le trigger s'exécute <em>une seule fois</em>, mais <code class="i">inserted</code> et <code class="i">deleted</code> contiennent chacune 100 lignes. Il faut <strong>toujours</strong> faire un JOIN avec ces tables, jamais supposer qu'elles n'ont qu'une ligne.
+    </div>
+    <pre>CREATE OR ALTER TRIGGER trg_exemple
+ON ma_table
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    -- "inserted" contient TOUTES les lignes insérées par l'opération
+    SELECT id, nom FROM inserted;
+END;
+GO</pre>
+  </section>
+
+  <section>
+    <h2>2. Base de travail — E-Commerce</h2>
+    <pre>USE master;
+IF EXISTS(SELECT * FROM sys.databases WHERE name='ecommerce')
+    DROP DATABASE ecommerce;
+CREATE DATABASE ecommerce;
+GO
+USE ecommerce;
+GO
+
+CREATE TABLE clients (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    nom NVARCHAR(100) NOT NULL,
+    email NVARCHAR(150) UNIQUE,
+    points_fidelite INT DEFAULT 0,
+    created_at DATETIME2 DEFAULT GETDATE()
+);
+
+CREATE TABLE produits (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    nom NVARCHAR(100) NOT NULL,
+    prix DECIMAL(10,2) CHECK (prix >= 0),
+    stock INT DEFAULT 0,
+    categorie NVARCHAR(50)
+);
+
+CREATE TABLE commandes (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    client_id INT FOREIGN KEY REFERENCES clients(id) ON DELETE CASCADE,
+    produit_id INT FOREIGN KEY REFERENCES produits(id),
+    quantite INT CHECK (quantite > 0),
+    prix_total DECIMAL(10,2),
+    date_cmd DATETIME2 DEFAULT GETDATE()
+);
+
+INSERT INTO clients (nom, email, points_fidelite) VALUES
+    (N'Alice Martin',N'alice@mail.com',250),(N'Bob Dupont',N'bob@mail.com',45),
+    (N'Clara Simon',N'clara@mail.com',500),(N'David Leblanc',N'david@mail.com',0);
+
+INSERT INTO produits (nom, prix, stock, categorie) VALUES
+    (N'Laptop Pro',1200.00,8,N'Informatique'),(N'Souris Ergonomique',35.00,50,N'Accessoires'),
+    (N'Clavier Mécanique',95.00,20,N'Accessoires'),(N'Moniteur 27"',450.00,5,N'Informatique'),
+    (N'Webcam HD',75.00,30,N'Accessoires');
+GO</pre>
+  </section>
+
+  <section>
+    <h2>3. Travaux Pratiques (10 exercices)</h2>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Fonction scalaire : Calcul de la remise</h4>
+      <p>Créez une fonction scalaire <code class="i">dbo.get_remise(@client_id INT)</code> qui retourne un taux de remise DECIMAL(4,2).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR ALTER FUNCTION dbo.get_remise(@client_id INT)
+RETURNS DECIMAL(4,2)
+AS
+BEGIN
+    DECLARE @pts INT;
+    SELECT @pts = points_fidelite FROM clients WHERE id = @client_id;
+    IF @pts IS NULL RETURN 0.00;
+    IF @pts >= 500 RETURN 0.20;
+    IF @pts >= 100 RETURN 0.10;
+    RETURN 0.00;
+END;
+GO
+
+-- Test :
+SELECT nom, points_fidelite, dbo.get_remise(id)*100 AS remise_pct FROM clients;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>Fonction scalaire : Prix final</h4>
+      <p>Créez <code class="i">dbo.prix_final(@client INT, @produit INT)</code> qui appelle <code class="i">get_remise</code> et retourne le prix après réduction.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR ALTER FUNCTION dbo.prix_final(@client INT, @produit INT)
+RETURNS DECIMAL(10,2)
+AS
+BEGIN
+    DECLARE @prix DECIMAL(10,2);
+    SELECT @prix = prix FROM produits WHERE id = @produit;
+    RETURN ROUND(@prix * (1 - dbo.get_remise(@client)), 2);
+END;
+GO
+
+SELECT dbo.prix_final(3, 1); -- Clara (500pts) Laptop (1200€) → 960€</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>Procédure : Passer une commande</h4>
+      <p>Créez <code class="i">passer_commande @client, @produit, @qte</code> avec gestion d'erreur via <code class="i">THROW</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR ALTER PROCEDURE dbo.passer_commande
+    @client INT, @produit INT, @qte INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @stock INT, @total DECIMAL(10,2);
+    SELECT @stock = stock FROM produits WHERE id = @produit;
+    IF @stock < @qte
+        THROW 50001, 'Stock insuffisant pour cette commande.', 1;
+    SET @total = dbo.prix_final(@client, @produit) * @qte;
+    INSERT INTO commandes(client_id,produit_id,quantite,prix_total) VALUES(@client,@produit,@qte,@total);
+    UPDATE produits SET stock = stock - @qte WHERE id = @produit;
+    PRINT 'Commande validée. Total: ' + CAST(@total AS NVARCHAR) + ' EUR';
+END;
+GO
+
+EXEC dbo.passer_commande 1, 2, 3;
+SELECT * FROM commandes;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>Trigger : Bloquer le stock négatif (Statement-Level)</h4>
+      <p>Créez un trigger <code class="i">AFTER UPDATE</code> sur <code class="i">produits</code> qui annule l'opération si un stock devient négatif. Utilisez <code class="i">ROLLBACK TRANSACTION</code> dans le trigger.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR ALTER TRIGGER trg_stock_negatif
+ON produits
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM inserted WHERE stock < 0)
+    BEGIN
+        ROLLBACK TRANSACTION;  -- Annule l'UPDATE
+        THROW 50002, 'Le stock ne peut pas être négatif.', 1;
+    END;
+END;
+GO
+
+UPDATE produits SET stock = stock - 100 WHERE id = 2; -- Doit échouer</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Trigger : Audit des changements de prix</h4>
+      <p>Créez la table <code class="i">audit_prix</code> et un trigger <code class="i">AFTER UPDATE</code> qui l'alimente. Attention : utilisez un JOIN entre <code class="i">inserted</code> et <code class="i">deleted</code> pour comparer ancien et nouveau prix.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE TABLE audit_prix (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    produit_id INT,
+    ancien_prix DECIMAL(10,2),
+    nouveau_prix DECIMAL(10,2),
+    modifie_par NVARCHAR(100) DEFAULT SYSTEM_USER,
+    modifie_le DATETIME2 DEFAULT GETDATE()
+);
+GO
+
+CREATE OR ALTER TRIGGER trg_audit_prix
+ON produits
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO audit_prix(produit_id, ancien_prix, nouveau_prix)
+    SELECT i.id, d.prix, i.prix
+    FROM inserted i
+    INNER JOIN deleted d ON i.id = d.id
+    WHERE i.prix <> d.prix;  -- N'insère que si le prix a réellement changé
+END;
+GO
+
+UPDATE produits SET prix = 1350.00 WHERE id = 1;
+SELECT * FROM audit_prix;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>Fonction Table Valued : Valeur du stock</h4>
+      <p>Créez une TVF (Table-Valued Function) <code class="i">dbo.valeur_stock(@categorie)</code> qui retourne une ligne par produit avec sa valeur en stock (prix × stock).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR ALTER FUNCTION dbo.valeur_stock(@categorie NVARCHAR(50))
+RETURNS TABLE
+AS
+RETURN (
+    SELECT nom, prix, stock, ROUND(prix * stock, 2) AS valeur_totale
+    FROM produits
+    WHERE categorie = @categorie
+);
+GO
+
+SELECT * FROM dbo.valeur_stock(N'Informatique');
+SELECT SUM(valeur_totale) AS total FROM dbo.valeur_stock(N'Accessoires');</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>Trigger : Points fidélité automatiques</h4>
+      <p>Créez un trigger <code class="i">AFTER INSERT</code> sur <code class="i">commandes</code> qui met à jour les points de fidélité de tous les clients concernés en une seule requête basée sur <code class="i">inserted</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR ALTER TRIGGER trg_points_fidelite
+ON commandes
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE c
+    SET c.points_fidelite = c.points_fidelite + ROUND(i.prix_total, 0)
+    FROM clients c
+    INNER JOIN inserted i ON c.id = i.client_id;
+    -- Ce UPDATE est SET-BASED : il traite toutes les lignes de "inserted" en même temps.
+END;
+GO
+
+EXEC dbo.passer_commande 2, 3, 1;
+SELECT id, nom, points_fidelite FROM clients WHERE id = 2;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Procédure : Réapprovisionner le stock</h4>
+      <p>Créez <code class="i">dbo.reapprovisionner @produit, @qte</code> avec validation et message de confirmation.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR ALTER PROCEDURE dbo.reapprovisionner @produit INT, @qte INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @qte <= 0 THROW 50003, 'La quantité doit être positive.', 1;
+    DECLARE @nom NVARCHAR(100), @avant INT;
+    SELECT @nom = nom, @avant = stock FROM produits WHERE id = @produit;
+    UPDATE produits SET stock = stock + @qte WHERE id = @produit;
+    PRINT N'Réappro OK: ' + @nom + N' — ' + CAST(@avant AS NVARCHAR) + N' → ' + CAST(@avant + @qte AS NVARCHAR) + N' unités';
+END;
+GO
+
+EXEC dbo.reapprovisionner 4, 10;
+EXEC dbo.reapprovisionner 1, -5; -- Doit échouer</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>Procédure : Historique client (TVF intégrée)</h4>
+      <p>Créez une procédure <code class="i">dbo.historique_client @id</code> qui retourne l'historique complet d'un client (produit, quantité, total, date) en utilisant un SELECT avec JOIN.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE OR ALTER PROCEDURE dbo.historique_client @id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT
+        p.nom AS produit,
+        c.quantite,
+        c.prix_total AS total,
+        c.date_cmd
+    FROM commandes c
+    INNER JOIN produits p ON p.id = c.produit_id
+    WHERE c.client_id = @id
+    ORDER BY c.date_cmd DESC;
+END;
+GO
+
+EXEC dbo.historique_client 1;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Trigger : Protéger les commandes récentes</h4>
+      <p>Créez un trigger <code class="i">INSTEAD OF DELETE</code> sur <code class="i">commandes</code> qui bloque la suppression des commandes de moins de 30 jours et journalise la tentative.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE TABLE tentatives_suppression (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    commande_id INT,
+    tente_le DATETIME2 DEFAULT GETDATE()
+);
+GO
+
+CREATE OR ALTER TRIGGER trg_protect_commandes
+ON commandes
+INSTEAD OF DELETE  -- Intercepte le DELETE avant qu'il ne se passe
+AS
+BEGIN
+    SET NOCOUNT ON;
+    -- Insérer dans le journal les commandes récentes qu'on essaie de supprimer
+    INSERT INTO tentatives_suppression(commande_id)
+    SELECT id FROM deleted WHERE date_cmd > DATEADD(DAY, -30, GETDATE());
+
+    -- Supprimer UNIQUEMENT les commandes de plus de 30 jours
+    DELETE c FROM commandes c
+    INNER JOIN deleted d ON c.id = d.id
+    WHERE d.date_cmd <= DATEADD(DAY, -30, GETDATE());
+END;
+GO
+
+DELETE FROM commandes WHERE id = 1;
+SELECT * FROM tentatives_suppression;</pre>
+      </details>
+    </div>
+  </section>
+
+  <footer>SQL Server Avancé — Séance 1 : T-SQL, Procédures & Triggers</footer>
+</div>
+</body>
+</html>

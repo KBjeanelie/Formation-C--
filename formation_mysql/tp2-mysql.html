@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MySQL Avancé — Séance 2 : Transactions & Sécurité</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--blue:#00758F;--orange:#F29111;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--orange);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--blue);margin:28px 0 10px;}
+  p{margin:0 0 14px;} ul{padding-left:22px;color:var(--dim);margin:0 0 18px;} li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(0,117,143,.08);border-left:3px solid var(--blue);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .info strong{color:var(--blue);}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--orange);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--orange);}
+  details[open] summary{color:var(--orange);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Dashboard MySQL</a>
+  <p class="eyebrow">Séance 2 — 4 heures</p>
+  <h1 class="title">Transactions & Sécurité MySQL</h1>
+  <p class="subtitle">Garantissez l'intégrité des données avec START TRANSACTION et protégez votre base avec le système de rôles de MySQL 8.</p>
+
+  <section>
+    <h2>1. Les Transactions MySQL</h2>
+    <p>MySQL supporte les transactions via le moteur <strong>InnoDB</strong>. Le moteur MyISAM (ancien) n'en supporte pas — c'est une raison de plus d'utiliser InnoDB.</p>
+    <pre>START TRANSACTION;  -- Démarre la transaction (aussi écrit BEGIN)
+
+  UPDATE comptes SET solde = solde - 200 WHERE id = 1;
+  UPDATE comptes SET solde = solde + 200 WHERE id = 2;
+
+COMMIT;    -- Valide toutes les modifications
+-- ou
+ROLLBACK;  -- Annule tout depuis le START TRANSACTION</pre>
+
+    <h3>Les SAVEPOINT</h3>
+    <pre>START TRANSACTION;
+  UPDATE comptes SET solde = solde - 50 WHERE id = 1;
+  SAVEPOINT etape1;
+
+  UPDATE comptes SET solde = solde - 100 WHERE id = 1;
+  -- On se ravise :
+  ROLLBACK TO SAVEPOINT etape1;  -- Annule seulement depuis etape1
+
+COMMIT;  -- Seul le premier retrait de 50€ est validé</pre>
+
+    <div class="info">
+      <strong>Autocommit :</strong> Par défaut, MySQL est en mode <code class="i">autocommit = 1</code> ce qui signifie que chaque requête est une transaction automatiquement committée. Dès que vous tapez <code class="i">START TRANSACTION</code>, ce mode est suspendu jusqu'au prochain <code class="i">COMMIT</code> ou <code class="i">ROLLBACK</code>.
+    </div>
+
+    <h3>Gestion des erreurs avec les gestionnaires (DECLARE HANDLER)</h3>
+    <pre>DELIMITER //
+CREATE PROCEDURE virement_securise(...)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;  -- En cas d'erreur SQL, on annule tout
+        SELECT 'Erreur : transaction annulée.' AS message;
+    END;
+
+    START TRANSACTION;
+        -- ... opérations ...
+    COMMIT;
+END //
+DELIMITER ;</pre>
+  </section>
+
+  <section>
+    <h2>2. Sécurité : Rôles et Utilisateurs (MySQL 8+)</h2>
+    <p>MySQL a introduit les rôles dans la version 8. La syntaxe diffère légèrement de PostgreSQL.</p>
+    <pre>-- Créer un utilisateur
+CREATE USER 'dev'@'localhost' IDENTIFIED BY 'SecretPwd!1';
+
+-- Créer un rôle de groupe
+CREATE ROLE 'lecteurs', 'editeurs';
+
+-- Assigner des droits au rôle
+GRANT SELECT ON banking.* TO 'lecteurs';
+GRANT SELECT, INSERT, UPDATE ON banking.* TO 'editeurs';
+
+-- Assigner le rôle à l'utilisateur
+GRANT 'lecteurs' TO 'dev'@'localhost';
+
+-- Activer les rôles par défaut (sinon l'utilisateur doit faire SET ROLE)
+SET DEFAULT ROLE 'lecteurs' TO 'dev'@'localhost';
+
+-- Afficher les droits d'un utilisateur
+SHOW GRANTS FOR 'dev'@'localhost';</pre>
+  </section>
+
+  <section>
+    <h2>3. Base de travail — Système Bancaire</h2>
+    <pre>CREATE DATABASE IF NOT EXISTS banking CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE banking;
+
+DROP TABLE IF EXISTS virements, journal_erreurs, comptes;
+
+CREATE TABLE comptes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulaire VARCHAR(100) NOT NULL,
+    solde DECIMAL(12,2) DEFAULT 0 CHECK (solde >= 0),
+    type_compte VARCHAR(20) DEFAULT 'courant'
+) ENGINE=InnoDB;
+
+CREATE TABLE virements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    compte_source INT, compte_dest INT,
+    montant DECIMAL(12,2),
+    statut VARCHAR(20) DEFAULT 'en_attente',
+    effectue_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE journal_erreurs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message TEXT,
+    contexte TEXT,
+    survenu_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+INSERT INTO comptes (titulaire, solde, type_compte) VALUES
+    ('Alice Martin',1500.00,'courant'),('Bob Dupont',300.00,'courant'),
+    ('Clara Simon',5000.00,'epargne'),('Société XYZ',50000.00,'professionnel'),
+    ('David Leblanc',0.00,'courant');</pre>
+  </section>
+
+  <section>
+    <h2>4. Travaux Pratiques (10 exercices)</h2>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Transaction simple : Virement manuel</h4>
+      <p>Effectuez un virement de 200€ du compte d'Alice (id=1) vers Bob (id=2) dans un bloc transactionnel. Vérifiez les soldes avant et après.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT id, titulaire, solde FROM comptes WHERE id IN (1,2);
+
+START TRANSACTION;
+  UPDATE comptes SET solde = solde - 200 WHERE id = 1;
+  UPDATE comptes SET solde = solde + 200 WHERE id = 2;
+COMMIT;
+
+SELECT id, titulaire, solde FROM comptes WHERE id IN (1,2);</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>ROLLBACK : Simuler un crash</h4>
+      <p>Ouvrez une transaction, débitez 100€ d'Alice, puis annulez-la. Vérifiez que son solde est inchangé.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT solde FROM comptes WHERE id = 1;
+
+START TRANSACTION;
+  UPDATE comptes SET solde = solde - 100 WHERE id = 1;
+  SELECT solde FROM comptes WHERE id = 1; -- visible dans cette session
+ROLLBACK;
+
+SELECT solde FROM comptes WHERE id = 1; -- solde restauré</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>Procédure : Virement sécurisé avec HANDLER</h4>
+      <p>Créez une procédure <code class="i">effectuer_virement(source, dest, montant)</code> avec un <code class="i">DECLARE EXIT HANDLER FOR SQLEXCEPTION</code> qui fait un ROLLBACK automatique en cas d'erreur.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE PROCEDURE effectuer_virement(IN p_src INT, IN p_dst INT, IN p_mnt DECIMAL(12,2))
+BEGIN
+    DECLARE v_solde DECIMAL(12,2);
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        INSERT INTO journal_erreurs(message) VALUES ('Virement échoué - transaction annulée');
+        SELECT 'ERREUR: virement annulé' AS statut;
+    END;
+
+    START TRANSACTION;
+        IF p_mnt <= 0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Montant invalide'; END IF;
+        SELECT solde INTO v_solde FROM comptes WHERE id = p_src FOR UPDATE;
+        IF v_solde < p_mnt THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Fonds insuffisants'; END IF;
+        UPDATE comptes SET solde = solde - p_mnt WHERE id = p_src;
+        UPDATE comptes SET solde = solde + p_mnt WHERE id = p_dst;
+        INSERT INTO virements(compte_source, compte_dest, montant, statut) VALUES(p_src, p_dst, p_mnt, 'effectue');
+    COMMIT;
+    SELECT CONCAT('Virement de ', p_mnt, '€ OK') AS statut;
+END //
+DELIMITER ;
+
+CALL effectuer_virement(1, 2, 50);
+CALL effectuer_virement(5, 1, 100); -- Doit échouer
+SELECT * FROM virements;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>SAVEPOINT : Transaction multi-étapes</h4>
+      <p>Effectuez 3 virements dans une même transaction. Si le 3ème échoue (fonds insuffisants), revenez au savepoint après le 2ème sans annuler les deux premiers.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>START TRANSACTION;
+  UPDATE comptes SET solde = solde - 30 WHERE id = 1;
+  UPDATE comptes SET solde = solde + 30 WHERE id = 2;
+  SAVEPOINT apres_premier;
+
+  UPDATE comptes SET solde = solde - 100 WHERE id = 3;
+  UPDATE comptes SET solde = solde + 100 WHERE id = 1;
+  SAVEPOINT apres_deuxieme;
+
+  -- Virement qui va échouer (David n'a pas de solde) :
+  UPDATE comptes SET solde = solde - 500 WHERE id = 5;
+  -- La contrainte CHECK solde >= 0 va déclencher une erreur.
+  -- En MySQL, l'erreur ne rollback pas automatiquement. On doit le faire manuellement :
+  ROLLBACK TO SAVEPOINT apres_deuxieme;
+COMMIT;
+
+SELECT id, titulaire, solde FROM comptes ORDER BY id;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Créer un rôle en lecture seule</h4>
+      <p>Créez un rôle <code class="i">conseiller</code> avec seulement le droit SELECT sur les tables <code class="i">comptes</code> et <code class="i">virements</code>. Assignez-le à un utilisateur <code class="i">martin</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE ROLE 'conseiller';
+GRANT SELECT ON banking.comptes TO 'conseiller';
+GRANT SELECT ON banking.virements TO 'conseiller';
+
+CREATE USER 'martin'@'%' IDENTIFIED BY 'martin_pass!';
+GRANT 'conseiller' TO 'martin'@'%';
+SET DEFAULT ROLE 'conseiller' TO 'martin'@'%';
+
+SHOW GRANTS FOR 'martin'@'%';</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>Rôle applicatif sur procédure uniquement</h4>
+      <p>Créez un utilisateur <code class="i">app</code> qui peut seulement exécuter la procédure <code class="i">effectuer_virement</code>, sans accès direct aux tables.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE USER 'app'@'%' IDENTIFIED BY 'app_secret!';
+
+-- Donner uniquement le droit d'exécuter la procédure
+GRANT EXECUTE ON PROCEDURE banking.effectuer_virement TO 'app'@'%';
+
+-- Ne pas donner de droits sur les tables
+-- L'astuce est que la procédure est créée avec SQL SECURITY DEFINER (par défaut)
+-- Elle s'exécutera avec les droits du créateur (root), pas de 'app'.</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>Trigger : Bloquer les virements suspects</h4>
+      <p>Créez un trigger <code class="i">BEFORE INSERT</code> sur <code class="i">virements</code> qui bloque tout virement supérieur à 10 000€.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE TRIGGER trg_virement_suspect
+BEFORE INSERT ON virements
+FOR EACH ROW
+BEGIN
+    IF NEW.montant > 10000 THEN
+        INSERT INTO journal_erreurs(message, contexte)
+        VALUES('Virement bloqué', CONCAT('Montant: ', NEW.montant, '€'));
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Virement refusé : dépasse le plafond de 10 000€.';
+    END IF;
+END //
+DELIMITER ;
+
+INSERT INTO virements(compte_source, compte_dest, montant) VALUES (4, 1, 15000);</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Observation de l'isolation (2 sessions)</h4>
+      <p>Dans une session A, démarrez une transaction et modifiez un solde sans committer. Dans une session B, lisez le même solde. Observez que B ne voit pas la modification non-commitée (READ COMMITTED).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- === SESSION A ===
+START TRANSACTION;
+UPDATE comptes SET solde = 99999 WHERE id = 1;
+-- NE PAS COMMITTER
+
+-- === SESSION B ===
+SELECT solde FROM comptes WHERE id = 1;
+-- Résultat : 1300€ (MySQL est en READ COMMITTED par défaut, la session B ne voit rien)
+
+-- === SESSION A ===
+COMMIT;
+
+-- === SESSION B ===
+SELECT solde FROM comptes WHERE id = 1;
+-- Résultat : 99999€ (maintenant visible)
+UPDATE comptes SET solde = 1300 WHERE id = 1; -- Remise en état</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>Vue sécurisée (VIEW) pour masquer les données sensibles</h4>
+      <p>Créez une vue <code class="i">v_comptes_public</code> qui expose le titulaire et le type de compte, mais masque le solde exact avec un texte générique selon le niveau (> 1000€ : "Solide", < 1000€ : "Faible").</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE VIEW v_comptes_public AS
+SELECT
+    id,
+    titulaire,
+    type_compte,
+    CASE
+        WHEN solde > 1000 THEN 'Solide'
+        WHEN solde > 0 THEN 'Faible'
+        ELSE 'Insuffisant'
+    END AS niveau_solde
+FROM comptes;
+
+-- Donner l'accès à la vue (pas à la table) :
+GRANT SELECT ON banking.v_comptes_public TO 'conseiller';
+
+SELECT * FROM v_comptes_public;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Procédure de clôture mensuelle</h4>
+      <p>Créez une procédure <code class="i">cloture_mensuelle()</code> dans une transaction unique : applique 2% d'intérêts aux comptes épargne, prélève 5€ de frais sur les comptes courants, et enregistre un rapport dans <code class="i">journal_erreurs</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE PROCEDURE cloture_mensuelle()
+BEGIN
+    DECLARE nb_epargne INT DEFAULT 0;
+    DECLARE nb_courant INT DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; END;
+
+    START TRANSACTION;
+        UPDATE comptes SET solde = ROUND(solde * 1.02, 2) WHERE type_compte = 'epargne';
+        SET nb_epargne = ROW_COUNT();
+
+        UPDATE comptes SET solde = solde - 5 WHERE type_compte = 'courant' AND solde > 0;
+        SET nb_courant = ROW_COUNT();
+
+        INSERT INTO journal_erreurs(message, contexte)
+        VALUES('CLOTURE MENSUELLE OK', CONCAT(nb_epargne, ' épargne traités, ', nb_courant, ' courants traités'));
+    COMMIT;
+
+    SELECT CONCAT('Clôture OK: ', nb_epargne, ' épargne, ', nb_courant, ' courants') AS bilan;
+END //
+DELIMITER ;
+
+CALL cloture_mensuelle();
+SELECT id, titulaire, solde, type_compte FROM comptes ORDER BY type_compte;</pre>
+      </details>
+    </div>
+  </section>
+
+  <footer>MySQL Avancé — Séance 2 : Transactions & Sécurité</footer>
+</div>
+</body>
+</html>

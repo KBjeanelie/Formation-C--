@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MySQL Avancé — Séance 3 : Crash Test & Indexation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--blue:#00758F;--orange:#F29111;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--orange);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--blue);margin:28px 0 10px;}
+  p{margin:0 0 14px;} ul{padding-left:22px;color:var(--dim);margin:0 0 18px;} li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(0,117,143,.08);border-left:3px solid var(--blue);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .info strong{color:var(--blue);}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--orange);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--orange);}
+  details[open] summary{color:var(--orange);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Dashboard MySQL</a>
+  <p class="eyebrow">Séance 3 — 4 heures</p>
+  <h1 class="title">Crash Test & Optimisation : Les Index</h1>
+  <p class="subtitle">Générez des millions de lignes, analysez les plans d'exécution MySQL avec EXPLAIN et divisez vos temps de requête par 100 grâce aux index.</p>
+
+  <section>
+    <h2>1. Comprendre EXPLAIN dans MySQL</h2>
+    <p>La commande <code class="i">EXPLAIN</code> (ou <code class="i">EXPLAIN ANALYZE</code> dans MySQL 8.0.18+) affiche le plan d'exécution d'une requête. C'est votre outil de diagnostic principal.</p>
+    <pre>EXPLAIN SELECT * FROM server_logs WHERE ip_address = '192.168.1.42';</pre>
+    <p>Les colonnes clés à surveiller dans le résultat :</p>
+    <ul>
+      <li><strong>type :</strong> Le type de scan. Le meilleur au pire : <code class="i">system</code> → <code class="i">const</code> → <code class="i">eq_ref</code> → <code class="i">ref</code> → <code class="i">range</code> → <code class="i">index</code> → <strong><code class="i">ALL</code> (à éviter !)</strong></li>
+      <li><strong>key :</strong> L'index utilisé. <code class="i">NULL</code> signifie aucun index utilisé.</li>
+      <li><strong>rows :</strong> Estimation du nombre de lignes que MySQL va devoir lire.</li>
+      <li><strong>Extra :</strong> Informations supplémentaires. "Using filesort" ou "Using temporary" sont des signaux d'alerte.</li>
+    </ul>
+    <div class="info">
+      <strong>Différence avec PostgreSQL :</strong> MySQL utilise <code class="i">EXPLAIN</code> seul (sans ANALYZE) pour voir le plan sans exécuter. <code class="i">EXPLAIN ANALYZE</code> (MySQL 8+) exécute réellement et donne les temps.
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Base de travail — Les Logs Serveur</h2>
+    <pre>CREATE DATABASE IF NOT EXISTS logs_db;
+USE logs_db;
+DROP TABLE IF EXISTS server_logs;
+
+CREATE TABLE server_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(15),
+    endpoint VARCHAR(100),
+    status_code INT,
+    response_time_ms INT,
+    user_agent TEXT,
+    created_at DATETIME
+) ENGINE=InnoDB;</pre>
+  </section>
+
+  <section>
+    <h2>3. Travaux Pratiques (10 exercices)</h2>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Générer 2 millions de lignes (Procédure de remplissage)</h4>
+      <p>MySQL n'a pas de <code class="i">generate_series</code>. Créez une procédure stockée qui insère 2 millions de lignes par boucle WHILE.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE PROCEDURE generer_logs(IN n INT)
+BEGIN
+    DECLARE i INT DEFAULT 0;
+    DECLARE endpoints TEXT;
+    WHILE i < n DO
+        INSERT INTO server_logs (ip_address, endpoint, status_code, response_time_ms, user_agent, created_at)
+        VALUES (
+            CONCAT('192.168.1.', FLOOR(RAND()*255)),
+            ELT(FLOOR(RAND()*5)+1, '/home','/api/users','/login','/dashboard','/api/data'),
+            ELT(FLOOR(RAND()*7)+1, 200,201,400,401,403,404,500),
+            FLOOR(RAND()*1000),
+            ELT(FLOOR(RAND()*4)+1,'Mozilla Firefox','Google Chrome','Safari','curl/7.68.0'),
+            DATE_SUB(NOW(), INTERVAL FLOOR(RAND()*365) DAY)
+        );
+        SET i = i + 1;
+    END WHILE;
+END //
+DELIMITER ;
+
+-- Désactiver l'autocommit pour la vitesse, puis insérer :
+SET autocommit = 0;
+CALL generer_logs(2000000);  -- ATTENTION: Cela peut prendre plusieurs minutes !
+COMMIT;
+SET autocommit = 1;
+
+SELECT COUNT(*) FROM server_logs;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>Le Full Table Scan (Méthode lente)</h4>
+      <p>Analysez la requête qui cherche les logs de l'IP <code class="i">192.168.1.42</code> avec EXPLAIN. Quel est le type de scan ? Combien de lignes MySQL prévoit-il de lire ?</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>EXPLAIN SELECT * FROM server_logs WHERE ip_address = '192.168.1.42';
+
+-- Résultat attendu :
+-- type: ALL (Full Table Scan)
+-- key: NULL (aucun index utilisé)
+-- rows: ~2000000 (MySQL doit TOUT lire)</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>Créer l'index et observer le changement</h4>
+      <p>Créez un index B-Tree sur <code class="i">ip_address</code>. Relancez EXPLAIN et comparez le type de scan et le nombre de lignes estimées.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE INDEX idx_logs_ip ON server_logs(ip_address);
+
+EXPLAIN SELECT * FROM server_logs WHERE ip_address = '192.168.1.42';
+
+-- Résultat attendu :
+-- type: ref (utilise l'index pour une valeur exacte)
+-- key: idx_logs_ip
+-- rows: ~8000 (au lieu de 2 000 000 !)</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>Le piège du LIKE avec wildcard initial</h4>
+      <p>Testez avec EXPLAIN pourquoi <code class="i">WHERE endpoint LIKE '%data'</code> ne peut pas utiliser un index B-Tree standard. Expliquez le phénomène.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE INDEX idx_logs_endpoint ON server_logs(endpoint);
+
+EXPLAIN SELECT * FROM server_logs WHERE endpoint LIKE '/api%';
+-- type: range → L'index EST utilisé car on sait par où commencer.
+
+EXPLAIN SELECT * FROM server_logs WHERE endpoint LIKE '%data';
+-- type: ALL → L'index N'EST PAS utilisé.
+-- Raison : Un index B-Tree trie les données de gauche à droite.
+-- Si la wildcard est en premier, MySQL ne sait pas par où commencer l'index.</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Index sur expression avec les colonnes générées</h4>
+      <p>Dans MySQL, on ne peut pas créer d'index sur une fonction directement. L'astuce est d'ajouter une <strong>colonne générée virtuelle</strong> basée sur l'expression, puis d'indexer cette colonne.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Ajouter une colonne générée (virtuelle, pas stockée physiquement)
+ALTER TABLE server_logs
+ADD COLUMN user_agent_lower VARCHAR(255) AS (LOWER(user_agent)) VIRTUAL;
+
+-- Créer l'index sur la colonne générée
+CREATE INDEX idx_logs_lower_ua ON server_logs(user_agent_lower);
+
+-- Maintenant cette requête peut utiliser l'index :
+EXPLAIN SELECT * FROM server_logs WHERE LOWER(user_agent) = 'safari';</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>Index Composite (Multi-colonnes)</h4>
+      <p>Créez l'index optimal pour la requête <code class="i">WHERE status_code = 500 AND endpoint = '/login'</code>. Vérifiez avec EXPLAIN que les deux colonnes sont utilisées.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE INDEX idx_logs_status_endpoint ON server_logs(status_code, endpoint);
+
+EXPLAIN SELECT * FROM server_logs WHERE status_code = 500 AND endpoint = '/login';
+-- type: ref, key: idx_logs_status_endpoint ✓</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>Index Partiel (invisible dans MySQL)</h4>
+      <p>MySQL ne supporte pas les index partiels avec une clause WHERE directement. Utilisez à la place la colonne générée ou un index fonctionnel. Indexez uniquement les erreurs en créant une colonne générée <code class="i">is_error</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Colonne générée : 1 si erreur, NULL si succès (les index ignorent les NULL !)
+ALTER TABLE server_logs
+ADD COLUMN is_error TINYINT AS (IF(status_code >= 400, 1, NULL)) VIRTUAL;
+
+CREATE INDEX idx_logs_errors ON server_logs(is_error);
+
+-- Requête optimisée sur les erreurs :
+EXPLAIN SELECT * FROM server_logs WHERE is_error = 1 AND status_code = 500;
+-- MySQL utilisera l'index pour filtrer les erreurs d'abord.</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Covering Index (Index couvrant)</h4>
+      <p>Créez un index sur <code class="i">(ip_address, status_code)</code> et vérifiez avec EXPLAIN que la requête <code class="i">SELECT ip_address, status_code ... WHERE ip_address = '...'</code> affiche "Using index" dans la colonne Extra (pas de lecture de table).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE INDEX idx_covering ON server_logs(ip_address, status_code);
+
+EXPLAIN SELECT ip_address, status_code FROM server_logs
+WHERE ip_address = '192.168.1.10';
+
+-- Extra: Using index → MySQL a toutes les données dans l'index
+-- Il ne lit pas la table physiquement ! C'est l'équivalent du Index Only Scan de PG.</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>Optimiser ORDER BY</h4>
+      <p>Analysez la requête <code class="i">ORDER BY created_at DESC LIMIT 10</code>. L'Extra affiche "Using filesort" ? Créez l'index adapté pour l'éliminer.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Avant (filesort) :
+EXPLAIN SELECT * FROM server_logs ORDER BY created_at DESC LIMIT 10;
+-- Extra: Using filesort (tri en mémoire/disque)
+
+-- Créer l'index :
+CREATE INDEX idx_logs_date ON server_logs(created_at DESC);
+
+-- Après :
+EXPLAIN SELECT * FROM server_logs ORDER BY created_at DESC LIMIT 10;
+-- Extra: Backward index scan (ou vide) → Le tri a disparu !</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Auditer ses index inutilisés</h4>
+      <p>MySQL 8.0 permet de rendre un index "invisible" pour tester s'il est réellement utile sans le supprimer. Testez cette fonctionnalité unique à MySQL.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Voir tous les index d'une table :
+SHOW INDEX FROM server_logs;
+
+-- Rendre un index invisible (MySQL ne l'utilisera plus, mais il continue à se maintenir)
+ALTER TABLE server_logs ALTER INDEX idx_logs_ip INVISIBLE;
+
+-- Vérifier avec EXPLAIN qu'il n'est plus utilisé :
+EXPLAIN SELECT * FROM server_logs WHERE ip_address = '192.168.1.42';
+
+-- Si les performances ne changent pas, l'index était inutile → Supprimer :
+DROP INDEX idx_logs_ip ON server_logs;
+
+-- Sinon, le réactiver :
+ALTER TABLE server_logs ALTER INDEX idx_logs_ip VISIBLE;</pre>
+      </details>
+    </div>
+  </section>
+
+  <footer>MySQL Avancé — Séance 3 : Crash Test & Indexation</footer>
+</div>
+</body>
+</html>

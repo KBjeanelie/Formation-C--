@@ -24,7 +24,7 @@
     font-family:var(--sans); line-height:1.65; font-size:16px;
     display:flex; flex-direction:column; min-height:100vh;
   }
-  .wrap{max-width:900px; margin:auto; padding:64px 32px; flex:1; display:flex; flex-direction:column; justify-content:center;}
+  .wrap{max-width:1400px; margin:auto; padding:64px 32px; flex:1; display:flex; flex-direction:column; justify-content:center;}
 
   .eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-dim); text-align:center; margin:0 0 14px;}
   h1.title{font-family:var(--sans); font-weight:700; font-size:clamp(32px,5vw,48px); text-align:center; margin:0 0 12px; letter-spacing:-.02em;}
@@ -59,6 +59,12 @@
   .card-bdd { border-top: 4px solid var(--green); }
   .card-bdd:hover { box-shadow: 0 12px 30px rgba(63, 189, 131, 0.15); border-color: var(--green); }
   
+  .card-mysql { border-top: 4px solid #00758F; } /* MySQL Blue */
+  .card-mysql:hover { box-shadow: 0 12px 30px rgba(0, 117, 143, 0.15); border-color: #00758F; }
+
+  .card-sqlserver { border-top: 4px solid #CC292B; } /* SQL Server Red */
+  .card-sqlserver:hover { box-shadow: 0 12px 30px rgba(204, 41, 43, 0.15); border-color: #CC292B; }
+  
   .logo {
     font-size: 48px;
     font-weight: 700;
@@ -68,6 +74,8 @@
   .card-cpp .logo { color: var(--orange); }
   .card-laravel .logo { color: var(--red); }
   .card-bdd .logo { color: var(--green); }
+  .card-mysql .logo { color: #00758F; }
+  .card-sqlserver .logo { color: #CC292B; }
 
   .card h2 { font-size: 24px; margin: 0 0 12px; font-weight: 600; }
   .card p { font-size: 15px; color: var(--ink-dim); margin: 0; line-height: 1.5; }
@@ -95,9 +103,21 @@
     </a>
 
     <a href="formation_bdd/index.html" class="card card-bdd">
-      <div class="logo">BDD</div>
-      <h2>Base de Données Avancée</h2>
-      <p>PostgreSQL, PL/pgSQL, Transactions, Optimisation des performances et introduction au NoSQL (MongoDB).</p>
+      <div class="logo">PGSQL</div>
+      <h2>PostgreSQL Avancé</h2>
+      <p>Logique serveur PL/pgSQL, Transactions ACID, Optimisation (EXPLAIN) et introduction au NoSQL (MongoDB).</p>
+    </a>
+
+    <a href="formation_mysql/index.html" class="card card-mysql">
+      <div class="logo">MySQL</div>
+      <h2>MySQL Avancé</h2>
+      <p>Routines, Triggers, Transactions, Optimisation des performances et introduction au NoSQL (MongoDB).</p>
+    </a>
+
+    <a href="formation_sqlserver/index.html" class="card card-sqlserver">
+      <div class="logo">MSSQL</div>
+      <h2>SQL Server Avancé</h2>
+      <p>T-SQL, Triggers Statement-Level, Transactions TRY...CATCH, Plans d'exécution et intro NoSQL (MongoDB).</p>
     </a>
   </div>
 </div>

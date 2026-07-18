@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MySQL Avancé — Séance 1 : Routines & Triggers</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--blue:#00758F;--orange:#F29111;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--orange);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--blue);margin:28px 0 10px;}
+  p{margin:0 0 14px;} ul{padding-left:22px;color:var(--dim);margin:0 0 18px;} li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(0,117,143,.08);border-left:3px solid var(--blue);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .info strong{color:var(--blue);}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--orange);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--orange);}
+  details[open] summary{color:var(--orange);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Dashboard MySQL</a>
+  <p class="eyebrow">Séance 1 — 4 heures</p>
+  <h1 class="title">Routines & Triggers MySQL</h1>
+  <p class="subtitle">Maîtrisez la programmation côté serveur avec MySQL. La syntaxe DELIMITER est particulière mais puissante — soyons méthodiques.</p>
+
+  <section>
+    <h2>1. Pourquoi le DELIMITER dans MySQL ?</h2>
+    <p>MySQL utilise le point-virgule <code class="i">;</code> pour savoir quand une commande se termine. Mais à l'intérieur d'une procédure, on a plusieurs <code class="i">;</code>. Il faut donc changer temporairement le séparateur pour que MySQL ne s'arrête pas au premier <code class="i">;</code> rencontré.</p>
+    <pre>DELIMITER //   -- On dit à MySQL "maintenant la commande se termine par //"
+
+CREATE PROCEDURE ma_procedure()
+BEGIN
+    SELECT 'Bonjour' ;  -- Ce ";" est ignoré par MySQL, c'est celui de la procédure
+    SELECT 'Monde' ;    -- Idem
+END //          -- MySQL comprend que la procédure est finie ici
+
+DELIMITER ;     -- On remet le séparateur normal</pre>
+
+    <h3>Structure d'une procédure stockée</h3>
+    <pre>DELIMITER //
+CREATE PROCEDURE nom_procedure(
+    IN param1 INT,       -- Paramètre en entrée
+    OUT param2 VARCHAR(100), -- Paramètre en sortie
+    INOUT param3 DECIMAL(10,2) -- Entrée ET sortie
+)
+BEGIN
+    DECLARE ma_variable INT DEFAULT 0;  -- Variables locales
+
+    IF param1 > 10 THEN
+        SET param2 = 'Grand';
+    ELSE
+        SET param2 = 'Petit';
+    END IF;
+END //
+DELIMITER ;</pre>
+
+    <h3>Variables spéciales dans un Trigger MySQL</h3>
+    <ul>
+      <li><code class="i">NEW.colonne</code> — La nouvelle valeur (INSERT / UPDATE).</li>
+      <li><code class="i">OLD.colonne</code> — L'ancienne valeur (UPDATE / DELETE).</li>
+      <li>Les triggers MySQL s'exécutent <strong>FOR EACH ROW</strong> (ligne par ligne) — pas de trigger Statement-Level.</li>
+    </ul>
+    <div class="info">
+      <strong>Note importante :</strong> Dans MySQL, un trigger ne peut pas appeler de procédures qui contiennent des transactions (<code class="i">COMMIT</code>/<code class="i">ROLLBACK</code>). La logique des triggers doit rester simple.
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Base de travail — E-Commerce</h2>
+    <pre>CREATE DATABASE IF NOT EXISTS ecommerce CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE ecommerce;
+
+DROP TABLE IF EXISTS commandes, produits, clients, audit_prix;
+
+CREATE TABLE clients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE,
+    points_fidelite INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE produits (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    prix DECIMAL(10,2) CHECK (prix >= 0),
+    stock INT DEFAULT 0,
+    categorie VARCHAR(50)
+) ENGINE=InnoDB;
+
+CREATE TABLE commandes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    client_id INT, produit_id INT,
+    quantite INT CHECK (quantite > 0),
+    prix_total DECIMAL(10,2),
+    date_cmd TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+    FOREIGN KEY (produit_id) REFERENCES produits(id)
+) ENGINE=InnoDB;
+
+INSERT INTO clients (nom, email, points_fidelite) VALUES
+    ('Alice Martin','alice@mail.com',250),('Bob Dupont','bob@mail.com',45),
+    ('Clara Simon','clara@mail.com',500),('David Leblanc','david@mail.com',0);
+
+INSERT INTO produits (nom, prix, stock, categorie) VALUES
+    ('Laptop Pro',1200.00,8,'Informatique'),('Souris Ergonomique',35.00,50,'Accessoires'),
+    ('Clavier Mécanique',95.00,20,'Accessoires'),('Moniteur 27"',450.00,5,'Informatique'),
+    ('Webcam HD',75.00,30,'Accessoires');</pre>
+  </section>
+
+  <section>
+    <h2>3. Travaux Pratiques (10 exercices)</h2>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Fonction : Calcul de la remise fidélité</h4>
+      <p>Créez une fonction <code class="i">get_remise(p_id INT)</code> qui retourne le taux de remise (DECIMAL). Règle : &lt; 100 pts → 0%, 100 à 499 → 0.10, ≥ 500 → 0.20.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE FUNCTION get_remise(p_id INT)
+RETURNS DECIMAL(4,2)
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE pts INT;
+    SELECT points_fidelite INTO pts FROM clients WHERE id = p_id;
+    IF pts IS NULL THEN RETURN 0.00; END IF;
+    IF pts >= 500 THEN RETURN 0.20;
+    ELSEIF pts >= 100 THEN RETURN 0.10;
+    ELSE RETURN 0.00;
+    END IF;
+END //
+DELIMITER ;
+
+-- Test :
+SELECT nom, points_fidelite, get_remise(id)*100 AS remise_pct FROM clients;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>Fonction : Prix final avec remise</h4>
+      <p>Créez une fonction <code class="i">prix_final(p_client INT, p_produit INT)</code> qui appelle <code class="i">get_remise</code> et retourne le prix après réduction.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE FUNCTION prix_final(p_client INT, p_produit INT)
+RETURNS DECIMAL(10,2)
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE v_prix DECIMAL(10,2);
+    DECLARE v_remise DECIMAL(4,2);
+    SELECT prix INTO v_prix FROM produits WHERE id = p_produit;
+    SET v_remise = get_remise(p_client);
+    RETURN ROUND(v_prix * (1 - v_remise), 2);
+END //
+DELIMITER ;
+
+SELECT prix_final(3, 1); -- Clara (500pts) sur Laptop (1200€) → 960€</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>Procédure : Passer une commande</h4>
+      <p>Créez une procédure <code class="i">passer_commande(p_client, p_produit, p_qte)</code> qui vérifie le stock, insère la commande avec le prix final et déduit le stock. Utilisez <code class="i">SIGNAL SQLSTATE</code> pour lever l'erreur.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE PROCEDURE passer_commande(IN p_client INT, IN p_produit INT, IN p_qte INT)
+BEGIN
+    DECLARE v_stock INT;
+    DECLARE v_prix DECIMAL(10,2);
+
+    SELECT stock INTO v_stock FROM produits WHERE id = p_produit;
+
+    IF v_stock < p_qte THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Stock insuffisant pour cette commande.';
+    END IF;
+
+    SET v_prix = prix_final(p_client, p_produit) * p_qte;
+
+    INSERT INTO commandes (client_id, produit_id, quantite, prix_total)
+    VALUES (p_client, p_produit, p_qte, v_prix);
+
+    UPDATE produits SET stock = stock - p_qte WHERE id = p_produit;
+
+    SELECT CONCAT('Commande validée. Total: ', v_prix, ' EUR') AS message;
+END //
+DELIMITER ;
+
+-- Test :
+CALL passer_commande(1, 2, 3);
+SELECT * FROM commandes;
+SELECT id, nom, stock FROM produits;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>Trigger : Bloquer le stock négatif</h4>
+      <p>Créez un trigger <code class="i">BEFORE UPDATE</code> sur <code class="i">produits</code> qui empêche toute modification portant le stock en dessous de 0.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE TRIGGER trg_stock_negatif
+BEFORE UPDATE ON produits
+FOR EACH ROW
+BEGIN
+    IF NEW.stock < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Le stock ne peut pas être négatif.';
+    END IF;
+END //
+DELIMITER ;
+
+-- Test : doit échouer
+UPDATE produits SET stock = stock - 100 WHERE id = 2;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Trigger : Audit des changements de prix</h4>
+      <p>Créez la table <code class="i">audit_prix</code> et un trigger <code class="i">AFTER UPDATE</code> sur <code class="i">produits</code> qui l'alimente en cas de modification du prix.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE TABLE audit_prix (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    produit_id INT,
+    ancien_prix DECIMAL(10,2),
+    nouveau_prix DECIMAL(10,2),
+    modifie_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DELIMITER //
+CREATE TRIGGER trg_audit_prix
+AFTER UPDATE ON produits
+FOR EACH ROW
+BEGIN
+    IF NEW.prix <> OLD.prix THEN
+        INSERT INTO audit_prix(produit_id, ancien_prix, nouveau_prix)
+        VALUES (OLD.id, OLD.prix, NEW.prix);
+    END IF;
+END //
+DELIMITER ;
+
+-- Test :
+UPDATE produits SET prix = 1350.00 WHERE id = 1;
+SELECT * FROM audit_prix;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>Fonction : Valeur totale du stock par catégorie</h4>
+      <p>Créez une fonction <code class="i">valeur_stock_categorie(cat VARCHAR(50))</code> qui retourne la valeur totale (prix × stock) pour une catégorie.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE FUNCTION valeur_stock_categorie(p_cat VARCHAR(50))
+RETURNS DECIMAL(12,2)
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE v_total DECIMAL(12,2);
+    SELECT COALESCE(SUM(prix * stock), 0) INTO v_total
+    FROM produits WHERE categorie = p_cat;
+    RETURN v_total;
+END //
+DELIMITER ;
+
+SELECT valeur_stock_categorie('Informatique');
+SELECT valeur_stock_categorie('Accessoires');</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>Trigger : Accumulation automatique des points</h4>
+      <p>Créez un trigger <code class="i">AFTER INSERT</code> sur <code class="i">commandes</code> qui ajoute 1 point de fidélité par euro dépensé au client.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE TRIGGER trg_points_fidelite
+AFTER INSERT ON commandes
+FOR EACH ROW
+BEGIN
+    UPDATE clients
+    SET points_fidelite = points_fidelite + ROUND(NEW.prix_total)
+    WHERE id = NEW.client_id;
+END //
+DELIMITER ;
+
+CALL passer_commande(2, 3, 1);
+SELECT id, nom, points_fidelite FROM clients WHERE id = 2;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Procédure : Réapprovisionner le stock</h4>
+      <p>Créez une procédure <code class="i">reapprovisionner(p_produit INT, p_qte INT)</code> qui rejette les quantités nulles ou négatives et affiche un message de confirmation.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE PROCEDURE reapprovisionner(IN p_produit INT, IN p_qte INT)
+BEGIN
+    DECLARE v_nom VARCHAR(100);
+    DECLARE v_stock_avant INT;
+
+    IF p_qte <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La quantité doit être positive.';
+    END IF;
+
+    SELECT nom, stock INTO v_nom, v_stock_avant FROM produits WHERE id = p_produit;
+    UPDATE produits SET stock = stock + p_qte WHERE id = p_produit;
+    SELECT CONCAT('Réappro OK: ', v_nom, ' — ', v_stock_avant, ' → ', v_stock_avant + p_qte, ' unités') AS resultat;
+END //
+DELIMITER ;
+
+CALL reapprovisionner(4, 10);
+CALL reapprovisionner(1, -5); -- Doit échouer</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>Procédure avec curseur : Historique client</h4>
+      <p>Créez une procédure <code class="i">afficher_historique(p_id INT)</code> qui utilise un curseur pour parcourir les commandes d'un client et les afficher une par une avec le nom du produit.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>DELIMITER //
+CREATE PROCEDURE afficher_historique(IN p_id INT)
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE v_produit VARCHAR(100);
+    DECLARE v_qte INT;
+    DECLARE v_total DECIMAL(10,2);
+    DECLARE v_date TIMESTAMP;
+
+    DECLARE cur CURSOR FOR
+        SELECT p.nom, c.quantite, c.prix_total, c.date_cmd
+        FROM commandes c JOIN produits p ON p.id = c.produit_id
+        WHERE c.client_id = p_id ORDER BY c.date_cmd DESC;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+    read_loop: LOOP
+        FETCH cur INTO v_produit, v_qte, v_total, v_date;
+        IF done THEN LEAVE read_loop; END IF;
+        SELECT v_produit AS produit, v_qte AS quantite, v_total AS total, v_date AS date_achat;
+    END LOOP;
+    CLOSE cur;
+END //
+DELIMITER ;
+
+CALL afficher_historique(1);</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Trigger : Empêcher la suppression de commandes récentes</h4>
+      <p>Créez une table <code class="i">tentatives_suppression</code> et un trigger <code class="i">BEFORE DELETE</code> sur <code class="i">commandes</code> qui bloque la suppression de commandes de moins de 30 jours.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE TABLE tentatives_suppression (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    commande_id INT,
+    tente_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DELIMITER //
+CREATE TRIGGER trg_protect_commandes
+BEFORE DELETE ON commandes
+FOR EACH ROW
+BEGIN
+    IF OLD.date_cmd > DATE_SUB(NOW(), INTERVAL 30 DAY) THEN
+        INSERT INTO tentatives_suppression(commande_id) VALUES (OLD.id);
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Suppression refusée : commande de moins de 30 jours.';
+    END IF;
+END //
+DELIMITER ;
+
+DELETE FROM commandes WHERE id = 1;
+SELECT * FROM tentatives_suppression;</pre>
+      </details>
+    </div>
+  </section>
+
+  <footer>MySQL Avancé — Séance 1 : Routines & Triggers</footer>
+</div>
+</body>
+</html>

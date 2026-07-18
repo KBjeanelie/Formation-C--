@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Cheatsheet MySQL - De 0 à Expert</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{ --bg:#14141f; --panel:#1c1c2b; --edge-soft:#292939; --ink:#eeece4; --ink-dim:#a8a5b8; --mysql-orange:#F29111; --mysql-blue:#00758F; --mono:'JetBrains Mono', monospace; --sans:'Inter', sans-serif; }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.65; font-size:16px; }
+  .wrap{max-width:900px; margin:0 auto; padding:64px 32px 120px;}
+  .back-link { display: inline-block; margin-bottom: 24px; color: var(--ink-dim); text-decoration: none; font-family: var(--mono); font-size: 13px; border: 1px solid var(--edge-soft); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+  .back-link:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .eyebrow{font-family:var(--mono); font-size:12.5px; color:var(--mysql-orange); text-transform:uppercase; letter-spacing:.12em; margin:0 0 14px;}
+  h1.title{font-family:var(--sans); font-weight:700; font-size:42px; margin:0 0 8px;}
+  .subtitle{color:var(--ink-dim); font-size:17px; margin:0 0 48px; max-width:700px;}
+  section{margin:48px 0; background:var(--panel); border:1px solid var(--edge-soft); border-radius:12px; padding:32px;}
+  h2{font-size:22px; font-weight:700; margin:0 0 16px; color:var(--mysql-orange);}
+  h3{font-size:17px; font-weight:600; color:var(--mysql-blue); margin:28px 0 10px;}
+  p{margin:0 0 14px;}
+  ul{padding-left: 20px; color:var(--ink-dim);}
+  li{margin-bottom:8px;}
+  code.inline{font-family:var(--mono); font-size:.88em; background:var(--bg); border:1px solid var(--edge-soft); padding:1px 6px; border-radius:4px; color:#f0c8a8;}
+  pre{background:#0d0d16; border:1px solid var(--edge-soft); border-radius:8px; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:0 0 24px; color:#d6d3e0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour au Dashboard MySQL</a>
+  <p class="eyebrow">Guide de Survie</p>
+  <h1 class="title">Cheatsheet MySQL</h1>
+  <p class="subtitle">Un aide-mémoire complet pour retrouver ses marques de 0 à expert. Idéal pour se rafraîchir la mémoire avant de démarrer la Séance 1.</p>
+
+  <section>
+    <h2>1. Les Commandes CLI (Terminal)</h2>
+    <p>Si vous utilisez l'outil en ligne de commande <code class="inline">mysql -u root -p</code> :</p>
+    <ul>
+      <li><code class="inline">SHOW DATABASES;</code> : Lister toutes les bases de données.</li>
+      <li><code class="inline">USE ma_base;</code> : Se connecter à la base "ma_base".</li>
+      <li><code class="inline">SHOW TABLES;</code> : Lister toutes les tables de la base actuelle.</li>
+      <li><code class="inline">DESCRIBE ma_table;</code> : Voir la structure d'une table (colonnes, types).</li>
+      <li><code class="inline">EXIT;</code> ou <code class="inline">\q</code> : Quitter mysql.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>2. Bases de Données</h2>
+    <pre>-- Créer une base de données avec encodage UTF-8 complet
+CREATE DATABASE e_commerce CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- S'y connecter
+USE e_commerce;</pre>
+  </section>
+
+  <section>
+    <h2>3. Création de Tables & Types de base</h2>
+    <p>L'auto-incrémentation se fait avec le mot-clé <code class="inline">AUTO_INCREMENT</code>.</p>
+    <pre>CREATE TABLE employes (
+    id INT AUTO_INCREMENT PRIMARY KEY, -- Auto-incrément (1, 2, 3...)
+    nom VARCHAR(100) NOT NULL,         -- Chaîne avec limite
+    bio TEXT,                          -- Chaîne sans limite stricte
+    age INT CHECK (age >= 18),         -- Entier avec contrainte
+    salaire DECIMAL(10,2),             -- Décimal précis (10 chiffres total, 2 après virgule)
+    is_active BOOLEAN DEFAULT TRUE,    -- Converti en TINYINT(1) sous le capot (1 ou 0)
+    date_embauche TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB; -- Moteur recommandé supportant les transactions et clés étrangères</pre>
+  </section>
+
+  <section>
+    <h2>4. Clés Étrangères (Relations)</h2>
+    <p>Lier deux tables ensemble et définir le comportement en cas de suppression.</p>
+    <pre>CREATE TABLE departements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(50)
+);
+
+CREATE TABLE employes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(100),
+    departement_id INT,
+    FOREIGN KEY (departement_id) REFERENCES departements(id) ON DELETE CASCADE
+);
+-- ON DELETE CASCADE : Si on supprime un département, 
+-- tous ses employés sont supprimés automatiquement.</pre>
+  </section>
+
+  <section>
+    <h2>5. Opérations CRUD (Manipulation des données)</h2>
+    
+    <h3>Insertion (CREATE)</h3>
+    <pre>INSERT INTO employes (nom, age, salaire) 
+VALUES ('Alice', 30, 2500.50),
+       ('Bob', 25, 2100.00);
+
+-- Récupérer le dernier ID inséré dans cette session :
+SELECT LAST_INSERT_ID();</pre>
+
+    <h3>Lecture (READ)</h3>
+    <pre>SELECT nom, salaire FROM employes 
+WHERE age >= 25 
+ORDER BY salaire DESC 
+LIMIT 5, 10; -- Pagination: sauter 5, en prendre 10</pre>
+
+    <h3>Mise à jour (UPDATE)</h3>
+    <pre>UPDATE employes 
+SET salaire = salaire + 100, is_active = TRUE 
+WHERE nom = 'Bob';</pre>
+
+    <h3>Suppression (DELETE)</h3>
+    <pre>DELETE FROM employes WHERE is_active = FALSE;</pre>
+  </section>
+
+  <section>
+    <h2>6. Modifier une structure existante (ALTER TABLE)</h2>
+    <pre>-- Ajouter une colonne
+ALTER TABLE employes ADD COLUMN email VARCHAR(150);
+
+-- Renommer une colonne
+ALTER TABLE employes CHANGE nom nom_complet VARCHAR(150);
+
+-- Modifier le type d'une colonne
+ALTER TABLE employes MODIFY salaire DECIMAL(12,2);
+
+-- Supprimer une colonne
+ALTER TABLE employes DROP COLUMN bio;</pre>
+  </section>
+
+  <section>
+    <h2>7. Gestion des Utilisateurs et Droits (Sécurité)</h2>
+    
+    <h3>Créer et modifier des utilisateurs</h3>
+    <pre>-- Créer un utilisateur pouvant se connecter depuis n'importe où (%)
+CREATE USER 'dev'@'%' IDENTIFIED BY 'secret123';
+
+-- Créer un rôle de groupe (MySQL 8.0+)
+CREATE ROLE 'lecteurs';
+
+-- Assigner le rôle à l'utilisateur
+GRANT 'lecteurs' TO 'dev'@'%';
+-- L'utilisateur devra exécuter "SET ROLE lecteurs;" après s'être connecté.
+-- Ou l'activer par défaut : SET DEFAULT ROLE 'lecteurs' TO 'dev'@'%';</pre>
+
+    <h3>Gérer les permissions (GRANT / REVOKE)</h3>
+    <pre>-- Donner tous les droits sur une base (attention)
+GRANT ALL PRIVILEGES ON e_commerce.* TO 'dev'@'%';
+
+-- Donner le droit de lecture via un rôle
+GRANT SELECT ON e_commerce.* TO 'lecteurs';
+
+-- Donner des droits spécifiques sur une table précise
+GRANT INSERT, UPDATE ON e_commerce.employes TO 'dev'@'%';
+
+-- Appliquer les changements (souvent nécessaire après modification manuelle des tables système)
+FLUSH PRIVILEGES;
+
+-- Retirer (révoquer) un droit
+REVOKE UPDATE ON e_commerce.employes FROM 'dev'@'%';</pre>
+  </section>
+
+</div>
+</body>
+</html>
