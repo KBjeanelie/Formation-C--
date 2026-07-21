@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Structure et BDD — Séance 3 : Agrégations & Sous-requêtes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--purple:#8b5cf6;--orange:#F29111;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--purple);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--purple);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--ink);margin:28px 0 10px;}
+  p{margin:0 0 14px;} ul{padding-left:22px;color:var(--dim);margin:0 0 18px;} li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge-soft);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(139,92,246,.08);border-left:3px solid var(--purple);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .info strong{color:var(--purple);}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--purple);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--purple);}
+  details[open] summary{color:var(--purple);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Dashboard SBD</a>
+  <p class="eyebrow">Séance 3 — 4 heures</p>
+  <h1 class="title">Agrégations & Sous-requêtes</h1>
+  <p class="subtitle">Apprenez à regrouper les données pour en extraire des statistiques (moyenne, somme, comptage) et à imbriquer des requêtes les unes dans les autres.</p>
+
+  <section>
+    <h2>1. Exercice Guidé : Les statistiques avec GROUP BY</h2>
+    <p>Le SQL ne sert pas qu'à lire des lignes brutes, il excelle pour faire des calculs statistiques. Continuons sur notre base <code class="i">bibliotheque_db</code> !</p>
+
+    <h3>Étape 1 : Les Fonctions d'Agrégation (Max, Min, Avg, Sum, Count)</h3>
+    <p>Ces fonctions permettent d'écraser plusieurs lignes en une seule valeur mathématique.</p>
+    <pre>USE bibliotheque_db;
+
+-- Combien avons-nous de livres en tout ?
+SELECT COUNT(*) FROM livres;
+
+-- Quel est le prix du livre le plus cher ?
+SELECT MAX(prix) FROM livres;</pre>
+
+    <h3>Étape 2 : Grouper les données avec GROUP BY</h3>
+    <p>Si on veut savoir "Combien de livres avons-nous <strong>par catégorie</strong> ?", on doit "grouper" les calculs selon cette catégorie.</p>
+    <pre>SELECT c.nom AS Categorie, COUNT(l.id) AS NombreDeLivres
+FROM categories c
+LEFT JOIN livres l ON c.id = l.categorie_id
+GROUP BY c.nom;</pre>
+
+    <h3>Étape 3 : Filtrer sur un groupe avec HAVING</h3>
+    <p>Le <code class="i">WHERE</code> filtre avant le calcul. Le <code class="i">HAVING</code> filtre <strong>après</strong> le calcul mathématique ! Par exemple : "Afficher uniquement les catégories qui ont plus de 1 livre."</p>
+    <pre>SELECT c.nom AS Categorie, COUNT(l.id) AS NombreDeLivres
+FROM categories c
+LEFT JOIN livres l ON c.id = l.categorie_id
+GROUP BY c.nom
+HAVING COUNT(l.id) > 1;</pre>
+    <div class="info">
+      <strong>Règle d'or :</strong> Dès que vous utilisez un <code class="i">GROUP BY</code>, <strong>toutes</strong> les colonnes du <code class="i">SELECT</code> qui ne sont pas dans une fonction mathématique (COUNT, SUM...) doivent obligatoirement apparaître dans le <code class="i">GROUP BY</code> !
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Travaux Pratiques (10 exercices)</h2>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Calcul de la somme (SUM)</h4>
+      <p>Quelle est la valeur totale (somme des prix) de tous les livres de notre bibliothèque ?</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT SUM(prix) AS ValeurTotale 
+FROM livres;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>Calcul de la moyenne (AVG)</h4>
+      <p>Quel est le prix moyen d'un livre dans cette bibliothèque ?</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT AVG(prix) AS PrixMoyen 
+FROM livres;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>La plus ancienne publication (MIN)</h4>
+      <p>Affichez l'année de publication du plus vieux livre de la table.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT MIN(annee_publication) AS PlusVieux 
+FROM livres;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>Sous-requête simple : Trouver le livre le plus vieux</h4>
+      <p>La question précédente nous a donné l'année (1862). Mais comment obtenir le <strong>titre</strong> du livre le plus vieux ? On imbrique une requête dans une autre !</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT titre, annee_publication 
+FROM livres
+WHERE annee_publication = (
+    SELECT MIN(annee_publication) FROM livres
+);</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Grouper par Auteur</h4>
+      <p>Affichez le nom de chaque auteur, suivi du nombre de livres que nous possédons pour cet auteur.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT auteur, COUNT(*) AS Nombre_Oeuvres
+FROM livres
+GROUP BY auteur;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>Filtrer un groupe (HAVING)</h4>
+      <p>Reprenez la requête précédente, mais n'affichez que les auteurs pour lesquels nous possédons STRICTEMENT PLUS d'un livre (donc 2 ou plus).</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT auteur, COUNT(*) AS Nombre_Oeuvres
+FROM livres
+GROUP BY auteur
+HAVING COUNT(*) > 1;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>Moyenne des prix par catégorie</h4>
+      <p>Affichez le nom de chaque catégorie avec le prix moyen de ses livres. Utilisez <code class="i">ROUND()</code> pour n'avoir que 2 chiffres après la virgule.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT c.nom AS Categorie, ROUND(AVG(l.prix), 2) AS Prix_Moyen
+FROM categories c
+INNER JOIN livres l ON c.id = l.categorie_id
+GROUP BY c.nom;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Sous-requête : Livres plus chers que la moyenne</h4>
+      <p>Trouvez le titre et le prix de tous les livres dont le prix est supérieur au prix moyen de toute la bibliothèque.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT titre, prix 
+FROM livres
+WHERE prix > (
+    SELECT AVG(prix) FROM livres
+);</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>Sous-requête avec IN</h4>
+      <p>Affichez le nom complet des adhérents qui ont emprunté un livre de la catégorie "Roman". (Vous pouvez le faire avec 3 jointures, ou avec une sous-requête !)</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Méthode Sous-requête (souvent plus claire à lire) :
+SELECT nom_complet FROM adherents 
+WHERE id IN (
+    SELECT adherent_id FROM emprunts WHERE livre_id IN (
+        SELECT id FROM livres WHERE categorie_id = (
+            SELECT id FROM categories WHERE nom = 'Roman'
+        )
+    )
+);
+
+-- Ou méthode avec Jointures :
+SELECT a.nom_complet 
+FROM adherents a
+INNER JOIN emprunts e ON a.id = e.adherent_id
+INNER JOIN livres l ON e.livre_id = l.id
+INNER JOIN categories c ON l.categorie_id = c.id
+WHERE c.nom = 'Roman';</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Créer une Vue (Raccourci permanent)</h4>
+      <p>Une vue (<code class="i">VIEW</code>) permet de sauvegarder une requête complexe comme si c'était une table virtuelle. Créez une vue appelée <code class="i">vue_stock_bibliotheque</code> qui affiche la somme totale des prix par auteur, puis faites un <code class="i">SELECT * FROM vue_stock_bibliotheque</code> pour tester.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE VIEW vue_stock_bibliotheque AS
+SELECT auteur, SUM(prix) AS valeur_totale
+FROM livres
+GROUP BY auteur;
+
+-- On peut maintenant interroger cette vue n'importe quand !
+SELECT * FROM vue_stock_bibliotheque ORDER BY valeur_totale DESC;</pre>
+      </details>
+    </div>
+
+  </section>
+
+  <footer>Structure et Base de Données — Séance 3 : Agrégations & Sous-requêtes</footer>
+</div>
+</body>
+</html>

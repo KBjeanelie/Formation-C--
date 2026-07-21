@@ -65,6 +65,9 @@
   .card-sqlserver { border-top: 4px solid #CC292B; } /* SQL Server Red */
   .card-sqlserver:hover { box-shadow: 0 12px 30px rgba(204, 41, 43, 0.15); border-color: #CC292B; }
   
+  .card-sbd { border-top: 4px solid #8b5cf6; } /* SBD Purple */
+  .card-sbd:hover { box-shadow: 0 12px 30px rgba(139, 92, 246, 0.15); border-color: #8b5cf6; }
+  
   .logo {
     font-size: 48px;
     font-weight: 700;
@@ -76,6 +79,7 @@
   .card-bdd .logo { color: var(--green); }
   .card-mysql .logo { color: #00758F; }
   .card-sqlserver .logo { color: #CC292B; }
+  .card-sbd .logo { color: #8b5cf6; }
 
   .card h2 { font-size: 24px; margin: 0 0 12px; font-weight: 600; }
   .card p { font-size: 15px; color: var(--ink-dim); margin: 0; line-height: 1.5; }
@@ -90,37 +94,70 @@
   <p class="subtitle">Choisissez la technologie que vous souhaitez étudier aujourd'hui pour accéder à votre tableau de bord dédié.</p>
 
   <div class="grid">
-    <a href="formation_c++/index.html" class="card card-cpp">
+    <a href="formation_c++/index.html" class="card card-cpp" data-level="L2">
       <div class="logo">C++</div>
       <h2>Formation C++</h2>
       <p>Bases algorithmiques, manipulation mémoire, pointeurs, et introduction à la Programmation Orientée Objet (POO).</p>
     </a>
 
-    <a href="formation_laravel/index.html" class="card card-laravel">
+    <a href="formation_laravel/index.html" class="card card-laravel" data-level="L3">
       <div class="logo">Laravel</div>
       <h2>Formation Laravel</h2>
       <p>Développement web moderne avec PHP, conteneurisation Docker, notions avancées, APIs et architecture MVC.</p>
     </a>
 
-    <a href="formation_bdd/index.html" class="card card-bdd">
+    <a href="formation_bdd/index.html" class="card card-bdd" data-level="L3">
       <div class="logo">PGSQL</div>
       <h2>PostgreSQL Avancé</h2>
       <p>Logique serveur PL/pgSQL, Transactions ACID, Optimisation (EXPLAIN) et introduction au NoSQL (MongoDB).</p>
     </a>
 
-    <a href="formation_mysql/index.html" class="card card-mysql">
+    <a href="formation_mysql/index.html" class="card card-mysql" data-level="L3">
       <div class="logo">MySQL</div>
       <h2>MySQL Avancé</h2>
       <p>Routines, Triggers, Transactions, Optimisation des performances et introduction au NoSQL (MongoDB).</p>
     </a>
 
-    <a href="formation_sqlserver/index.html" class="card card-sqlserver">
+    <a href="formation_sqlserver/index.html" class="card card-sqlserver" data-level="L3">
       <div class="logo">MSSQL</div>
       <h2>SQL Server Avancé</h2>
       <p>T-SQL, Triggers Statement-Level, Transactions TRY...CATCH, Plans d'exécution et intro NoSQL (MongoDB).</p>
     </a>
+
+    <a href="formation_sbd/index.html" class="card card-sbd" data-level="L2">
+      <div class="logo">SQL</div>
+      <h2>Structure & Base de Données</h2>
+      <p>Initiation à MySQL, DDL, CRUD, Jointures, Fonctions d'agrégation, Sous-requêtes et Modélisation.</p>
+    </a>
   </div>
 </div>
 <footer>Plateforme d'apprentissage unifiée - Développement Logiciel et Web</footer>
+<script>
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', function(e) {
+      e.preventDefault();
+      const level = this.getAttribute('data-level');
+      let requiredPin = '';
+      
+      if (level === 'L3') {
+        requiredPin = '1492';
+      } else if (level === 'L2') {
+        requiredPin = '1880';
+      }
+      
+      const userPin = prompt(`Accès restreint. Ce cours est réservé aux étudiants de ${level}.\nVeuillez entrer le code PIN :`);
+      
+      if (userPin === null) {
+        return; // L'utilisateur a annulé
+      }
+      
+      if (userPin === requiredPin) {
+        window.location.href = this.getAttribute('href');
+      } else {
+        alert("Code PIN incorrect. Accès refusé.");
+      }
+    });
+  });
+</script>
 </body>
 </html>

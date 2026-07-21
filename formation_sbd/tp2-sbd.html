@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Structure et BDD — Séance 2 : Jointures</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge:#292939;--ink:#eeece4;--dim:#a8a5b8;--faint:#726f85;--purple:#8b5cf6;--orange:#F29111;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px;}
+  .wrap{max-width:920px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge);padding:6px 12px;border-radius:6px;transition:.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--dim);}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--purple);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;}
+  h1.title{font-size:clamp(28px,4vw,40px);font-weight:700;margin:0 0 8px;}
+  .subtitle{color:var(--dim);font-size:16px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:32px;}
+  h2{font-size:22px;font-weight:700;color:var(--purple);margin:0 0 16px;}
+  h3{font-size:17px;font-weight:600;color:var(--ink);margin:28px 0 10px;}
+  p{margin:0 0 14px;} ul{padding-left:22px;color:var(--dim);margin:0 0 18px;} li{margin-bottom:8px;}
+  code.i{font-family:var(--mono);font-size:.85em;background:var(--bg);border:1px solid var(--edge);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge-soft);border-radius:8px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;margin:0 0 20px;color:#d6d3e0;}
+  .info{background:rgba(139,92,246,.08);border-left:3px solid var(--purple);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;}
+  .info strong{color:var(--purple);}
+  .tp-box{background:var(--bg);border:1px solid var(--edge);border-top:3px solid var(--purple);border-radius:8px;padding:20px;margin-top:20px;}
+  .tp-num{font-family:var(--mono);font-size:11px;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .tp-box h4{font-size:16px;margin:0 0 10px;color:var(--ink);}
+  details{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:10px 16px;}
+  summary{font-weight:600;cursor:pointer;color:var(--dim);font-family:var(--mono);font-size:13px;outline:none;}
+  summary:hover{color:var(--purple);}
+  details[open] summary{color:var(--purple);margin-bottom:14px;border-bottom:1px solid var(--edge);padding-bottom:8px;}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--edge);color:var(--faint);font-size:13px;font-family:var(--mono);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Dashboard SBD</a>
+  <p class="eyebrow">Séance 2 — 4 heures</p>
+  <h1 class="title">Requêtes Avancées & Jointures</h1>
+  <p class="subtitle">Une base de données relationnelle prend tout son sens quand on relie les tables entre elles. Découvrez les filtres avancés et la clause JOIN.</p>
+
+  <section>
+    <h2>1. Exercice Guidé : Lier deux tables (Clé Étrangère et JOIN)</h2>
+    <p>Nous avons une table <code class="i">livres</code> et une table <code class="i">adherents</code>. Comment savoir quel adhérent a emprunté quel livre ? On ne va pas tout mettre dans la même table, on va créer une troisième table pour faire le lien !</p>
+
+    <h3>Étape 1 : Créer la table de liaison (Emprunts)</h3>
+    <pre>USE bibliotheque_db;
+
+CREATE TABLE emprunts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    adherent_id INT,
+    livre_id INT,
+    date_emprunt DATE,
+    FOREIGN KEY (adherent_id) REFERENCES adherents(id),
+    FOREIGN KEY (livre_id) REFERENCES livres(id)
+);</pre>
+    <p>Les mots-clés <strong>FOREIGN KEY</strong> indiquent à MySQL : "Attention, le chiffre dans <code class="i">adherent_id</code> DOIT correspondre à un ID qui existe vraiment dans la table <code class="i">adherents</code>".</p>
+
+    <h3>Étape 2 : Enregistrer un emprunt</h3>
+    <p>Admettons que l'adhérent numéro 1 (Pauline) emprunte le livre numéro 3 (Harry Potter) aujourd'hui.</p>
+    <pre>INSERT INTO emprunts (adherent_id, livre_id, date_emprunt) 
+VALUES (1, 3, '2023-10-25');</pre>
+
+    <h3>Étape 3 : La requête magique (INNER JOIN)</h3>
+    <p>Si on fait un simple <code class="i">SELECT * FROM emprunts</code>, on ne verra que des chiffres (1, 3). Pour afficher les vrais noms, on utilise <strong>INNER JOIN</strong>.</p>
+    <pre>SELECT adherents.nom_complet, livres.titre, emprunts.date_emprunt
+FROM emprunts
+INNER JOIN adherents ON emprunts.adherent_id = adherents.id
+INNER JOIN livres ON emprunts.livre_id = livres.id;</pre>
+    <div class="info">
+      <strong>L'astuce :</strong> Dans la clause <code class="i">ON</code>, on dit à MySQL comment faire correspondre les deux pièces du puzzle (la clé étrangère de la table A = l'ID principal de la table B).
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Travaux Pratiques (10 exercices)</h2>
+    <p>Assurez-vous d'avoir exécuté l'exercice guidé. Vous allez maintenant pratiquer les filtres avancés et les différents types de jointures.</p>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 01</div>
+      <h4>Filtre textuel partiel (LIKE)</h4>
+      <p>Affichez tous les livres dont le titre contient le mot "Prince".</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>-- Le symbole % remplace "n'importe quel nombre de caractères"
+SELECT * FROM livres 
+WHERE titre LIKE '%Prince%';</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 02</div>
+      <h4>Listes de valeurs (IN)</h4>
+      <p>Affichez les livres écrits par "J.K. Rowling" ou par "Victor Hugo" en utilisant la clause <code class="i">IN</code> au lieu de faire plusieurs <code class="i">OR</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT titre, auteur FROM livres 
+WHERE auteur IN ('J.K. Rowling', 'Victor Hugo');</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 03</div>
+      <h4>Intervalles (BETWEEN)</h4>
+      <p>Affichez les livres publiés entre 1900 et 1999.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT * FROM livres 
+WHERE annee_publication BETWEEN 1900 AND 1999;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 04</div>
+      <h4>Plusieurs conditions (AND, OR)</h4>
+      <p>Trouvez les livres qui coûtent moins de 12 euros ET qui ont été écrits avant 1950.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT titre, prix, annee_publication FROM livres 
+WHERE prix < 12.00 AND annee_publication < 1950;</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 05</div>
+      <h4>Utiliser les ALIAS (AS) pour raccourcir le code</h4>
+      <p>Réécrivez la requête de jointure (Étape 3 du guide) en utilisant des "Alias" (des surnoms très courts d'une lettre pour les tables) pour que le code soit plus lisible.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT a.nom_complet, l.titre, e.date_emprunt
+FROM emprunts AS e
+INNER JOIN adherents AS a ON e.adherent_id = a.id
+INNER JOIN livres AS l ON e.livre_id = l.id;
+
+-- Note : Le mot clé "AS" est facultatif pour les tables, on peut juste écrire "emprunts e"</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 06</div>
+      <h4>Rajouter une nouvelle catégorie</h4>
+      <p>On veut classer les livres. Ajoutez une table <code class="i">categories</code> (id, nom) et insérez "Roman", "Science-Fiction", et "Jeunesse".</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(50) NOT NULL
+);
+
+INSERT INTO categories (nom) VALUES ('Roman'), ('Science-Fiction'), ('Jeunesse');</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 07</div>
+      <h4>Modifier une table existante pour l'associer</h4>
+      <p>Ajoutez une colonne <code class="i">categorie_id</code> à la table <code class="i">livres</code>, et définissez-la comme clé étrangère vers la table <code class="i">categories</code>.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>ALTER TABLE livres ADD COLUMN categorie_id INT;
+
+ALTER TABLE livres 
+ADD FOREIGN KEY (categorie_id) REFERENCES categories(id);</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 08</div>
+      <h4>Mise à jour massive (UPDATE)</h4>
+      <p>Attribuez la catégorie 1 ("Roman") à tous les livres sauf Harry Potter, qui aura la catégorie 3 ("Jeunesse").</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>UPDATE livres SET categorie_id = 1;
+UPDATE livres SET categorie_id = 3 WHERE titre = 'Harry Potter';</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 09</div>
+      <h4>LEFT JOIN (Garder tout le monde)</h4>
+      <p>Insérez un nouveau livre sans catégorie (laissez categorie_id à NULL). Puis faites un <code class="i">LEFT JOIN</code> entre <code class="i">livres</code> et <code class="i">categories</code>. Que remarquez-vous par rapport à un INNER JOIN ?</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>INSERT INTO livres (titre, auteur, annee_publication, prix) 
+VALUES ('Le Guide du Voyageur', 'Douglas Adams', 1979, 9.99);
+-- (Ici categorie_id est automatiquement NULL car on ne l'a pas précisé)
+
+SELECT l.titre, c.nom AS categorie
+FROM livres l
+LEFT JOIN categories c ON l.categorie_id = c.id;
+
+-- Explication : Le livre apparaît dans les résultats avec une catégorie "NULL". 
+-- Si on avait utilisé INNER JOIN, ce livre aurait disparu des résultats car l'INNER JOIN exige que le lien existe des deux côtés !</pre>
+      </details>
+    </div>
+
+    <div class="tp-box">
+      <div class="tp-num">TP 10</div>
+      <h4>Trouver les "Orphelins" (IS NULL)</h4>
+      <p>En utilisant la requête précédente et un filtre spécial <code class="i">IS NULL</code>, affichez UNIQUEMENT les livres qui n'ont pas encore été classés dans une catégorie.</p>
+      <details>
+        <summary>▶ Voir la solution</summary>
+        <pre>SELECT l.titre 
+FROM livres l
+LEFT JOIN categories c ON l.categorie_id = c.id
+WHERE c.id IS NULL; 
+
+-- Ou plus simplement, sans jointure :
+SELECT titre FROM livres WHERE categorie_id IS NULL;</pre>
+      </details>
+    </div>
+
+  </section>
+
+  <footer>Structure et Base de Données — Séance 2 : Requêtes Avancées & Jointures</footer>
+</div>
+</body>
+</html>

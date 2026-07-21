@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Cheatsheet SBD - Initiation SQL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{--bg:#14141f;--panel:#1c1c2b;--edge-soft:#292939;--ink:#eeece4;--ink-dim:#a8a5b8;--purple:#8b5cf6;--purple-dim:#a78bfa;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:16px;}
+  .wrap{max-width:900px;margin:0 auto;padding:64px 32px 120px;}
+  .back-link{display:inline-block;margin-bottom:24px;color:var(--ink-dim);text-decoration:none;font-family:var(--mono);font-size:13px;border:1px solid var(--edge-soft);padding:6px 12px;border-radius:6px;transition:all 0.2s;}
+  .back-link:hover{color:var(--ink);border-color:var(--ink-dim);}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;color:var(--purple);text-transform:uppercase;letter-spacing:.12em;margin:0 0 14px;}
+  h1.title{font-family:var(--sans);font-weight:700;font-size:42px;margin:0 0 8px;}
+  .subtitle{color:var(--ink-dim);font-size:17px;margin:0 0 48px;max-width:700px;}
+  section{margin:48px 0;background:var(--panel);border:1px solid var(--edge-soft);border-radius:12px;padding:32px;}
+  h2{font-size:22px;font-weight:700;margin:0 0 16px;color:var(--purple);}
+  h3{font-size:17px;font-weight:600;color:var(--purple-dim);margin:28px 0 10px;}
+  p{margin:0 0 14px;}
+  ul{padding-left: 20px; color:var(--ink-dim);}
+  li{margin-bottom:8px;}
+  code.inline{font-family:var(--mono);font-size:.88em;background:var(--bg);border:1px solid var(--edge-soft);padding:1px 6px;border-radius:4px;color:#f0c8a8;}
+  pre{background:#0d0d16;border:1px solid var(--edge-soft);border-radius:8px;padding:16px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.6;margin:0 0 24px;color:#d6d3e0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour au Dashboard SBD</a>
+  <p class="eyebrow">Guide de Survie</p>
+  <h1 class="title">Cheatsheet Initiation SQL</h1>
+  <p class="subtitle">Un aide-mémoire complet pour maîtriser les bases du langage SQL et la conception de tables.</p>
+
+  <section>
+    <h2>1. Les Commandes CLI (Terminal)</h2>
+    <ul>
+      <li><code class="inline">SHOW DATABASES;</code> : Lister toutes les bases de données.</li>
+      <li><code class="inline">USE ma_base;</code> : Se connecter à la base "ma_base".</li>
+      <li><code class="inline">SHOW TABLES;</code> : Lister toutes les tables de la base actuelle.</li>
+      <li><code class="inline">DESCRIBE ma_table;</code> : Voir la structure d'une table (colonnes, types).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>2. Création de Tables & Types de base</h2>
+    <pre>CREATE DATABASE mon_projet;
+USE mon_projet;
+
+CREATE TABLE etudiants (
+    id INT AUTO_INCREMENT PRIMARY KEY, -- Identifiant unique automatique
+    nom VARCHAR(50) NOT NULL,          -- Texte de max 50 caractères, obligatoire
+    prenom VARCHAR(50),                -- Texte facultatif (peut être NULL)
+    age INT CHECK (age >= 18),         -- Entier avec condition
+    moyenne DECIMAL(4,2),              -- Nombre à virgule (ex: 15.50)
+    date_inscription DATE DEFAULT CURRENT_DATE
+);</pre>
+  </section>
+
+  <section>
+    <h2>3. Opérations CRUD (Manipulation)</h2>
+    
+    <h3>Insertion (CREATE)</h3>
+    <pre>INSERT INTO etudiants (nom, prenom, age, moyenne) 
+VALUES ('Dupont', 'Jean', 20, 14.50),
+       ('Martin', 'Alice', 22, 16.00);</pre>
+
+    <h3>Lecture (READ)</h3>
+    <pre>-- Lire tout
+SELECT * FROM etudiants;
+
+-- Lire avec filtre et tri
+SELECT nom, prenom FROM etudiants 
+WHERE age >= 20 
+ORDER BY moyenne DESC;</pre>
+
+    <h3>Mise à jour (UPDATE)</h3>
+    <pre>UPDATE etudiants 
+SET moyenne = 18.00 
+WHERE nom = 'Dupont';</pre>
+
+    <h3>Suppression (DELETE)</h3>
+    <pre>DELETE FROM etudiants WHERE age < 18;</pre>
+  </section>
+
+  <section>
+    <h2>4. Jointures (Relations entre tables)</h2>
+    <pre>-- Table filière
+CREATE TABLE filieres (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom_filiere VARCHAR(50)
+);
+
+-- Etudiant appartient à une filière (Clé Etrangère)
+ALTER TABLE etudiants ADD filiere_id INT;
+ALTER TABLE etudiants ADD FOREIGN KEY (filiere_id) REFERENCES filieres(id);
+
+-- La requête INNER JOIN (récupérer les étudiants AVEC le nom de leur filière)
+SELECT e.nom, e.prenom, f.nom_filiere 
+FROM etudiants e
+INNER JOIN filieres f ON e.filiere_id = f.id;</pre>
+  </section>
+
+  <section>
+    <h2>5. Fonctions d'Agrégation & Regroupement</h2>
+    <pre>-- Compter le nombre total d'étudiants
+SELECT COUNT(*) FROM etudiants;
+
+-- Calculer la moyenne générale de tous les étudiants
+SELECT AVG(moyenne) FROM etudiants;
+
+-- Afficher la moyenne par filière (GROUP BY)
+SELECT f.nom_filiere, AVG(e.moyenne) AS moyenne_filiere
+FROM etudiants e
+INNER JOIN filieres f ON e.filiere_id = f.id
+GROUP BY f.nom_filiere;</pre>
+  </section>
+
+</div>
+</body>
+</html>
