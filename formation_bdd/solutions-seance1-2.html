@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Solutions - PostgreSQL Avancé (Séances 1 & 2)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  body {
+    font-family: 'Inter', sans-serif;
+    color: #1f2937;
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  h1 {
+    color: #ef6b34;
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 40px;
+  }
+  h2 {
+    color: #111827;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 8px;
+    margin-top: 40px;
+  }
+  .solution {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    page-break-inside: avoid;
+  }
+  .exo-title {
+    font-weight: 600;
+    color: #ef6b34;
+    font-size: 18px;
+    margin-top: 0;
+  }
+  .explication {
+    margin-top: 16px;
+    font-size: 15px;
+    color: #4b5563;
+  }
+  pre {
+    background: #111827;
+    color: #e5e7eb;
+    padding: 16px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    overflow-x: auto;
+  }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  @media print {
+    body { padding: 0; margin: 1cm; max-width: none; }
+    .solution { border: none; border-bottom: 1px solid #ccc; border-radius: 0; box-shadow: none; }
+    pre { border: 1px solid #000; color: #000; background: #f3f4f6; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>Livre des Solutions : PostgreSQL Avancé</h1>
+  <p style="text-align: center; color: #6b7280; margin-top: -20px;">Corrections détaillées des 15 exercices (Séances 1 & 2)</p>
+
+  <h2>Niveau Facile : Les bases de PL/pgSQL</h2>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 1 : Premier Bloc Anonyme</h3>
+    <pre>
+DO $$
+DECLARE
+    nom VARCHAR := 'Alice';
+BEGIN
+    RAISE NOTICE 'Bonjour % !', nom;
+END;
+$$;</pre>
+    <div class="explication"><strong>Explication :</strong> Un bloc anonyme n'est pas sauvegardé en base (contrairement à une fonction). Il commence par <code>DO $$</code>. La section <code>DECLARE</code> sert à initialiser les variables, et le code s'écrit entre <code>BEGIN</code> et <code>END;</code>. Le <code>%</code> dans <code>RAISE NOTICE</code> agit comme un espace réservé (placeholder) pour la variable.</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 2 : Structure Conditionnelle (IF/ELSE)</h3>
+    <pre>
+DO $$
+DECLARE
+    note INT := 14;
+BEGIN
+    IF note >= 10 THEN
+        RAISE NOTICE 'Validé';
+    ELSE
+        RAISE NOTICE 'Non validé';
+    END IF;
+END;
+$$;</pre>
+    <div class="explication"><strong>Explication :</strong> La structure IF est très classique. Ne pas oublier de terminer systématiquement par <code>END IF;</code> (avec l'espace).</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 3 : La Boucle FOR</h3>
+    <pre>
+DO $$
+BEGIN
+    FOR i IN 1..10 LOOP
+        RAISE NOTICE '7 x % = %', i, (7 * i);
+    END LOOP;
+END;
+$$;</pre>
+    <div class="explication"><strong>Explication :</strong> En PL/pgSQL, la boucle for sur des entiers s'écrit <code>FOR variable IN debut..fin LOOP</code>. Nul besoin de déclarer la variable <code>i</code> dans la section DECLARE, elle est créée automatiquement par la boucle.</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 4 : Ma première Fonction</h3>
+    <pre>
+CREATE OR REPLACE FUNCTION multiplier(a INT, b INT) 
+RETURNS INT AS $$
+BEGIN
+    RETURN a * b;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Test :
+SELECT multiplier(5, 4);</pre>
+    <div class="explication"><strong>Explication :</strong> Pour créer une fonction, il faut préciser les paramètres, le type de retour (<code>RETURNS INT</code>) et surtout spécifier le langage utilisé à la toute fin (<code>LANGUAGE plpgsql</code>). Le mot clé <code>RETURN</code> arrête l'exécution de la fonction et renvoie la valeur.</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 5 : Fonction texte simple</h3>
+    <pre>
+CREATE OR REPLACE FUNCTION saluer(nom VARCHAR) 
+RETURNS VARCHAR AS $$
+BEGIN
+    IF nom IS NULL THEN
+        RETURN 'Bonjour, inconnu';
+    ELSE
+        RETURN 'Bonjour, ' || nom;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;</pre>
+    <div class="explication"><strong>Explication :</strong> En SQL, l'opérateur de concaténation de chaînes est le double tube <code>||</code>. La gestion du NULL est cruciale car concaténer une chaîne avec NULL retourne toujours NULL ! L'utilisation du IF ou de la fonction <code>COALESCE()</code> permet d'éviter ce piège.</div>
+  </div>
+
+  <h2>Niveau Intermédiaire : Manipulation de données et Triggers simples</h2>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 6 : Formatage avant insertion (Trigger)</h3>
+    <pre>
+CREATE OR REPLACE FUNCTION trg_format_nom() 
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.nom := UPPER(NEW.nom);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_maj_nom
+BEFORE INSERT ON produits
+FOR EACH ROW
+EXECUTE FUNCTION trg_format_nom();</pre>
+    <div class="explication"><strong>Explication :</strong> Un trigger s'écrit toujours en deux temps sous PostgreSQL : 1. La fonction (qui doit retourner TRIGGER). 2. Le rattachement à la table. Puisque c'est un trigger BEFORE, on peut modifier les valeurs entrantes (qui se trouvent dans la variable spéciale <code>NEW</code>) avant que Postgres ne les écrive sur le disque.</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 7 : Validation des données (RAISE EXCEPTION)</h3>
+    <pre>
+CREATE OR REPLACE FUNCTION trg_valider_prix() 
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.prix <= 0 THEN
+        RAISE EXCEPTION 'Le prix doit être strictement positif';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_check_prix
+BEFORE INSERT OR UPDATE ON produits
+FOR EACH ROW
+EXECUTE FUNCTION trg_valider_prix();</pre>
+    <div class="explication"><strong>Explication :</strong> La commande <code>RAISE EXCEPTION</code> stoppe instantanément la transaction en cours. Si le prix est invalide, l'INSERT ou l'UPDATE échouera et une erreur sera renvoyée à l'application cliente. C'est idéal pour garantir l'intégrité métier des données !</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 8 : Boucle sur un résultat de requête (Record)</h3>
+    <pre>
+DO $$
+DECLARE
+    ligne RECORD;
+BEGIN
+    FOR ligne IN (SELECT nom, stock FROM produits WHERE stock < 10) 
+    LOOP
+        RAISE NOTICE 'Alerte stock : % (Reste: %)', ligne.nom, ligne.stock;
+    END LOOP;
+END;
+$$;</pre>
+    <div class="explication"><strong>Explication :</strong> Une variable <code>RECORD</code> (enregistrement) est un type générique qui peut contenir une ligne entière d'un résultat de requête. La boucle va exécuter le SELECT, puis itérer sur chaque ligne retournée. On accède aux colonnes avec la syntaxe <code>variable.colonne</code>.</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 9 : Fonction retournant plusieurs valeurs</h3>
+    <pre>
+CREATE OR REPLACE FUNCTION get_produits_chers(seuil DECIMAL) 
+RETURNS TABLE (nom VARCHAR, prix DECIMAL) AS $$
+BEGIN
+    RETURN QUERY 
+    SELECT p.nom, p.prix FROM produits p WHERE p.prix > seuil;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Utilisation :
+SELECT * FROM get_produits_chers(50.00);</pre>
+    <div class="explication"><strong>Explication :</strong> <code>RETURNS TABLE (...)</code> permet de définir la structure du tableau renvoyé par la fonction. L'instruction <code>RETURN QUERY</code> exécute la requête qui la suit et ajoute son résultat à l'ensemble retourné par la fonction. Contrairement à RETURN simple, RETURN QUERY ne stoppe pas l'exécution de la fonction !</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 10 : Journalisation des suppressions (Audit)</h3>
+    <pre>
+CREATE OR REPLACE FUNCTION trg_audit_delete() 
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO audit_produits (nom, date_suppression)
+    VALUES (OLD.nom, NOW());
+    
+    RETURN OLD; -- Pour un AFTER DELETE, le return n'a pas d'importance, mais OLD est conseillé.
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_audit_delete
+AFTER DELETE ON produits
+FOR EACH ROW
+EXECUTE FUNCTION trg_audit_delete();</pre>
+    <div class="explication"><strong>Explication :</strong> La variable spéciale <code>OLD</code> contient l'état de la ligne AVANT sa modification ou suppression. Puisque la donnée vient d'être supprimée de la table source, nous l'insérons dans une table d'archive pour conserver une trace (Audit).</div>
+  </div>
+
+  <h2>Niveau Difficile : Cas concrets et logiques avancées</h2>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 11 : Gestion des exceptions (Try/Catch)</h3>
+    <pre>
+DO $$
+DECLARE
+    resultat DECIMAL;
+BEGIN
+    resultat := 10 / 0;
+EXCEPTION
+    WHEN division_by_zero THEN
+        RAISE NOTICE 'Erreur mathématique détectée !';
+END;
+$$;</pre>
+    <div class="explication"><strong>Explication :</strong> Sans le bloc <code>EXCEPTION</code>, la transaction aurait lamentablement échoué (rollback complet). Le bloc EXCEPTION permet de capturer l'erreur (ici via le code SQLSTATE d'erreur <code>division_by_zero</code>) et de la traiter gracieusement.</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 12 : Fonction de Virement Transactionnel</h3>
+    <pre>
+CREATE OR REPLACE FUNCTION virement(src INT, dst INT, mnt DECIMAL) 
+RETURNS VOID AS $$
+DECLARE
+    solde_source DECIMAL;
+BEGIN
+    -- 1. Lire le solde
+    SELECT solde INTO solde_source FROM comptes WHERE id = src FOR UPDATE;
+    
+    -- 2. Vérifier
+    IF solde_source < mnt THEN
+        RAISE EXCEPTION 'Solde insuffisant (%). Demande: %', solde_source, mnt;
+    END IF;
+    
+    -- 3. Effectuer le virement
+    UPDATE comptes SET solde = solde - mnt WHERE id = src;
+    UPDATE comptes SET solde = solde + mnt WHERE id = dst;
+END;
+$$ LANGUAGE plpgsql;</pre>
+    <div class="explication"><strong>Explication :</strong> La fonction <code>SELECT ... INTO variable</code> est indispensable pour extraire une valeur de la base et la manipuler en PL/pgSQL. (Note avancée : Le <code>FOR UPDATE</code> pose un verrou exclusif sur la ligne pour éviter les problèmes de concurrence si deux virements se font à la même milliseconde).</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 13 : Empêcher la modification de données sensibles</h3>
+    <pre>
+CREATE OR REPLACE FUNCTION trg_lock_nom() 
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.titulaire IS DISTINCT FROM OLD.titulaire THEN
+        RAISE EXCEPTION 'Changement de propriétaire interdit';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_lock_nom
+BEFORE UPDATE ON comptes
+FOR EACH ROW
+EXECUTE FUNCTION trg_lock_nom();</pre>
+    <div class="explication"><strong>Explication :</strong> <code>IS DISTINCT FROM</code> est une version améliorée de l'opérateur d'inégalité <code>!=</code>. Sa force est qu'il compare correctement les valeurs NULL (car en SQL, "NULL != NULL" ne renvoie ni vrai ni faux, mais NULL !). Il permet d'être certain que la valeur a physiquement changé.</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 14 : Maintien d'un total (Denormalisation)</h3>
+    <pre>
+CREATE OR REPLACE FUNCTION trg_maj_statistiques() 
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE statistiques SET total_fonds = total_fonds + NEW.solde;
+    ELSIF TG_OP = 'UPDATE' THEN
+        UPDATE statistiques SET total_fonds = total_fonds - OLD.solde + NEW.solde;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE statistiques SET total_fonds = total_fonds - OLD.solde;
+    END IF;
+    
+    RETURN NULL; -- Pour un trigger AFTER, return NULL est standard
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_stats
+AFTER INSERT OR UPDATE OR DELETE ON comptes
+FOR EACH ROW
+EXECUTE FUNCTION trg_maj_statistiques();</pre>
+    <div class="explication"><strong>Explication :</strong> Un même trigger peut s'abonner à plusieurs événements (INSERT OR UPDATE OR DELETE). La variable spéciale <code>TG_OP</code> permet de savoir l'action déclenchante pour ajuster la somme globale intelligemment. Ce modèle évite de faire un "SELECT SUM()" coûteux sur des tables géantes.</div>
+  </div>
+
+  <div class="solution">
+    <h3 class="exo-title">Solution 15 : SQL Dynamique avec EXECUTE</h3>
+    <pre>
+CREATE OR REPLACE FUNCTION compter_lignes(nom_table VARCHAR) 
+RETURNS INT AS $$
+DECLARE
+    total INT;
+BEGIN
+    -- Exécution d'une chaîne SQL construite dynamiquement
+    EXECUTE format('SELECT COUNT(*) FROM %I', nom_table) INTO total;
+    RETURN total;
+END;
+$$ LANGUAGE plpgsql;</pre>
+    <div class="explication"><strong>Explication :</strong> Les identifiants SQL (noms de tables ou colonnes) ne peuvent pas être des variables standards dans une requête. Nous sommes obligés de construire une chaîne de caractères et de l'exécuter avec <code>EXECUTE</code>. La fonction <code>format()</code> avec le paramètre <code>%I</code> protège contre l'injection SQL en gérant les guillemets automatiquement.</div>
+  </div>
+
+</body>
+</html>

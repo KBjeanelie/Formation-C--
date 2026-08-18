@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Évaluation SBD — L2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
+:root{
+  --bg:#0f0f1a; --surface:#16162a; --panel:#1e1e35; --edge:#2a2a45;
+  --ink:#e8e6f0; --dim:#8a87a8; --faint:#4a4768;
+  --purple:#8b5cf6; --purple-glow:rgba(139,92,246,.18);
+  --green:#22c55e; --red:#ef4444; --red-glow:rgba(239,68,68,.2);
+  --blue:#3b82f6; --yellow:#eab308; --orange:#ef6b34;
+  --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  background:rgba(15,15,26,.95);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--edge);padding:0 24px;height:64px;
+  display:flex;align-items:center;gap:16px;
+}
+.tb-logo{font-family:var(--mono);font-size:13px;color:var(--purple);font-weight:700;white-space:nowrap;}
+.tb-prog-wrap{flex:1;display:flex;align-items:center;gap:12px;}
+.tb-prog-track{flex:1;height:6px;background:var(--edge);border-radius:99px;overflow:hidden;}
+.tb-prog-fill{height:100%;background:linear-gradient(90deg,var(--purple),#a78bfa);border-radius:99px;transition:width .4s ease;}
+.tb-prog-label{font-family:var(--mono);font-size:12px;color:var(--dim);white-space:nowrap;}
+#timer-box{
+  font-family:var(--mono);font-size:20px;font-weight:700;color:var(--purple);
+  background:var(--panel);border:1px solid var(--edge);padding:6px 14px;border-radius:8px;
+  letter-spacing:.06em;min-width:80px;text-align:center;
+}
+#timer-box.danger{color:var(--red);border-color:var(--red);animation:pulse-border 1s infinite;}
+@keyframes pulse-border{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}
+#cheat-box{
+  font-family:var(--mono);font-size:12px;padding:6px 12px;
+  background:var(--panel);border:1px solid var(--edge);border-radius:8px;
+  color:var(--dim);white-space:nowrap;transition:.3s;
+}
+#cheat-box.alert{
+  background:#1a0000;border-color:var(--red);color:var(--red);
+  font-weight:700;animation:shake .3s ease,cheat-pulse 1.5s infinite;
+}
+@keyframes cheat-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6);}50%{box-shadow:0 0 0 8px rgba(239,68,68,0);}}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+
+#alarm-flash{position:fixed;inset:0;z-index:999;background:var(--red);pointer-events:none;opacity:0;transition:opacity .1s;}
+#alarm-flash.flash{opacity:.25;}
+#cheat-alarm{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  z-index:9999;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.75);
+  opacity:0;transition:opacity .2s;
+}
+#cheat-alarm.show{opacity:1;pointer-events:all;}
+#cheat-alarm-inner{
+  background:#1a0000;border:3px solid var(--red);border-radius:16px;
+  padding:40px 56px;text-align:center;max-width:480px;
+  box-shadow:0 0 80px rgba(239,68,68,.6),0 0 200px rgba(239,68,68,.2);
+  animation:alarm-scale .2s ease;
+}
+@keyframes alarm-scale{0%{transform:scale(.85);}100%{transform:scale(1);}}
+#cheat-alarm .alarm-icon{font-size:56px;margin-bottom:16px;animation:alarm-swing 1s ease infinite;}
+@keyframes alarm-swing{0%,100%{transform:rotate(-8deg);}50%{transform:rotate(8deg);}}
+#cheat-alarm h2{color:var(--red);font-size:24px;font-weight:800;margin-bottom:10px;}
+#cheat-alarm p{color:#ff8a8a;font-size:15px;line-height:1.5;}
+#cheat-alarm .penalty-badge{display:inline-block;margin-top:18px;background:var(--red);color:#fff;font-family:var(--mono);font-weight:700;font-size:18px;padding:8px 24px;border-radius:8px;}
+#alarm-dismiss{display:block;margin:18px auto 0;background:transparent;border:1px solid var(--red);color:var(--red);font-family:var(--mono);font-size:13px;padding:8px 20px;border-radius:6px;cursor:pointer;transition:.2s;pointer-events:all;}
+#alarm-dismiss:hover{background:var(--red);color:#fff;}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-card{background:var(--surface);border:1px solid var(--edge);border-radius:20px;padding:48px 40px;width:100%;max-width:460px;text-align:center;}
+.login-card .logo{font-family:var(--mono);font-size:42px;font-weight:700;color:var(--purple);margin-bottom:8px;}
+.login-card h2{font-size:22px;font-weight:700;margin-bottom:8px;}
+.login-card p{color:var(--dim);font-size:14px;margin-bottom:32px;}
+.form-group{text-align:left;margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;color:var(--dim);margin-bottom:6px;font-family:var(--mono);}
+.form-group input{width:100%;padding:12px 14px;background:var(--panel);border:1px solid var(--edge);color:var(--ink);border-radius:10px;font-size:15px;font-family:var(--sans);transition:.2s;}
+.form-group input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow);}
+.badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;}
+.badge{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--edge);color:var(--dim);}
+.btn-start{width:100%;padding:16px;background:linear-gradient(135deg,var(--purple),#a78bfa);color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer;transition:.2s;}
+.btn-start:hover{filter:brightness(1.1);transform:translateY(-1px);}
+
+#exam-screen{display:none;padding-top:84px;min-height:100vh;}
+#minimap{position:fixed;bottom:0;left:0;right:0;z-index:150;background:rgba(15,15,26,.95);backdrop-filter:blur(12px);border-top:1px solid var(--edge);padding:10px 24px;display:flex;align-items:center;gap:8px;overflow-x:auto;}
+.mm-dot{width:26px;height:26px;border-radius:6px;border:1px solid var(--edge);background:var(--panel);font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;color:var(--faint);cursor:pointer;transition:.2s;flex-shrink:0;}
+.mm-dot:hover{border-color:var(--purple);color:var(--purple);}
+.mm-dot.answered{background:rgba(139,92,246,.15);border-color:var(--purple);color:var(--purple);}
+.mm-dot.current{background:var(--purple);border-color:var(--purple);color:#fff;font-weight:700;}
+
+.q-container{display:flex;align-items:flex-start;justify-content:center;min-height:calc(100vh - 84px - 60px);padding:32px 20px 80px;}
+.q-card{background:var(--surface);border:1px solid var(--edge);border-radius:20px;padding:40px;width:100%;max-width:780px;}
+.q-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.q-section{font-family:var(--mono);font-size:11px;color:var(--purple);text-transform:uppercase;letter-spacing:.1em;}
+.q-counter{font-family:var(--mono);font-size:13px;color:var(--dim);}
+.q-text{font-size:19px;font-weight:600;line-height:1.55;margin-bottom:24px;color:var(--ink);}
+.q-pre{background:#0a0a14;border:1px solid var(--edge);border-radius:10px;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.7;color:#c9c7e8;margin-bottom:22px;}
+.options{display:flex;flex-direction:column;gap:10px;margin-bottom:32px;}
+.opt-label{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border:1px solid var(--edge);border-radius:12px;cursor:pointer;transition:.2s;}
+.opt-label:hover{border-color:var(--purple);background:var(--purple-glow);}
+.opt-label.selected{border-color:var(--purple);background:var(--purple-glow);}
+.opt-label input{display:none;}
+.opt-letter{min-width:28px;height:28px;border-radius:6px;background:var(--panel);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--dim);transition:.2s;flex-shrink:0;}
+.opt-label.selected .opt-letter{background:var(--purple);border-color:var(--purple);color:#fff;}
+.opt-text{font-size:15px;line-height:1.5;padding-top:4px;}
+.q-nav{display:flex;justify-content:space-between;align-items:center;}
+.btn-nav{display:flex;align-items:center;gap:8px;padding:12px 22px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;border:1px solid var(--edge);}
+.btn-prev{background:var(--panel);color:var(--dim);}
+.btn-prev:hover{border-color:var(--dim);color:var(--ink);}
+.btn-next{background:linear-gradient(135deg,var(--purple),#a78bfa);color:#fff;border-color:transparent;}
+.btn-next:hover{filter:brightness(1.1);}
+.btn-submit{background:linear-gradient(135deg,var(--green),#16a34a);color:#fff;border-color:transparent;display:none;}
+.btn-submit:hover{filter:brightness(1.1);}
+
+#result-screen{display:none;padding-top:84px;min-height:100vh;}
+.result-wrap{max-width:860px;margin:0 auto;padding:32px 20px 80px;}
+.result-hero{text-align:center;margin-bottom:48px;}
+.result-score{font-size:80px;font-weight:800;color:var(--purple);line-height:1;}
+.result-label{font-size:16px;color:var(--dim);margin-top:8px;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;}
+.stat-card{background:var(--surface);border:1px solid var(--edge);border-radius:14px;padding:22px 24px;}
+.stat-card h4{font-family:var(--mono);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.stat-card .stat-val{font-size:28px;font-weight:700;color:var(--ink);}
+.stat-card .stat-sub{font-size:13px;color:var(--dim);margin-top:4px;}
+.section-scores{background:var(--surface);border:1px solid var(--edge);border-radius:14px;padding:24px;margin-bottom:20px;}
+.section-scores h3{font-size:16px;font-weight:600;margin-bottom:20px;}
+.sec-row{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.sec-label{font-size:13px;color:var(--dim);min-width:200px;}
+.sec-bar-track{flex:1;height:8px;background:var(--edge);border-radius:99px;overflow:hidden;}
+.sec-bar-fill{height:100%;border-radius:99px;transition:width .6s ease .2s;}
+.sec-score{font-family:var(--mono);font-size:12px;color:var(--purple);min-width:50px;text-align:right;}
+.cheat-card{background:#1a0000;border:1px solid var(--red);border-radius:14px;padding:24px;margin-bottom:20px;}
+.cheat-card h3{color:var(--red);font-size:16px;margin-bottom:12px;}
+.cheat-event{font-size:13px;font-family:var(--mono);color:#ff8a8a;padding:6px 0;border-bottom:1px solid rgba(239,68,68,.15);}
+.answers-section{background:var(--surface);border:1px solid var(--edge);border-radius:14px;padding:24px;margin-bottom:20px;}
+.answers-section h3{font-size:16px;font-weight:600;margin-bottom:20px;}
+.ans-item{border-left:3px solid var(--edge);padding:12px 16px;margin-bottom:10px;border-radius:0 8px 8px 0;}
+.ans-item.correct{border-color:var(--green);background:rgba(34,197,94,.05);}
+.ans-item.wrong{border-color:var(--red);background:rgba(239,68,68,.05);}
+.ans-item .ans-q{font-size:13px;color:var(--dim);margin-bottom:4px;font-family:var(--mono);}
+.ans-correct{font-size:12px;color:var(--green);margin-top:4px;}
+.btn-print{width:100%;padding:16px;background:linear-gradient(135deg,var(--purple),#a78bfa);color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer;margin-top:8px;transition:.2s;}
+.btn-print:hover{filter:brightness(1.1);}
+
+@media print{
+  #topbar,#minimap,.btn-nav,.btn-print,#cheat-alarm,#alarm-flash{display:none!important;}
+  body{background:#fff;color:#000;}
+  #login-screen,#exam-screen{display:none!important;}
+  #result-screen{display:block!important;padding-top:0;}
+  .result-wrap{max-width:100%;padding:0;}
+  .stat-card,.section-scores,.answers-section,.cheat-card,.result-hero{background:#fff;border:1px solid #ccc;border-radius:0;page-break-inside:avoid;}
+  .result-score{color:#000;}
+  .ans-item.correct{border-color:#000;background:#f0fff0;}
+  .ans-item.wrong{border-color:#c00;background:#fff0f0;}
+  .cheat-card{border:2px solid #c00;background:#fff;}
+  .cheat-card h3,.cheat-event{color:#c00;}
+}
+</style>
+</head>
+<body>
+
+<div id="alarm-flash"></div>
+<div id="cheat-alarm">
+  <div id="cheat-alarm-inner">
+    <div class="alarm-icon">🚨</div>
+    <h2>CONSULTATION SUSPECTE DÉTECTÉE</h2>
+    <p id="alarm-msg">Une activité inhabituelle a été détectée sur votre session.<br><strong style="color:var(--red)">Cet événement a été horodaté et inclus dans votre copie finale.</strong></p>
+    <div class="penalty-badge">− 0.15 POINT APPLIQUÉ</div>
+    <button style="display:block;margin:18px auto 0;background:transparent;border:2px solid var(--red);color:var(--red);font-family:var(--mono);font-size:14px;padding:10px 24px;border-radius:6px;cursor:pointer;pointer-events:all;z-index:10000;position:relative;" onclick="dismissAlarm()">Je comprends, reprendre l'examen</button>
+  </div>
+</div>
+
+<div id="topbar" style="display:none;">
+  <div class="tb-logo">SBD L2</div>
+  <div class="tb-prog-wrap">
+    <div class="tb-prog-track"><div class="tb-prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="tb-prog-label" id="prog-label">0 / 35</div>
+  </div>
+  <div id="timer-box">45:00</div>
+  <div id="cheat-box">🛡 0 suspect</div>
+</div>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="logo">SQL</div>
+    <h2>Évaluation Finale</h2>
+    <p>Structure & Base de Données — Niveau L2 — Documents autorisés</p>
+    <div class="badges">
+      <span class="badge">35 Questions</span>
+      <span class="badge">⏱ 45 minutes</span>
+      <span class="badge">👥 Groupe de 3</span>
+      <span class="badge">📝 Note / 20</span>
+    </div>
+    <div class="form-group"><label>Étudiant 1 — Nom & Prénom</label><input type="text" id="e1" placeholder="Dupont Jean"></div>
+    <div class="form-group"><label>Étudiant 2 — Nom & Prénom</label><input type="text" id="e2" placeholder="Martin Alice"></div>
+    <div class="form-group"><label>Étudiant 3 — Nom & Prénom</label><input type="text" id="e3" placeholder="Bernard Lucas"></div>
+    <button class="btn-start" onclick="startExam()">▶ Démarrer l'Évaluation</button>
+  </div>
+</div>
+
+<div id="exam-screen">
+  <div class="q-container">
+    <div class="q-card" id="q-card">
+      <div class="q-meta">
+        <span class="q-section" id="q-section"></span>
+        <span class="q-counter" id="q-counter"></span>
+      </div>
+      <p class="q-text" id="q-text"></p>
+      <pre class="q-pre" id="q-pre" style="display:none"></pre>
+      <div class="options" id="q-options"></div>
+      <div class="q-nav">
+        <button class="btn-nav btn-prev" id="btn-prev" onclick="navigate(-1)">← Précédent</button>
+        <button class="btn-nav btn-next" id="btn-next" onclick="navigate(1)">Suivant →</button>
+        <button class="btn-nav btn-submit" id="btn-submit" onclick="submitExam()">✔ Terminer l'examen</button>
+      </div>
+    </div>
+  </div>
+  <div id="minimap"></div>
+</div>
+
+<div id="result-screen">
+  <div class="result-wrap">
+    <div class="result-hero">
+      <div class="result-score" id="r-score">--</div>
+      <div class="result-label">Note finale <span id="r-info"></span></div>
+    </div>
+    <div class="result-grid">
+      <div class="stat-card"><h4>Bonnes Réponses</h4><div class="stat-val" id="r-correct">-</div><div class="stat-sub">sur 35 questions</div></div>
+      <div class="stat-card"><h4>Temps utilisé</h4><div class="stat-val" id="r-time">-</div></div>
+      <div class="stat-card"><h4>Infractions</h4><div class="stat-val" id="r-infractions" style="color:var(--red)">-</div><div class="stat-sub" id="r-penalty-sub"></div></div>
+      <div class="stat-card"><h4>Groupe</h4><div class="stat-val" style="font-size:16px;line-height:1.4" id="r-group">-</div></div>
+    </div>
+    <div class="section-scores"><h3>Score par Séance</h3><div id="section-bars"></div></div>
+    <div class="cheat-card" id="cheat-card" style="display:none"><h3>⚠ Rapport Anti-Triche</h3><div id="cheat-log-list"></div></div>
+    <div class="answers-section"><h3>Correction détaillée</h3><div id="answers-review"></div></div>
+    <button class="btn-print" onclick="window.print()">🖨 Imprimer / Sauvegarder en PDF</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  // ── SÉANCE 1 : DDL & CRUD (Q1-Q9) ──
+  {s:"Séance 1 — DDL & CRUD", q:"Quel mot-clé SQL crée une nouvelle table ?", opts:["MAKE TABLE","CREATE TABLE","NEW TABLE","BUILD TABLE"], a:1},
+  {s:"Séance 1 — DDL & CRUD", q:"Quelle contrainte garantit qu'un champ n'accepte jamais de valeur NULL ?", opts:["UNIQUE","DEFAULT","NOT NULL","PRIMARY KEY"], a:2},
+  {s:"Séance 1 — DDL & CRUD", q:"Pour modifier la structure d'une table existante (ajouter une colonne), on utilise :", opts:["MODIFY TABLE","UPDATE TABLE","ALTER TABLE","CHANGE TABLE"], a:2},
+  {s:"Séance 1 — DDL & CRUD", q:"Quelle commande supprime DÉFINITIVEMENT une table et sa structure ?", opts:["TRUNCATE TABLE","DELETE TABLE","DROP TABLE","REMOVE TABLE"], a:2},
+  {s:"Séance 1 — DDL & CRUD", q:"Quelle est la syntaxe correcte pour insérer un enregistrement ?", opts:["ADD INTO clients VALUES ('Alice', 30);","INSERT clients VALUES ('Alice', 30);","INSERT INTO clients (nom, age) VALUES ('Alice', 30);","PUT INTO clients (nom, age) = ('Alice', 30);"], a:2},
+  {s:"Séance 1 — DDL & CRUD", q:"Quelle requête modifie la valeur d'un champ dans une ligne existante ?", opts:["MODIFY clients SET age=31 WHERE id=1;","ALTER clients age=31 WHERE id=1;","UPDATE clients SET age=31 WHERE id=1;","CHANGE clients SET age=31 WHERE id=1;"], a:2},
+  {s:"Séance 1 — DDL & CRUD", q:"Que fait TRUNCATE TABLE par rapport à DELETE FROM table ?", opts:["TRUNCATE supprime aussi la structure.","TRUNCATE peut être filtré avec WHERE.","TRUNCATE vide tout instantanément et est non journalisé ; DELETE peut être filtré.","Il n'y a aucune différence."], a:2},
+  {s:"Séance 1 — DDL & CRUD", q:"Quel type SQL utiliser pour stocker un prix avec 2 décimales ?", opts:["FLOAT","INT","DECIMAL(10,2)","VARCHAR(20)"], a:2},
+  {s:"Séance 1 — DDL & CRUD", q:"Pour stocker un code postal français (exactement 5 chiffres), quel type est optimal ?", opts:["VARCHAR(5)","INT","TEXT","CHAR(5)"], a:3},
+
+  // ── SÉANCE 2 : Jointures & Filtres Avancés (Q10-Q18) ──
+  {s:"Séance 2 — Jointures & Filtres", q:"Quelle jointure retourne SEULEMENT les lignes qui ont une correspondance dans les DEUX tables ?", opts:["LEFT JOIN","OUTER JOIN","INNER JOIN","CROSS JOIN"], a:2},
+  {s:"Séance 2 — Jointures & Filtres", q:"Quelle jointure affiche toutes les lignes de la table de gauche, même sans correspondance ?", opts:["INNER JOIN","RIGHT JOIN","LEFT JOIN","FULL JOIN"], a:2},
+  {s:"Séance 2 — Jointures & Filtres", q:"Que filtre WHERE nom LIKE 'A%' ?", opts:["Les noms qui contiennent 'A'.","Les noms qui commencent par 'A'.","Les noms qui finissent par 'A'.","Les noms qui font exactement 1 caractère."], a:1},
+  {s:"Séance 2 — Jointures & Filtres", q:"Que filtre WHERE age BETWEEN 18 AND 25 ?", opts:["Les âges strictement supérieurs à 18 et inférieurs à 25.","Les âges de 18 à 25 inclus.","Les âges égaux à 18 ou 25 seulement.","Les âges entre 19 et 24 exclusivement."], a:1},
+  {s:"Séance 2 — Jointures & Filtres", q:"Comment récupérer les 10 premiers résultats triés par nom (MySQL/PostgreSQL) ?", opts:["SELECT * FROM t ORDER BY nom FETCH 10;","SELECT TOP 10 * FROM t ORDER BY nom;","SELECT * FROM t ORDER BY nom LIMIT 10;","SELECT * FROM t ORDER BY nom MAX 10;"], a:2},
+  {s:"Séance 2 — Jointures & Filtres", q:"Que retourne WHERE id IN (1, 3, 5) ?", opts:["Les lignes où id est compris entre 1 et 5.","Les lignes où id vaut exactement 1, 3 ou 5.","Les lignes où id est différent de 1, 3 et 5.","Une erreur de syntaxe SQL."], a:1},
+  {s:"Séance 2 — Jointures & Filtres", q:"Comment afficher les clients n'ayant passé AUCUNE commande (LEFT JOIN) ?", code:`SELECT c.nom\nFROM clients c\nLEFT JOIN commandes cmd ON c.id = cmd.client_id\nWHERE ???`, opts:["WHERE cmd.id IS NOT NULL","WHERE cmd.id = 0","WHERE cmd.id IS NULL","WHERE cmd.client_id != c.id"], a:2},
+  {s:"Séance 2 — Jointures & Filtres", q:"Quelle clause permet de supprimer les doublons dans un SELECT ?", opts:["UNIQUE","DISTINCT","NODUPLICATE","SINGLE"], a:1},
+  {s:"Séance 2 — Jointures & Filtres", q:"Quelle est la différence entre = et IN dans une clause WHERE ?", opts:["Aucune différence.","= compare à une valeur unique, IN compare à une liste de valeurs.","IN est plus lent que =.","= accepte NULL, IN non."], a:1},
+
+  // ── SÉANCE 3 : Agrégations & Sous-requêtes (Q19-Q27) ──
+  {s:"Séance 3 — Agrégations & Sous-requêtes", q:"Quelle est la différence entre WHERE et HAVING ?", opts:["WHERE filtre après GROUP BY, HAVING avant.","HAVING est utilisé avec UPDATE, WHERE avec SELECT.","WHERE filtre les lignes avant agrégation, HAVING filtre les groupes après GROUP BY.","Il n'y a aucune différence."], a:2},
+  {s:"Séance 3 — Agrégations & Sous-requêtes", q:"Que retourne SELECT COUNT(*) FROM clients si des lignes ont des NULL ?", opts:["Seulement les lignes sans NULL.","Le nombre de colonnes NULL.","Le nombre total de lignes, y compris celles avec des NULL.","Une erreur SQL."], a:2},
+  {s:"Séance 3 — Agrégations & Sous-requêtes", q:"Quelle fonction d'agrégation calcule la moyenne ?", opts:["MEAN()","AVERAGE()","AVG()","MED()"], a:2},
+  {s:"Séance 3 — Agrégations & Sous-requêtes", q:"Que fait GROUP BY ville dans une requête SELECT ville, COUNT(*) FROM clients GROUP BY ville ?", opts:["Trie les résultats par ville.","Filtre les villes ayant plusieurs clients.","Regroupe les lignes par ville pour compter les clients dans chaque ville.","Supprime les doublons de villes."], a:2},
+  {s:"Séance 3 — Agrégations & Sous-requêtes", q:"Quelle est la syntaxe correcte pour afficher les villes ayant plus de 5 clients ?", opts:["SELECT ville, COUNT(*) FROM c WHERE COUNT(*) > 5 GROUP BY ville;","SELECT ville, COUNT(*) FROM c GROUP BY ville WHERE COUNT(*) > 5;","SELECT ville, COUNT(*) FROM c GROUP BY ville HAVING COUNT(*) > 5;","SELECT ville, COUNT(*) FROM c HAVING COUNT(*) > 5;"], a:2},
+  {s:"Séance 3 — Agrégations & Sous-requêtes", q:"Que se passe-t-il si une sous-requête avec = retourne plusieurs lignes ?", opts:["SQL prend la première ligne automatiquement.","La requête échoue avec une erreur.","Cela agit comme IN.","NULL est retourné."], a:1},
+  {s:"Séance 3 — Agrégations & Sous-requêtes", q:"Laquelle de ces fonctions d'agrégation N'EXISTE PAS nativement en SQL standard ?", opts:["SUM","MAX","MEDIAN","AVG"], a:2},
+  {s:"Séance 3 — Agrégations & Sous-requêtes", q:"Qu'est-ce qu'une VUE (VIEW) en SQL ?", opts:["Une copie physique d'une table sauvegardée sur disque.","Une requête SELECT sauvegardée sous un nom, accessible comme une table virtuelle.","Un outil de sauvegarde automatique.","Un synonyme de procédure stockée."], a:1},
+  {s:"Séance 3 — Agrégations & Sous-requêtes", q:"Quel mot-clé utilise-t-on dans une sous-requête pour vérifier si un résultat existe ?", opts:["HAS","CONTAINS","EXISTS","PRESENT"], a:2},
+
+  // ── SÉANCE 4 : Modélisation & Synthèse (Q28-Q35) ──
+  {s:"Séance 4 — Modélisation & Synthèse", q:"Quelle est la différence entre PRIMARY KEY et UNIQUE ?", opts:["PRIMARY KEY auto-incrémente, UNIQUE non.","PRIMARY KEY interdit les NULL, UNIQUE peut en accepter.","Aucune différence pratique.","UNIQUE ne peut s'appliquer qu'à un seul champ."], a:1},
+  {s:"Séance 4 — Modélisation & Synthèse", q:"Comment modélise-t-on une relation Many-to-Many (Plusieurs à Plusieurs) ?", opts:["Avec un champ JSON dans une des tables.","Par une table de liaison contenant les clés étrangères des deux tables.","En dupliquant les lignes.","Ce n'est pas possible en SQL standard."], a:1},
+  {s:"Séance 4 — Modélisation & Synthèse", q:"Que fait ON DELETE CASCADE sur une clé étrangère ?", opts:["Empêche la suppression si des enfants existent.","Supprime automatiquement les lignes enfants liées quand la ligne parent est supprimée.","Met les FK à NULL lors d'une suppression.","Supprime uniquement la contrainte."], a:1},
+  {s:"Séance 4 — Modélisation & Synthèse", q:"Quelle contrainte garantit qu'une valeur reste dans un intervalle défini ?", opts:["DEFAULT","RANGE","CHECK","VALIDATE"], a:2},
+  {s:"Séance 4 — Modélisation & Synthèse", q:"Qu'est-ce qu'une transaction en base de données ?", opts:["Un historique de requêtes passées.","Un verrou sur une table.","Un groupe d'opérations exécutées comme une unité atomique (tout réussit ou tout échoue).","Une procédure stockée."], a:2},
+  {s:"Séance 4 — Modélisation & Synthèse", q:"Quel est l'inconvénient principal de créer des index sur toutes les colonnes ?", opts:["Les SELECT deviennent plus lents.","Chaque INSERT/UPDATE/DELETE doit aussi mettre à jour les index, ralentissant les écritures.","Les index prennent trop de RAM.","Il est impossible d'avoir plus de 5 index par table."], a:1},
+  {s:"Séance 4 — Modélisation & Synthèse", q:"Quelle commande annule toutes les opérations d'une transaction en cours ?", opts:["ABORT","CANCEL","UNDO","ROLLBACK"], a:3},
+  {s:"Séance 4 — Modélisation & Synthèse", q:"Qu'est-ce que la normalisation d'une base de données ?", opts:["Le fait de sauvegarder la base en format binaire.","Un processus d'organisation des données pour réduire la redondance et améliorer l'intégrité.","La conversion de toutes les valeurs en minuscules.","La création d'index sur toutes les colonnes."], a:1},
+];
+
+const SECTION_RANGES = [
+  {name:"Séance 1 — DDL & CRUD", start:0, end:8, color:"#8b5cf6"},
+  {name:"Séance 2 — Jointures & Filtres", start:9, end:17, color:"#3b82f6"},
+  {name:"Séance 3 — Agrégations", start:18, end:26, color:"#22c55e"},
+  {name:"Séance 4 — Modélisation", start:27, end:34, color:"#eab308"},
+];
+
+let currentQ=0, answers=new Array(35).fill(null), cheatEvents=[], timerInterval=null, secondsLeft=45*60, startTime=null, group={}, alarmShowing=false;
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('alarm-dismiss')?.addEventListener('click', (e) => {
+    e.stopPropagation(); dismissAlarm();
+  });
+});
+
+function dismissAlarm(){
+  document.getElementById('cheat-alarm').classList.remove('show');
+  alarmShowing=false;
+}
+
+function startExam(){
+  const e1=document.getElementById('e1').value.trim(), e2=document.getElementById('e2').value.trim(), e3=document.getElementById('e3').value.trim();
+  if(!e1||!e2||!e3){alert("Saisissez les 3 noms du groupe.");return;}
+  group={e1,e2,e3};
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('exam-screen').style.display='block';
+  document.getElementById('topbar').style.display='flex';
+  buildMinimap(); renderQuestion(0); startTimer(); setupAntiCheat();
+  startTime=new Date();
+}
+function buildMinimap(){const mm=document.getElementById('minimap');mm.innerHTML='';for(let i=0;i<35;i++){const d=document.createElement('div');d.className='mm-dot';d.id='mm-'+i;d.textContent=i+1;d.onclick=()=>navigateTo(i);mm.appendChild(d);}}
+function updateMinimap(){for(let i=0;i<35;i++){const d=document.getElementById('mm-'+i);d.className='mm-dot'+(i===currentQ?' current':(answers[i]!==null?' answered':''));}}
+function renderQuestion(idx){
+  const q=QUESTIONS[idx];
+  document.getElementById('q-section').textContent=q.s;
+  document.getElementById('q-counter').textContent=`Question ${idx+1} / 35`;
+  document.getElementById('q-text').textContent=q.q;
+  const pre=document.getElementById('q-pre');
+  if(q.code){pre.style.display='block';pre.textContent=q.code;}else{pre.style.display='none';}
+  const opts=document.getElementById('q-options'); opts.innerHTML='';
+  const letters=['A','B','C','D'];
+  q.opts.forEach((o,i)=>{
+    const lbl=document.createElement('label');
+    lbl.className='opt-label'+(answers[idx]===i?' selected':'');
+    lbl.innerHTML=`<input type="radio" name="opt" value="${i}"><div class="opt-letter">${letters[i]}</div><div class="opt-text">${o}</div>`;
+    lbl.onclick=()=>selectAnswer(idx,i);
+    opts.appendChild(lbl);
+  });
+  document.getElementById('btn-prev').style.display=idx===0?'none':'flex';
+  const btnNext=document.getElementById('btn-next'), btnSub=document.getElementById('btn-submit');
+  if(idx===34){btnNext.style.display='none';btnSub.style.display='flex';}else{btnNext.style.display='flex';btnSub.style.display='none';}
+  const pct=((idx+1)/35*100).toFixed(1);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-label').textContent=`${idx+1} / 35`;
+  updateMinimap();
+}
+function selectAnswer(idx,val){answers[idx]=val;document.querySelectorAll('.opt-label').forEach((l,i)=>l.classList.toggle('selected',i===val));updateMinimap();}
+function navigate(dir){navigateTo(currentQ+dir);}
+function navigateTo(idx){if(idx<0||idx>34)return;currentQ=idx;renderQuestion(idx);}
+function startTimer(){
+  timerInterval=setInterval(()=>{
+    secondsLeft--;
+    const m=Math.floor(secondsLeft/60).toString().padStart(2,'0'), s=(secondsLeft%60).toString().padStart(2,'0');
+    const el=document.getElementById('timer-box'); el.textContent=m+':'+s;
+    if(secondsLeft<=300)el.classList.add('danger');
+    if(secondsLeft<=0){clearInterval(timerInterval);triggerCheat("⏱ Temps écoulé — soumission automatique");submitExam();}
+  },1000);
+}
+function examIsRunning(){
+  return document.getElementById('exam-screen').style.display === 'block';
+}
+function setupAntiCheat(){
+  document.addEventListener('visibilitychange',()=>{
+    if(!examIsRunning()) return;
+    if(document.hidden&&!alarmShowing)triggerCheat("Changement d'onglet / fenêtre mis en arrière-plan");
+  });
+  document.addEventListener('copy',()=>{
+    if(!examIsRunning()) return;
+    const sel=window.getSelection().toString().trim();
+    if(sel.length>15) setTimeout(()=>{
+      if(!examIsRunning()) return;
+      triggerCheat(`Copie de texte suspecte (${sel.length} caractères)`);
+    }, 3000);
+  });
+}
+function triggerCheat(msg){
+  if(!examIsRunning()) return; // Garde ultime
+  cheatEvents.push({time:new Date().toLocaleTimeString('fr-FR'),msg});
+  const flash=document.getElementById('alarm-flash'); flash.classList.add('flash'); setTimeout(()=>flash.classList.remove('flash'),400);
+  const cb=document.getElementById('cheat-box'); cb.textContent=`🚨 ${cheatEvents.length} INFRACTION${cheatEvents.length>1?'S':''}`; cb.classList.add('alert');
+  // Ne pas révéler la raison à l'étudiant
+  document.getElementById('alarm-msg').innerHTML='Une activité inhabituelle a été détectée sur votre session.<br><br><strong style="color:var(--red)">Cette action a été horodatée et incluse dans votre copie finale.</strong>';
+  document.getElementById('cheat-alarm').classList.add('show'); alarmShowing=true;
+}
+function submitExam(){
+  clearInterval(timerInterval);
+  const endTime=new Date(), elapsed=Math.round((endTime-startTime)/1000), em=Math.floor(elapsed/60), es=elapsed%60;
+  let correct=0;
+  const sectionResults=SECTION_RANGES.map(s=>({...s,correct:0,total:s.end-s.start+1}));
+  QUESTIONS.forEach((q,i)=>{const ok=answers[i]===q.a;if(ok){correct++;sectionResults.find(s=>i>=s.start&&i<=s.end).correct++;}});
+  const penalty=cheatEvents.length*0.15, raw=(correct/35)*20, final=Math.max(0,raw-penalty).toFixed(2);
+  document.getElementById('exam-screen').style.display='none';
+  document.getElementById('topbar').style.display='none';
+  document.getElementById('result-screen').style.display='block';
+  document.getElementById('r-score').textContent=final;
+  document.getElementById('r-info').textContent=`sur 20 — Groupe : ${group.e1}, ${group.e2}, ${group.e3}`;
+  document.getElementById('r-correct').textContent=`${correct} / 35`;
+  document.getElementById('r-time').textContent=`${em}m ${es}s`;
+  document.getElementById('r-infractions').textContent=cheatEvents.length;
+  document.getElementById('r-penalty-sub').textContent=`Pénalité totale : -${penalty.toFixed(2)} pt`;
+  document.getElementById('r-group').innerHTML=`${group.e1}<br>${group.e2}<br>${group.e3}`;
+  const barsEl=document.getElementById('section-bars');
+  sectionResults.forEach(s=>{const pct=Math.round(s.correct/s.total*100);barsEl.innerHTML+=`<div class="sec-row"><span class="sec-label">${s.name}</span><div class="sec-bar-track"><div class="sec-bar-fill" style="width:${pct}%;background:${s.color}"></div></div><span class="sec-score">${s.correct}/${s.total}</span></div>`;});
+  if(cheatEvents.length>0){document.getElementById('cheat-card').style.display='block';const logEl=document.getElementById('cheat-log-list');cheatEvents.forEach(e=>{logEl.innerHTML+=`<div class="cheat-event">[${e.time}] ${e.msg} → −0.15 pt</div>`;});}
+  const revEl=document.getElementById('answers-review'); const letters=['A','B','C','D'];
+  QUESTIONS.forEach((q,i)=>{const ok=answers[i]===q.a,userAns=answers[i]!==null?`Répondu : ${letters[answers[i]]}`:'Non répondu';revEl.innerHTML+=`<div class="ans-item ${ok?'correct':'wrong'}"><div class="ans-q">Q${i+1} — ${q.s}</div><div>${q.q.substring(0,80)}${q.q.length>80?'...':''}</div><div style="font-size:13px;color:var(--dim);margin-top:4px;">${userAns}${!ok?`<span class="ans-correct"> ✔ Bonne réponse : ${letters[q.a]}</span>`:''}</div></div>`;});
+  setTimeout(()=>window.print(),700);
+}
+</script>
+</body>
+</html>

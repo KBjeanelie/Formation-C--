@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Exercices - PostgreSQL Avancé (Séances 1 & 2)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  body {
+    font-family: 'Inter', sans-serif;
+    color: #1f2937;
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  h1 {
+    color: #3fbd83;
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 40px;
+  }
+  h2 {
+    color: #111827;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 8px;
+    margin-top: 40px;
+  }
+  .exercice {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+    page-break-inside: avoid;
+  }
+  .exo-title {
+    font-weight: 600;
+    color: #3fbd83;
+    font-size: 18px;
+    margin-top: 0;
+  }
+  .indice {
+    background: #ecfdf5;
+    border-left: 4px solid #3fbd83;
+    padding: 10px 16px;
+    margin-top: 16px;
+    font-size: 14px;
+    color: #065f46;
+  }
+  .indice strong {
+    color: #047857;
+  }
+  @media print {
+    body { padding: 0; margin: 1cm; max-width: none; }
+    .exercice { border: none; border-bottom: 1px solid #ccc; border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>Recueil d'Exercices : PostgreSQL Avancé</h1>
+  <p style="text-align: center; color: #6b7280; margin-top: -20px;">Blocs Anonymes, Fonctions PL/pgSQL et Triggers (Séances 1 & 2)</p>
+
+  <h2>Niveau Facile : Les bases de PL/pgSQL</h2>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 1 : Premier Bloc Anonyme</h3>
+    <p>Écrivez un bloc anonyme (<code style="font-family: monospace;">DO $$ ...</code>) qui déclare une variable <code style="font-family: monospace;">nom</code> de type <code style="font-family: monospace;">VARCHAR</code> avec la valeur de votre choix, puis affiche un message dans la console : "Bonjour [votre nom] !".</p>
+    <div class="indice"><strong>Indice :</strong> Utilisez l'instruction <code>RAISE NOTICE</code> pour afficher du texte, et le symbole <code>%</code> pour concaténer une variable.</div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 2 : Structure Conditionnelle (IF/ELSE)</h3>
+    <p>Créez un bloc anonyme avec une variable <code style="font-family: monospace;">note</code> (entier). Si la note est supérieure ou égale à 10, affichez "Validé". Sinon, affichez "Non validé".</p>
+    <div class="indice"><strong>Indice :</strong> La structure de base est <code>IF condition THEN ... ELSE ... END IF;</code></div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 3 : La Boucle FOR</h3>
+    <p>Écrivez un bloc anonyme qui utilise une boucle pour afficher la table de multiplication par 7 (de 1 à 10).</p>
+    <div class="indice"><strong>Indice :</strong> Utilisez <code>FOR i IN 1..10 LOOP ... END LOOP;</code>.</div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 4 : Ma première Fonction</h3>
+    <p>Créez une fonction nommée <code style="font-family: monospace;">multiplier</code> qui prend deux paramètres entiers et retourne leur produit. Testez-la avec un <code style="font-family: monospace;">SELECT</code>.</p>
+    <div class="indice"><strong>Indice :</strong> La fonction doit être définie avec <code>RETURNS INT</code>. N'oubliez pas le bloc <code>BEGIN ... END;</code> et l'instruction <code>RETURN</code>.</div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 5 : Fonction texte simple</h3>
+    <p>Créez une fonction <code style="font-family: monospace;">saluer(nom VARCHAR)</code> qui retourne la chaîne de caractères "Bonjour, " suivie du nom. Si le nom est NULL, elle doit retourner "Bonjour, inconnu".</p>
+    <div class="indice"><strong>Indice :</strong> Vous pouvez utiliser l'opérateur de concaténation <code>||</code> ou la fonction <code>COALESCE()</code>.</div>
+  </div>
+
+  <h2>Niveau Intermédiaire : Manipulation de données et Triggers simples</h2>
+  <p><em>Pour ces exercices, imaginez une table <code>produits(id SERIAL PRIMARY KEY, nom VARCHAR, prix DECIMAL, stock INT)</code>.</em></p>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 6 : Formatage avant insertion (Trigger)</h3>
+    <p>Créez une fonction trigger et un trigger (BEFORE INSERT sur la table <code style="font-family: monospace;">produits</code>) qui met systématiquement le nom du produit en MAJUSCULES avant de l'enregistrer dans la base.</p>
+    <div class="indice"><strong>Indice :</strong> Dans la fonction trigger, modifiez la variable spéciale <code>NEW.nom</code> avec la fonction SQL <code>UPPER()</code>, puis retournez <code>NEW</code>.</div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 7 : Validation des données (RAISE EXCEPTION)</h3>
+    <p>Créez un trigger BEFORE INSERT OR UPDATE qui empêche d'enregistrer un produit si son prix est négatif ou nul. L'erreur doit afficher le message : "Le prix doit être strictement positif".</p>
+    <div class="indice"><strong>Indice :</strong> Utilisez <code>IF NEW.prix <= 0 THEN RAISE EXCEPTION '...'; END IF;</code></div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 8 : Boucle sur un résultat de requête (Record)</h3>
+    <p>Écrivez un bloc anonyme qui parcourt tous les produits dont le stock est inférieur à 10, et affiche pour chacun d'eux : "Alerte stock : [nom du produit] (Reste: [stock])".</p>
+    <div class="indice"><strong>Indice :</strong> Déclarez une variable de type <code>RECORD</code> et utilisez <code>FOR ma_variable IN (SELECT ...) LOOP ...</code></div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 9 : Fonction retournant plusieurs valeurs</h3>
+    <p>Créez une fonction <code style="font-family: monospace;">get_produits_chers(seuil DECIMAL)</code> qui retourne le nom et le prix de tous les produits dont le prix est supérieur au seuil passé en paramètre.</p>
+    <div class="indice"><strong>Indice :</strong> Utilisez <code>RETURNS TABLE (nom VARCHAR, prix DECIMAL)</code> et <code>RETURN QUERY SELECT ...</code></div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 10 : Journalisation des suppressions (Audit)</h3>
+    <p>Créez une table <code style="font-family: monospace;">audit_produits(nom VARCHAR, date_suppression TIMESTAMP)</code>. Puis, créez un trigger AFTER DELETE sur <code style="font-family: monospace;">produits</code> qui insère automatiquement le nom du produit supprimé dans la table d'audit.</p>
+    <div class="indice"><strong>Indice :</strong> Lors d'un DELETE, les anciennes valeurs sont accessibles via la variable spéciale <code>OLD</code>. N'oubliez pas de retourner <code>OLD</code> à la fin.</div>
+  </div>
+
+  <h2>Niveau Difficile : Cas concrets et logiques avancées</h2>
+  <p><em>Pour ces exercices, imaginez une table <code>comptes(id SERIAL PRIMARY KEY, titulaire VARCHAR, solde DECIMAL)</code> et une table <code>historique(id SERIAL, msg TEXT)</code>.</em></p>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 11 : Gestion des exceptions (Try/Catch)</h3>
+    <p>Écrivez un bloc anonyme qui tente de diviser 10 par 0, et qui "attrape" l'erreur avec un bloc EXCEPTION pour afficher proprement : "Erreur mathématique détectée !", sans faire planter la requête.</p>
+    <div class="indice"><strong>Indice :</strong> En PL/pgSQL, utilisez la section <code>EXCEPTION WHEN division_by_zero THEN ...</code> avant le END final.</div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 12 : Fonction de Virement Transactionnel</h3>
+    <p>Créez une fonction <code style="font-family: monospace;">virement(compte_source INT, compte_dest INT, montant DECIMAL)</code> qui déduit l'argent du compte source et l'ajoute au compte de destination. Si le compte source n'a pas assez d'argent, levez une exception.</p>
+    <div class="indice"><strong>Indice :</strong> Récupérez d'abord le solde source avec <code>SELECT INTO</code>. Si c'est insuffisant, utilisez <code>RAISE EXCEPTION</code>. Sinon, faites les deux <code>UPDATE</code> consécutifs.</div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 13 : Empêcher la modification de données sensibles</h3>
+    <p>Créez un trigger BEFORE UPDATE sur <code style="font-family: monospace;">comptes</code> qui interdit formellement de modifier le nom du titulaire. Seul le solde peut être mis à jour. (Message d'erreur : "Changement de propriétaire interdit").</p>
+    <div class="indice"><strong>Indice :</strong> Comparez <code>NEW.titulaire</code> avec <code>OLD.titulaire</code> (utilisez <code>IS DISTINCT FROM</code> pour gérer les cas NULL proprement).</div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 14 : Maintien d'un total (Denormalisation)</h3>
+    <p>Imaginez une table unique <code style="font-family: monospace;">statistiques(total_fonds DECIMAL)</code> contenant une seule ligne. Créez un trigger qui met à jour ce grand total automatiquement à chaque INSERT, UPDATE ou DELETE sur la table <code style="font-family: monospace;">comptes</code>.</p>
+    <div class="indice"><strong>Indice :</strong> Vous devrez gérer les opérations spéciales <code>TG_OP = 'INSERT'</code>, <code>'UPDATE'</code>, et <code>'DELETE'</code> dans un IF/ELSIF, et ajuster le <code>total_fonds</code> en utilisant NEW.solde et/ou OLD.solde.</div>
+  </div>
+
+  <div class="exercice">
+    <h3 class="exo-title">Exercice 15 : SQL Dynamique avec EXECUTE</h3>
+    <p>Créez une fonction <code style="font-family: monospace;">compter_lignes(nom_table VARCHAR)</code> qui retourne le nombre total de lignes d'une table dont le nom est passé en paramètre. <em>(Attention: Impossible de faire un SELECT COUNT directement avec une variable comme nom de table, il faut du SQL dynamique).</em></p>
+    <div class="indice"><strong>Indice :</strong> Utilisez l'instruction <code>EXECUTE 'SELECT COUNT(*) FROM ' || quote_ident(nom_table) INTO variable_resultat;</code></div>
+  </div>
+
+</body>
+</html>
